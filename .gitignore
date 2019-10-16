@@ -21,3 +21,33 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+/.idea/$PRODUCT_WORKSPACE_FILE$
+/.idea/.gitignore
+/.idea/compiler.xml
+/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst
+/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst
+/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst
+/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst
+/.idea/libraries/Maven__com_fasterxml_jackson_core_jackson_annotations_2_9_0.xml
+/.idea/libraries/Maven__com_fasterxml_jackson_core_jackson_core_2_9_9.xml
+/.idea/libraries/Maven__com_fasterxml_jackson_core_jackson_databind_2_9_9.xml
+/.idea/libraries/Maven__com_fasterxml_jackson_dataformat_jackson_dataformat_yaml_2_9_10.xml
+/.idea/libraries/Maven__com_fasterxml_jackson_datatype_jackson_datatype_jdk8_2_9_9.xml
+/.idea/libraries/Maven__com_fasterxml_jackson_datatype_jackson_datatype_jsr310_2_9_9.xml
+/.idea/libraries/Maven__com_fasterxml_jackson_module_jackson_module_parameter_names_2_9_9.xml
+/.idea/libraries/Maven__com_google_code_findbugs_jsr305_3_0_0.xml
+/.idea/libraries/Maven__com_wavefront_wavefront_internal_reporter_java_1_1.xml
+/.idea/libraries/Maven__com_wavefront_wavefront_opentracing_sdk_java_1_12.xml
+/.idea/libraries/Maven__com_wavefront_wavefront_runtime_sdk_jvm_0_9_9.xml
+/.idea/libraries/Maven__com_wavefront_wavefront_sdk_java_1_13.xml
+/.idea/libraries/Maven__io_opentracing_opentracing_api_0_32_0.xml
+/.idea/libraries/Maven__io_opentracing_opentracing_noop_0_32_0.xml
+/.idea/libraries/Maven__io_opentracing_opentracing_util_0_32_0.xml
+/.idea/libraries/Maven__org_yaml_snakeyaml_1_23.xml
+/.idea/misc.xml
+/.idea/modules.xml
+/target/maven-archiver/pom.properties
+/.idea/uiDesigner.xml
+/.idea/vcs.xml
+/wavefront-trace-loader.iml
+/target/classes/META-INF/wavefront-trace-loader.kotlin_module
