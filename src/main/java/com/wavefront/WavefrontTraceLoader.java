@@ -1,40 +1,53 @@
 package com.wavefront;
 
-import com.wavefront.sdk.common.Pair;
+import com.wavefront.config.ApplicationConfig;
 import com.wavefront.sdk.common.WavefrontSender;
+import com.wavefront.sdk.direct.ingestion.WavefrontDirectIngestionClient;
+import com.wavefront.sdk.proxy.WavefrontProxyClient;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
 
-public class WavefrontTraceLoader {
+/**
+ * TODO
+ *
+ * @author Sirak Ghazaryan (sghazaryan@vmware.com)
+ */
+public class WavefrontTraceLoader extends AbstractTraceLoader {
+  private final SpanGenerator spanGenerator = new SpanGenerator();
+  private SpanSender spanSender;
+  private SpanQueue spanQueue;
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+  public static void main(String[] args) throws IOException {
+    new WavefrontTraceLoader().start(args);
+  }
 
-        if( args.length <= 0 || args[0] == null || args[0].isEmpty()){
-            System.out.println("The first parameter is Pattern's file name, and can't be empty");
-            return;
-        }
-
-        LoadExecutor loadExecutor = new LoadExecutor();
-        loadExecutor.execute(args[0]);
-
-//        WavefrontSender spanSender =
-//                (new com.wavefront.sdk.direct.ingestion.WavefrontDirectIngestionClient.
-//                        Builder( "http://localhost:8080", "bdc66030-a1a8-493b-b416-5559fdcfa45d")).build();
-//
-//        long time = Calendar.getInstance().getTimeInMillis() - 10;
-//        List<Pair<String, String>> tags = new LinkedList<Pair<String, String>>();
-//        tags.add(new Pair<String, String>("application", "trace loader"));
-//        tags.add(new Pair<String, String>("service", "generator"));
-//        tags.add(new Pair<String, String>("host", "ip-10.20.30.40"));
-//        Random rand = new Random();
-//        while(true){
-//            time = Calendar.getInstance().getTimeInMillis() - 10;
-//            spanSender.sendSpan("The First com.wavefront.traceloader.Span", time, 10, "localhost" + rand.nextInt(10),
-//                    UUID.randomUUID(), UUID.randomUUID(), null, null, tags, null);
-//            TimeUnit.SECONDS.sleep(1);
-//            System.out.println("timestamp - " + time);
-//        }
+  @Override
+  void setupSenders() throws IOException {
+    ApplicationConfig config = loadApplicationConfig();
+    if (config == null) {
+      throw new IOException("Application config should contain proxy or direction ingestion info.");
     }
+    // TODO do we need additional checks here??
+    WavefrontSender wavefrontSender;
+    if (config.getProxyServer() != null) {
+      wavefrontSender = new WavefrontProxyClient.Builder(config.getProxyServer()).
+          metricsPort(config.getMetricsPort()).
+          distributionPort(config.getDistributionPort()).
+          tracingPort(config.getTracingPort()).build();
+    } else {
+      wavefrontSender = new WavefrontDirectIngestionClient.Builder(config.getServer(), config.getToken()).build();
+    }
+
+    spanSender = new SpanSender(wavefrontSender);
+  }
+
+  @Override
+  void generateSpans() {
+    spanQueue = spanGenerator.generate(generatorConfig);
+  }
+
+  @Override
+  void sendSpans() throws IOException, InterruptedException {
+    spanSender.startSending(spanQueue);
+  }
 }
