@@ -1,5 +1,9 @@
 package com.wavefront;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import com.google.common.base.Joiner;
 
 import com.beust.jcommander.JCommander;
@@ -22,7 +26,7 @@ import java.util.stream.Collectors;
  */
 public abstract class AbstractTraceLoader {
   protected static final Logger logger = Logger.getLogger("traceloader");
-  protected final GeneratorConfig generatorConfig = new GeneratorConfig();
+  protected GeneratorConfig generatorConfig = new GeneratorConfig();
 
   private void parseArguments(String[] args) {
     logger.info("Arguments: " + Arrays.stream(args).
@@ -68,6 +72,18 @@ public abstract class AbstractTraceLoader {
     try {
       if (generatorConfig.getGeneratorConfigFile() != null) {
         generatorConfig.initPropertiesFromFile();
+
+//        ObjectMapper mapper = new ObjectMapper()
+//                .registerModule(new ParameterNamesModule())
+//                .registerModule(new Jdk8Module())
+//                .registerModule(new JavaTimeModule());
+//        mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);
+//        try {
+//          generatorConfig = mapper.readValue(new File(generatorConfig.getGeneratorConfigFile()), GeneratorConfig.class);
+//        } catch (IOException e) {
+//          e.printStackTrace();
+//          System.out.println("Error in the pattern file!");
+//        }
       }
     } catch (Throwable e) {
       logger.severe("Could not load generator configuration file " + generatorConfig.getGeneratorConfigFile());

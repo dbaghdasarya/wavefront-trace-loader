@@ -3,6 +3,7 @@ package com.wavefront;
 import com.wavefront.sdk.common.WavefrontSender;
 
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,24 +22,38 @@ public class SpanSender {
     spanSender = wavefrontSender;
   }
 
-  public void startSending(SpanQueue spanQueue) throws IOException, InterruptedException {
+  public void startSending(double rate, SpanQueue spanQueue) throws IOException, InterruptedException {
+    Calendar calendar = Calendar.getInstance();
+    long start = System.currentTimeMillis();
+    long current;
+    int sent = 0;
+    int mustBeSent = 0;
     Span tempSpan;
-    while ((tempSpan = spanQueue.pollFirst()) != null) {
-      spanSender.sendSpan(
-          tempSpan.getName(),
-          tempSpan.getStartMillis(),
-          tempSpan.getDuration(),
-          tempSpan.getSource(),
-          tempSpan.getTraceUUID(),
-          tempSpan.getSpanUUID(),
-          tempSpan.getParents(),
-          null,
-          tempSpan.getTags(),
-          null);
+    while (spanQueue.size() > 0)
+    {
+      current = System.currentTimeMillis();
+      mustBeSent = (int)(rate * ( current - start) / 1000);
+      System.out.println("mustBeSent = " + mustBeSent + ", sent = " + sent);
+      while (sent < mustBeSent && (tempSpan = spanQueue.pollFirst()) != null)
+      {
+        spanSender.sendSpan(
+                tempSpan.getName(),
+                tempSpan.getStartMillis(),
+                tempSpan.getDuration(),
+                tempSpan.getSource(),
+                tempSpan.getTraceUUID(),
+                tempSpan.getSpanUUID(),
+                tempSpan.getParents(),
+                null,
+                tempSpan.getTags(),
+                null);
+        System.out.println("timestamp - " + tempSpan.getStartMillis());
+        sent++;
+      }
 
-      System.out.println("timestamp - " + tempSpan.getStartMillis());
-      TimeUnit.SECONDS.sleep(1);
+      TimeUnit.MILLISECONDS.sleep(50);
     }
-    logger.log(Level.INFO, "Send complete!");
+
+    logger.log(Level.INFO, "Sending complete!");
   }
 }

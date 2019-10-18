@@ -14,11 +14,25 @@ public class SpanQueue {
     spanQueue.addLast(e);
   }
 
-  public Span pollFirst() {
+  public void addTrace(LinkedList<Span>[] trace){
+    if(trace == null){
+      return;
+    }
+
+    for (LinkedList<Span> spans: trace) {
+      spanQueue.addAll(spans);
+    }
+  }
+
+  public Span pollFirst(){
     return spanQueue.pollFirst();
   }
 
-  public void clear() {
+  public void clear(){
     spanQueue.clear();
+  }
+
+  public int size(){
+    return spanQueue.size();
   }
 }

@@ -1,4 +1,24 @@
 {
-  "rate": 5,
-  "duration": "pt25m15s"
+  "spansRate": 5,
+  "duration": "25m15s",
+  "traceTypes": [
+    {
+      "traceTypeName": "Sirak",
+      "nestingLevel": 4,
+      "spansNumber": 20,
+      "tracesNumber": 100,
+      "mandatoryTags": [{
+        "services": ["front-desk","room-service","gym","restaurant","pool"]
+      }],
+      "optionalTags": [{
+        "payment": [10,20,30,40,50,55]
+      }]
+    },
+    {
+      "traceTypeName": "Davit",
+      "nestingLevel": 5,
+      "spansNumber": 67,
+      "tracesNumber": 100
+    }
+  ]
 }
