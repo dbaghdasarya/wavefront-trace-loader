@@ -1,5 +1,5 @@
 {
-  "spansRate": 5,
+  "tracesRate": 5,
   "duration": "25m15s",
   "traceTypes": [
     {

@@ -33,13 +33,13 @@ public class Span {
 
   protected LinkedList<Span> children = new LinkedList<>();
 
-  public Span(){
+  public Span() {
     spanUUID = UUID.randomUUID();
   }
 
   public Span(String _name, long _startMillis, long _durationMillis, @Nullable String _source,
               UUID _traceUUID, UUID _spanUUID, @Nullable List<UUID> _parents, @Nullable List<UUID> _followsFrom,
-              @Nullable List<Pair<String, String>> _tags, @Nullable List<SpanLog> _spanLogs ){
+              @Nullable List<Pair<String, String>> _tags, @Nullable List<SpanLog> _spanLogs) {
     name = _name;
     startMillis = _startMillis;
     durationMillis = _durationMillis;
@@ -96,21 +96,21 @@ public class Span {
     return spanLogs;
   }
 
-  public void addChild(Span span){
+  public void addChild(Span span) {
     span.addParent(this);
     children.addLast(span);
   }
 
-  public void addParent(Span parent){
+  public void addParent(Span parent) {
     // here we don't touch traceUUID of the span, because what to do when parent removed after?
-    if(parents == null){
+    if (parents == null) {
       parents = new LinkedList<>();
     }
     parents.add(parent.getSpanUUID());
   }
 
-  public boolean removeParent(Span parent){
-    if(parents == null){
+  public boolean removeParent(Span parent) {
+    if (parents == null) {
       return false;
     }
     parents.remove(parent.getSpanUUID());

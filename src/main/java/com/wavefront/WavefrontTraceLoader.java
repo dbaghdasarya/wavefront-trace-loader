@@ -48,6 +48,6 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
 
   @Override
   void sendSpans() throws IOException, InterruptedException {
-    spanSender.startSending(generatorConfig.getSpansRate(), spanQueue);
+    spanSender.startSending(generatorConfig.getTracesRate(), spanQueue);
   }
 }

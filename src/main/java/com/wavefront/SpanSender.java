@@ -29,24 +29,22 @@ public class SpanSender {
     int sent = 0;
     int mustBeSent = 0;
     Span tempSpan;
-    while (spanQueue.size() > 0)
-    {
+    while (spanQueue.size() > 0) {
       current = System.currentTimeMillis();
-      mustBeSent = (int)(rate * ( current - start) / 1000);
+      mustBeSent = (int) (rate * (current - start) / 1000);
       System.out.println("mustBeSent = " + mustBeSent + ", sent = " + sent);
-      while (sent < mustBeSent && (tempSpan = spanQueue.pollFirst()) != null)
-      {
+      while (sent < mustBeSent && (tempSpan = spanQueue.pollFirst()) != null) {
         spanSender.sendSpan(
-                tempSpan.getName(),
-                tempSpan.getStartMillis(),
-                tempSpan.getDuration(),
-                tempSpan.getSource(),
-                tempSpan.getTraceUUID(),
-                tempSpan.getSpanUUID(),
-                tempSpan.getParents(),
-                null,
-                tempSpan.getTags(),
-                null);
+            tempSpan.getName(),
+            tempSpan.getStartMillis(),
+            tempSpan.getDuration(),
+            tempSpan.getSource(),
+            tempSpan.getTraceUUID(),
+            tempSpan.getSpanUUID(),
+            tempSpan.getParents(),
+            null,
+            tempSpan.getTags(),
+            null);
         System.out.println("timestamp - " + tempSpan.getStartMillis());
         sent++;
       }

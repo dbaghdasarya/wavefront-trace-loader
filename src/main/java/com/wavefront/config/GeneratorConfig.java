@@ -1,13 +1,12 @@
 package com.wavefront.config;
 
 import com.beust.jcommander.Parameter;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wavefront.TraceTypePattern;
 import com.wavefront.helpers.DurationStringConverter;
-import com.fasterxml.jackson.core.type.TypeReference;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -22,6 +21,7 @@ import java.util.logging.Logger;
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  * @author Sirak Ghazaryan (sghazaryan@vmware.com)
  */
+@SuppressWarnings("unused, FieldCanBeLocal")
 public class GeneratorConfig {
   private static final Logger logger = Logger.getLogger(GeneratorConfig.class.getCanonicalName());
 
@@ -29,19 +29,19 @@ public class GeneratorConfig {
   private boolean help = false;
 
   @Parameter(names = {"--configFile"}, description = "Location of application config yaml file.")
-  protected String appConfigFile = "applicationConfig.yaml";
+  private String appConfigFile = "applicationConfig.yaml";
 
-  @Parameter(names = {"--rate"}, description = "Secondly rate at which the spans will be ingested.")
-  protected Double spansRate = 0.0;
+  @Parameter(names = {"--rate"}, description = "Rate at which the traces will be ingested.")
+  private Double tracesRate = 0.0;
 
   @Parameter(names = {"--duration"}, description = "Duration of ingestion time in minutes.", converter = DurationStringConverter.class)
-  protected Duration duration;
+  private Duration duration;
 
   @Parameter(names = {"-f", "--file"}, description = "Generator config file.", order = 0)
   private String generatorConfigFile = null;
 
-  @Parameter(description = "")
-  protected List<String> unparsedParams;
+  @Parameter
+  private List<String> unparsedParams;
 
   private LinkedList<TraceTypePattern> traceTypes;
 
@@ -58,9 +58,10 @@ public class GeneratorConfig {
 
     //read JSON like DOM Parser
     JsonNode rootNode = objectMapper.readTree(jsonData);
-    spansRate = rootNode.path("spansRate").asDouble();
-    duration = ( new DurationStringConverter()).convert(rootNode.path("duration").asText());
-    traceTypes = objectMapper.readValue(rootNode.path("traceTypes").toString(), new TypeReference<LinkedList<TraceTypePattern>>(){});
+    tracesRate = rootNode.path("tracesRate").asDouble();
+    duration = (new DurationStringConverter()).convert(rootNode.path("duration").asText());
+    traceTypes = objectMapper.readValue(rootNode.path("traceTypes").toString(), new TypeReference<LinkedList<TraceTypePattern>>() {
+    });
   }
 
   public boolean isHelp() {
@@ -71,8 +72,8 @@ public class GeneratorConfig {
     return appConfigFile;
   }
 
-  public Double getSpansRate() {
-    return spansRate;
+  public Double getTracesRate() {
+    return tracesRate;
   }
 
   public Duration getDuration() {

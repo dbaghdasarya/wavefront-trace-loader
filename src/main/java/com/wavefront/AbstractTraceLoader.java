@@ -1,9 +1,5 @@
 package com.wavefront;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import com.google.common.base.Joiner;
 
 import com.beust.jcommander.JCommander;
