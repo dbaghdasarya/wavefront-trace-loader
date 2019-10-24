@@ -1,6 +1,7 @@
 package com.wavefront;
 
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * TODO
@@ -14,14 +15,14 @@ public class SpanQueue {
     spanQueue.addLast(e);
   }
 
-  public void addTrace(LinkedList<Span>[] trace) {
+  public void addTrace(List<List<Span>> trace) {
     if (trace == null) {
       return;
     }
 
-    for (LinkedList<Span> spans : trace) {
+    trace.forEach(spans -> {
       spanQueue.addAll(spans);
-    }
+    });
   }
 
   public Span pollFirst() {

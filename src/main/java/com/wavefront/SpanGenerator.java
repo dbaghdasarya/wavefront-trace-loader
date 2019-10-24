@@ -1,5 +1,7 @@
 package com.wavefront;
 
+import com.google.common.collect.Lists;
+
 import com.wavefront.config.GeneratorConfig;
 import com.wavefront.sdk.common.Pair;
 
@@ -18,27 +20,28 @@ import java.util.logging.Logger;
  */
 public class SpanGenerator {
   private static final Logger logger = Logger.getLogger(SpanSender.class.getCanonicalName());
+  private static final Random randGenerator = new Random();
 
   public SpanQueue generate(GeneratorConfig config) {
-    SpanQueue spanQueue = new SpanQueue();
+    final SpanQueue spanQueue = new SpanQueue();
     long spansNumber = (long) (config.getTracesRate() * config.getDuration().toSeconds());
     long spanDuration = (long) (1000.0 / config.getTracesRate());
     logger.log(Level.INFO, "Should be genereted " + spansNumber + " spans, with spanDuration - " +
         spanDuration);
 
-    LinkedList<TraceTypePattern> traceTypes = config.getTraceTypes();
-    for (TraceTypePattern traceTypePattern : traceTypes) {
+    config.getTraceTypes().forEach(traceTypePattern -> {
       for (int n = 0; n < traceTypePattern.tracesNumber; n++) {
-        spanQueue.addTrace(treceGenerator(traceTypePattern, config.getTracesRate()));
+        spanQueue.addTrace(traceGenerator(traceTypePattern, config.getTracesRate()));
       }
-    }
+    });
 
     logger.log(Level.INFO, "Generation complete!");
     return spanQueue;
   }
 
 
-  protected LinkedList<Span>[] treceGenerator(TraceTypePattern traceTypePattern, double rate) {
+  protected List<List<Span>> traceGenerator(TraceTypePattern traceTypePattern,
+                                            double rate) {
     int levels = traceTypePattern.nestingLevel;
     int spanNumbers = traceTypePattern.spansNumber;
     spanNumbers--;
@@ -46,24 +49,17 @@ public class SpanGenerator {
     long spanDuration = (long) (1000.0 / rate);
     long startTime = Calendar.getInstance().getTimeInMillis();
     long currentTime = startTime;
-    Random rand = new Random();
     String suffixes = "abcdefg";
     int sufLen = suffixes.length();
 
-
-    List<Pair<String, String>> tags = new LinkedList<Pair<String, String>>();
-    tags.add(new Pair<String, String>("application", "trace loader"));
-    tags.add(new Pair<String, String>("service", "generator"));
-    tags.add(new Pair<String, String>("host", "ip-10.20.30.40"));
-
-    LinkedList<Span>[] trace = new LinkedList[levels];
+    List<List<Span>> trace = Lists.newArrayListWithExpectedSize(levels);
     for (int n = 0; n < levels; n++) {
-      trace[n] = new LinkedList<>();
+      trace.add(new LinkedList<>());
     }
 
     // Head span
     UUID traceUUID = UUID.randomUUID();
-    trace[0].add(new Span(
+    trace.get(0).add(new Span(
         traceTypePattern.traceTypeName,
         currentTime,
         spanDuration,
@@ -72,14 +68,14 @@ public class SpanGenerator {
         UUID.randomUUID(),
         null,
         null,
-        tags,
+        getTags(traceTypePattern.errorRate),
         null));
 
     while (spanNumbers > 0) {
       for (int n = 1; n < levels && spanNumbers > 0; n++) {
         for (int m = n; m < levels && spanNumbers > 0; m++) {
-          trace[m].add(new Span(
-              "name_" + suffixes.charAt(rand.nextInt(sufLen)),
+          trace.get(m).add(new Span(
+              "name_" + suffixes.charAt(randGenerator.nextInt(sufLen)),
               currentTime,
               spanDuration,
               "localhost", // + suffixes.charAt(rand.nextInt(sufLen)),
@@ -87,7 +83,7 @@ public class SpanGenerator {
               UUID.randomUUID(),
               null,
               null,
-              tags,
+              getTags(0), // Errors only in the first span
               null));
           spanNumbers--;
           currentTime += spanDuration;
@@ -97,12 +93,29 @@ public class SpanGenerator {
 
     int upperLevelSize;
     for (int n = levels - 1; n > 0; n--) {
-      upperLevelSize = trace[n - 1].size();
+      upperLevelSize = trace.get(n - 1).size();
       for (Span childSpan :
-          trace[n]) {
-        childSpan.addParent(trace[n - 1].get(rand.nextInt(upperLevelSize)));
+          trace.get(n)) {
+        childSpan.addParent(trace.get(n - 1).get(randGenerator.nextInt(upperLevelSize)));
       }
     }
     return trace;
+  }
+
+  protected List<Pair<String, String>> getTags(int errorRate) {
+    // TODO: now it looks static, but for RCA we will generate tags variation for spans
+
+    List<Pair<String, String>> tags = new LinkedList<>();
+    tags.add(new Pair<>("application", "trace loader"));
+    tags.add(new Pair<>("service", "generator"));
+    tags.add(new Pair<>("host", "ip-10.20.30.40"));
+
+    if (errorRate > 0) {
+      if (randGenerator.nextInt(100) < errorRate) {
+        tags.add(new Pair<>("error", "true"));
+      }
+    }
+
+    return tags;
   }
 }

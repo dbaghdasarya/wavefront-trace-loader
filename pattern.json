@@ -1,12 +1,15 @@
 {
-  "tracesRate": 5,
-  "duration": "25m15s",
+  "tracesRate": 50,
+  "duration": "2m15s",
+  "traceTypesNumber" : 0,
+  "errorRate": 20,
   "traceTypes": [
     {
-      "traceTypeName": "Sirak",
+      "traceTypeName": "TType_1",
       "nestingLevel": 4,
       "spansNumber": 20,
       "tracesNumber": 100,
+      "errorRate": 20,
       "mandatoryTags": [{
         "services": ["front-desk","room-service","gym","restaurant","pool"]
       }],
@@ -15,7 +18,7 @@
       }]
     },
     {
-      "traceTypeName": "Davit",
+      "traceTypeName": "TType_2",
       "nestingLevel": 5,
       "spansNumber": 67,
       "tracesNumber": 100
