@@ -68,7 +68,7 @@ public abstract class AbstractTraceLoader {
     try {
       if (generatorConfig.getGeneratorConfigFile() != null) {
         generatorConfig.initPropertiesFromFile();
-
+// TODO fixme
 //        ObjectMapper mapper = new ObjectMapper()
 //                .registerModule(new ParameterNamesModule())
 //                .registerModule(new Jdk8Module())

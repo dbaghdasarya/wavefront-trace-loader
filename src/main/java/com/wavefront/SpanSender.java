@@ -3,9 +3,7 @@ package com.wavefront;
 import com.wavefront.sdk.common.WavefrontSender;
 
 import java.io.IOException;
-import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -23,11 +21,10 @@ public class SpanSender {
   }
 
   public void startSending(double rate, SpanQueue spanQueue) throws IOException, InterruptedException {
-    Calendar calendar = Calendar.getInstance();
     long start = System.currentTimeMillis();
     long current;
     int sent = 0;
-    int mustBeSent = 0;
+    int mustBeSent;
     Span tempSpan;
     while (spanQueue.size() > 0) {
       current = System.currentTimeMillis();
@@ -52,6 +49,6 @@ public class SpanSender {
       TimeUnit.MILLISECONDS.sleep(50);
     }
 
-    logger.log(Level.INFO, "Sending complete!");
+    logger.info("Sending complete!");
   }
 }

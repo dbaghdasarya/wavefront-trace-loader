@@ -1,27 +1,61 @@
 {
-  "tracesRate": 50,
-  "duration": "2m15s",
-  "traceTypesNumber" : 0,
+  "spansRate": 50,
+  "duration": "2m",
+  "traceTypesCount" : 0,
   "errorRate": 20,
   "traceTypes": [
     {
       "traceTypeName": "TType_1",
-      "nestingLevel": 4,
-      "spansNumber": 20,
-      "tracesNumber": 100,
-      "errorRate": 20,
-      "mandatoryTags": [{
-        "services": ["front-desk","room-service","gym","restaurant","pool"]
-      }],
-      "optionalTags": [{
-        "payment": [10,20,30,40,50,55]
-      }]
+      "nestingLevel": 5,
+      "tracePercentage": 50,
+      "spansDistributions": [
+        {
+          "startValue": 10,
+          "endValue": 15,
+          "percentage": 10
+        },
+        {
+          "startValue": 20,
+          "endValue": 40,
+          "percentage": 90
+        }
+      ],
+
+      "mandatoryTags": [
+        {
+          "services": [
+            "front-desk",
+            "room-service",
+            "gym",
+            "restaurant",
+            "pool"
+          ]
+        }
+      ],
+      "optionalTags": [
+        {
+          "payment": [
+            10,
+            20,
+            30,
+            40,
+            50,
+            55
+          ]
+        }
+      ]
     },
     {
       "traceTypeName": "TType_2",
-      "nestingLevel": 5,
-      "spansNumber": 67,
-      "tracesNumber": 100
+      "nestingLevel": 2,
+      "spansDistributions": [
+        {
+          "startValue": 1,
+          "endValue": 5,
+          "percentage": 100
+        }
+      ],
+      "tracePercentage": 50
     }
   ]
 }
