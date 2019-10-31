@@ -1,5 +1,7 @@
 package com.wavefront;
 
+import com.google.common.base.Strings;
+
 import com.wavefront.config.ApplicationConfig;
 import com.wavefront.sdk.common.WavefrontSender;
 import com.wavefront.sdk.direct.ingestion.WavefrontDirectIngestionClient;
@@ -29,16 +31,20 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
     }
     // TODO do we need additional checks here??
     WavefrontSender wavefrontSender;
-    if (config.getProxyServer() != null) {
-      wavefrontSender = new WavefrontProxyClient.Builder(config.getProxyServer()).
-          metricsPort(config.getMetricsPort()).
-          distributionPort(config.getDistributionPort()).
-          tracingPort(config.getTracingPort()).build();
+    if (!Strings.isNullOrEmpty(config.getOutputFile())) {
+      spanSender = new SpanSender(config.getOutputFile());
     } else {
-      wavefrontSender = new WavefrontDirectIngestionClient.Builder(config.getServer(), config.getToken()).build();
-    }
+      if (config.getProxyServer() != null) {
+        wavefrontSender = new WavefrontProxyClient.Builder(config.getProxyServer()).
+            metricsPort(config.getMetricsPort()).
+            distributionPort(config.getDistributionPort()).
+            tracingPort(config.getTracingPort()).build();
+      } else {
+        wavefrontSender = new WavefrontDirectIngestionClient.Builder(config.getServer(), config.getToken()).build();
+      }
 
-    spanSender = new SpanSender(wavefrontSender);
+      spanSender = new SpanSender(wavefrontSender, generatorConfig.getSpansRate());
+    }
   }
 
   @Override
@@ -47,7 +53,7 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
   }
 
   @Override
-  void sendSpans() throws IOException, InterruptedException {
-    spanSender.startSending(generatorConfig.getSpansRate(), spanQueue);
+  void sendSpans() throws Exception {
+    spanSender.startSending(spanQueue);
   }
 }

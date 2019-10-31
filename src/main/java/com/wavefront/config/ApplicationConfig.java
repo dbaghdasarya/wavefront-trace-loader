@@ -9,7 +9,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class ApplicationConfig {
   /**
-   * Proxy server for routing traffic to wavefront. If it's set, the direct ingestion configs will be ignored.
+   * Saving to file has the highest priority.
+   */
+  @JsonProperty
+  private String outputFile = null;
+  /**
+   * Proxy server for routing traffic to wavefront. If it's set, the direct ingestion configs will
+   * be ignored.
    */
   @JsonProperty
   private String proxyServer = null;
@@ -39,6 +45,10 @@ public class ApplicationConfig {
   @JsonProperty
   private String token = null;
 
+
+  public String getOutputFile() {
+    return outputFile;
+  }
 
   public String getServer() {
     return server;

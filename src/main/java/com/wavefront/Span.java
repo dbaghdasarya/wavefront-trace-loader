@@ -1,5 +1,7 @@
 package com.wavefront;
 
+import com.google.common.base.Strings;
+
 import com.wavefront.sdk.common.Pair;
 import com.wavefront.sdk.entities.tracing.SpanLog;
 
@@ -116,4 +118,39 @@ public class Span {
     parents.remove(parent.getSpanUUID());
     return true;
   }
+
+  public String toString() {
+    // name duration start traceId spanId tags ...
+    // children
+    StringBuilder sb = new StringBuilder().append(name);
+
+    sb.append(" traceId=").append(traceUUID);
+    sb.append(" spanId=").append(spanUUID);
+
+    if (parents != null) {
+      parents.forEach(parent -> sb.append(" parent=").append(parent));
+    }
+
+    if (followsFrom != null) {
+      followsFrom.forEach(predecessor -> sb.append(" followsFrom=").append(predecessor));
+    }
+
+    if (!Strings.isNullOrEmpty(source)) {
+      sb.append(" source=").append(source);
+    }
+
+    if (tags.size() > 0) {
+      tags.forEach(tag -> sb.append(" ").append(tag._1).append("=").append(tag._2));
+    }
+
+    sb.append(" ").append(startMillis);
+    sb.append(" ").append(durationMillis);
+    sb.append("\n");
+
+    if (children != null) {
+      children.forEach(child -> sb.append(child.toString()));
+    }
+    return sb.toString();
+  }
+
 }

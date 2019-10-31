@@ -92,5 +92,5 @@ public abstract class AbstractTraceLoader {
 
   abstract void generateSpans();
 
-  abstract void sendSpans() throws IOException, InterruptedException;
+  abstract void sendSpans() throws Exception;
 }

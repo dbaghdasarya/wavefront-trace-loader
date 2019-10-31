@@ -1,2 +1,5 @@
 server: "http://localhost:8080"
 token: "bdc66030-a1a8-493b-b416-5559fdcfa45d"
+## uncomment for generating traces to file
+## this option has the highest priority and will block trace ingestion to Wavefront
+#outputFile: "traces.txt"
