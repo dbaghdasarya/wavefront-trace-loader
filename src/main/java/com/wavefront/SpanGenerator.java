@@ -25,7 +25,7 @@ import javax.annotation.Nonnull;
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
 public class SpanGenerator {
-  private static final Logger logger = Logger.getLogger(SpanSender.class.getCanonicalName());
+  private static final Logger LOGGER = Logger.getLogger(SpanSender.class.getCanonicalName());
   private static final Random RANDOM = new Random(System.currentTimeMillis());
   private static final int HUNDRED_PERCENT = 100;
   private final LoadingCache<TraceTypePattern, List<Integer>> spansDistributionsPercentages =
@@ -42,7 +42,7 @@ public class SpanGenerator {
   public SpanQueue generate(GeneratorConfig config) {
     SpanQueue spanQueue = new SpanQueue();
     int spansCount = config.getSpansRate() * (int) config.getDuration().toSeconds();
-    logger.info("Should be generated " + spansCount + " spans.");
+    LOGGER.info("Should be generated " + spansCount + " spans.");
 
     // normalize percentages of distribution to fix wrong inputs
     normalizeDistributions(config.getTraceTypes());
@@ -56,7 +56,7 @@ public class SpanGenerator {
 
       spanQueue.addTrace(generateTrace(traceTypePattern, spansDistribution));
     }
-    logger.info("Generation complete!");
+    LOGGER.info("Generation complete!");
     return spanQueue;
   }
 
@@ -158,7 +158,7 @@ public class SpanGenerator {
   private double getNormalizationRatio(double percentsSum) {
     double ratio = 1;
     if (Double.compare(percentsSum, HUNDRED_PERCENT) != 0) {
-      logger.warning("Distributions summary percentage must be 100. " +
+      LOGGER.warning("Distributions summary percentage must be 100. " +
           "Normalizing in range 0-100");
       ratio = (double) HUNDRED_PERCENT / percentsSum;
     }
@@ -199,7 +199,7 @@ public class SpanGenerator {
         left += percentages.get(i);
       }
     }
-    logger.warning("Next item index doesn't matched. Return first item index.");
+    LOGGER.warning("Next item index doesn't matched. Return first item index.");
     return 0;
   }
 }

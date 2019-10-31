@@ -32,7 +32,6 @@ public class Span {
   @Nullable
   private List<SpanLog> spanLogs;
 
-  private LinkedList<Span> children = new LinkedList<>();
 
   public Span() {
     spanUUID = UUID.randomUUID();
@@ -97,11 +96,6 @@ public class Span {
     return spanLogs;
   }
 
-  public void addChild(Span span) {
-    span.addParent(this);
-    children.addLast(span);
-  }
-
   public void addParent(Span parent) {
     // here we don't touch traceUUID of the span, because what to do when parent removed after?
     if (parents == null) {
@@ -119,16 +113,8 @@ public class Span {
   }
 
   public String toString() {
-    // name duration start traceId spanId tags ...
-    // children
-    final StringBuilder sb = new StringBuilder();
-    sb.append(Utils.tracingSpanToLineData(name, getStartMillis(), getDuration(), source,
-        traceUUID, spanUUID, parents, followsFrom, tags, spanLogs, source));
-
-    if (children != null) {
-      children.forEach(child -> sb.append(child.toString()));
-    }
-    return sb.toString();
+    return Utils.tracingSpanToLineData(getName(), getStartMillis(), getDuration(),
+        getSource(), getTraceUUID(), getSpanUUID(), getParents(), getFollowsFrom(),
+        getTags(), getSpanLogs(), getSource());
   }
-
 }

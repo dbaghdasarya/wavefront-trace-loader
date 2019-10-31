@@ -21,11 +21,11 @@ import java.util.stream.Collectors;
  * @author Sirak Ghazaryan (sghazaryan@vmware.com)
  */
 public abstract class AbstractTraceLoader {
-  protected static final Logger logger = Logger.getLogger("traceloader");
+  protected static final Logger LOGGER = Logger.getLogger("traceloader");
   protected GeneratorConfig generatorConfig = new GeneratorConfig();
 
   private void parseArguments(String[] args) {
-    logger.info("Arguments: " + Arrays.stream(args).
+    LOGGER.info("Arguments: " + Arrays.stream(args).
         collect(Collectors.joining(", ")));
     JCommander jCommander = JCommander.newBuilder().
         programName(this.getClass().getCanonicalName()).
@@ -38,7 +38,7 @@ public abstract class AbstractTraceLoader {
       System.exit(0);
     }
     if (generatorConfig.getUnparsedParams() != null) {
-      logger.info("Unparsed arguments: " + Joiner.on(", ").
+      LOGGER.info("Unparsed arguments: " + Joiner.on(", ").
           join(generatorConfig.getUnparsedParams()));
     }
   }
@@ -58,7 +58,7 @@ public abstract class AbstractTraceLoader {
       generateSpans();
       sendSpans();
     } catch (Throwable t) {
-      logger.log(Level.SEVERE, "Aborting start-up", t);
+      LOGGER.log(Level.SEVERE, "Aborting start-up", t);
       System.exit(1);
     }
   }
@@ -70,7 +70,7 @@ public abstract class AbstractTraceLoader {
         generatorConfig.initPropertiesFromFile();
       }
     } catch (Throwable e) {
-      logger.severe("Could not load generator configuration file " + generatorConfig.getGeneratorConfigFile());
+      LOGGER.severe("Could not load generator configuration file " + generatorConfig.getGeneratorConfigFile());
       throw e;
     }
   }
@@ -83,7 +83,7 @@ public abstract class AbstractTraceLoader {
       ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
       return objectMapper.readValue(new File(generatorConfig.getAppConfigFile()), ApplicationConfig.class);
     } catch (Exception e) {
-      logger.log(Level.SEVERE, "Could not load application config", e);
+      LOGGER.log(Level.SEVERE, "Could not load application config", e);
       throw e;
     }
   }
