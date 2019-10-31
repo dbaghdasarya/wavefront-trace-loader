@@ -121,16 +121,15 @@ public class SpanGenerator {
    * Normalize all distributions. ie trace type, spans counts and so on.
    */
   private void normalizeDistributions(List<TraceTypePattern> traceTypePatterns) {
-    // trace types distribution
-    double sum = traceTypePatterns.stream().mapToDouble(d -> d.tracePercentage).sum();
-    traceTypePatterns.forEach(d ->
-        d.tracePercentage = (int) Math.round(d.tracePercentage * getNormalizationRatio(sum)));
-
-    // spans distribution
-    traceTypePatterns.forEach(traceTypePattern -> {
-      double spansSum = traceTypePattern.spansDistributions.stream().mapToDouble(d -> d.percentage).sum();
-      traceTypePattern.spansDistributions.forEach(d ->
-          d.percentage = (int) Math.round(d.percentage * getNormalizationRatio(spansSum)));
+    // trace types and spans count distribution
+    double tracePercRatio = getNormalizationRatio(traceTypePatterns.stream().
+        mapToDouble(t -> t.tracePercentage).sum());
+    traceTypePatterns.forEach(traceType -> {
+      traceType.tracePercentage = (int) Math.round(traceType.tracePercentage * tracePercRatio);
+      double spansPercRatio = getNormalizationRatio(traceType.spansDistributions.stream().
+          mapToDouble(d -> d.percentage).sum());
+      traceType.spansDistributions.forEach(d ->
+          d.percentage = (int) Math.round(d.percentage * spansPercRatio));
     });
   }
 

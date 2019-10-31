@@ -68,18 +68,6 @@ public abstract class AbstractTraceLoader {
     try {
       if (generatorConfig.getGeneratorConfigFile() != null) {
         generatorConfig.initPropertiesFromFile();
-// TODO fixme
-//        ObjectMapper mapper = new ObjectMapper()
-//                .registerModule(new ParameterNamesModule())
-//                .registerModule(new Jdk8Module())
-//                .registerModule(new JavaTimeModule());
-//        mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);
-//        try {
-//          generatorConfig = mapper.readValue(new File(generatorConfig.getGeneratorConfigFile()), GeneratorConfig.class);
-//        } catch (IOException e) {
-//          e.printStackTrace();
-//          System.out.println("Error in the pattern file!");
-//        }
       }
     } catch (Throwable e) {
       logger.severe("Could not load generator configuration file " + generatorConfig.getGeneratorConfigFile());
