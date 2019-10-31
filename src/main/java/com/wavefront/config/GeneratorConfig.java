@@ -26,7 +26,7 @@ import java.util.logging.Logger;
  */
 @SuppressWarnings("unused, FieldCanBeLocal")
 public class GeneratorConfig {
-  private static final Logger logger = Logger.getLogger(GeneratorConfig.class.getCanonicalName());
+  private static final Logger LOGGER = Logger.getLogger(GeneratorConfig.class.getCanonicalName());
 
   @Parameter(names = {"--help"}, help = true)
   private boolean help = false;
@@ -60,7 +60,7 @@ public class GeneratorConfig {
   }
 
   public void initPropertiesFromFile() throws IOException {
-    logger.info("initPropertiesFromFile() function is called.");
+    LOGGER.info("initPropertiesFromFile() function is called.");
 
     //read json file data to String
     byte[] jsonData = Files.readAllBytes(Paths.get(getGeneratorConfigFile()));

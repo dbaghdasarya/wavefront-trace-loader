@@ -1,6 +1,7 @@
 package com.wavefront;
 
 import com.wavefront.sdk.common.Pair;
+import com.wavefront.sdk.common.Utils;
 import com.wavefront.sdk.entities.tracing.SpanLog;
 
 import java.util.LinkedList;
@@ -15,23 +16,22 @@ import javax.annotation.Nullable;
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
 public class Span {
-  protected String name;
-  protected long startMillis;
-  protected long durationMillis;
+  private String name;
+  private long startMillis;
+  private long durationMillis;
   @Nullable
-  protected String source;
-  protected UUID traceUUID;
+  private String source;
+  private UUID traceUUID;
   private final UUID spanUUID;
   @Nullable
-  protected List<UUID> parents;
+  private List<UUID> parents;
   @Nullable
-  protected List<UUID> followsFrom;
+  private List<UUID> followsFrom;
   @Nullable
-  protected List<Pair<String, String>> tags;
+  private List<Pair<String, String>> tags;
   @Nullable
-  protected List<SpanLog> spanLogs;
+  private List<SpanLog> spanLogs;
 
-  protected LinkedList<Span> children = new LinkedList<>();
 
   public Span() {
     spanUUID = UUID.randomUUID();
@@ -96,11 +96,6 @@ public class Span {
     return spanLogs;
   }
 
-  public void addChild(Span span) {
-    span.addParent(this);
-    children.addLast(span);
-  }
-
   public void addParent(Span parent) {
     // here we don't touch traceUUID of the span, because what to do when parent removed after?
     if (parents == null) {
@@ -115,5 +110,11 @@ public class Span {
     }
     parents.remove(parent.getSpanUUID());
     return true;
+  }
+
+  public String toString() {
+    return Utils.tracingSpanToLineData(getName(), getStartMillis(), getDuration(),
+        getSource(), getTraceUUID(), getSpanUUID(), getParents(), getFollowsFrom(),
+        getTags(), getSpanLogs(), getSource());
   }
 }

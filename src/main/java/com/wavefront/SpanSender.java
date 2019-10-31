@@ -1,8 +1,11 @@
 package com.wavefront;
 
+import com.google.common.base.Strings;
+
 import com.wavefront.sdk.common.WavefrontSender;
 
-import java.io.IOException;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -12,15 +15,30 @@ import java.util.logging.Logger;
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
 public class SpanSender {
-  private static final Logger logger = Logger.getLogger(SpanSender.class.getCanonicalName());
+  private static final Logger LOGGER = Logger.getLogger(SpanSender.class.getCanonicalName());
   private WavefrontSender spanSender;
+  private final Integer rate;
+  private final String outputFile;
 
 
-  public SpanSender(WavefrontSender wavefrontSender) {
-    spanSender = wavefrontSender;
+  public SpanSender(WavefrontSender wavefrontSender, Integer rate) {
+    this.spanSender = wavefrontSender;
+    this.rate = rate;
+    this.outputFile = null;
   }
 
-  public void startSending(double rate, SpanQueue spanQueue) throws IOException, InterruptedException {
+  public SpanSender(String outputFile) {
+    this.spanSender = null;
+    this.rate = null;
+    this.outputFile = outputFile;
+  }
+
+  public void startSending(SpanQueue spanQueue) throws Exception {
+    if (!Strings.isNullOrEmpty(outputFile)) {
+      saveToFile(spanQueue);
+      return;
+    }
+
     long start = System.currentTimeMillis();
     long current;
     int sent = 0;
@@ -49,6 +67,17 @@ public class SpanSender {
       TimeUnit.MILLISECONDS.sleep(50);
     }
 
-    logger.info("Sending complete!");
+    LOGGER.info("Sending complete!");
+  }
+
+  private void saveToFile(SpanQueue spanQueue) throws Exception {
+    final File file = new File(outputFile);
+    final FileWriter fileWriter = new FileWriter(file);
+    int spansCount = spanQueue.size();
+    Span tempSpan;
+    while ((tempSpan = spanQueue.pollFirst()) != null) {
+      fileWriter.write(tempSpan.toString());
+    }
+    LOGGER.info(spansCount + " spans saved to file  " + file.getAbsolutePath());
   }
 }
