@@ -1,18 +1,13 @@
 package com.wavefront;
 
+import com.google.common.base.Strings;
+
 import com.wavefront.sdk.common.WavefrontSender;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-
-import com.google.common.base.Strings;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 
 /**
  * TODO
@@ -20,17 +15,7 @@ import com.google.common.cache.LoadingCache;
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
 public class SpanSender {
-  private static final Logger logger = Logger.getLogger(SpanSender.class.getCanonicalName());
-  private static LoadingCache<String, FileWriter> fileWriterLoadingCache = CacheBuilder.newBuilder()
-      .build(new CacheLoader<>() {
-        @Override
-        public FileWriter load(String fileName) throws Exception {
-          return new FileWriter(new File(fileName));
-        }
-      });
-
-  private FileWriter fileWriter;
-
+  private static final Logger LOGGER = Logger.getLogger(SpanSender.class.getCanonicalName());
   private WavefrontSender spanSender;
   private final Integer rate;
   private final String outputFile;
@@ -82,17 +67,17 @@ public class SpanSender {
       TimeUnit.MILLISECONDS.sleep(50);
     }
 
-    logger.info("Sending complete!");
+    LOGGER.info("Sending complete!");
   }
 
-  private void saveToFile(SpanQueue spanQueue) throws ExecutionException, IOException {
-    fileWriter = fileWriterLoadingCache.get(outputFile);
-    int sent = 0;
+  private void saveToFile(SpanQueue spanQueue) throws Exception {
+    final File file = new File(outputFile);
+    final FileWriter fileWriter = new FileWriter(file);
+    int spansCount = spanQueue.size();
     Span tempSpan;
     while ((tempSpan = spanQueue.pollFirst()) != null) {
       fileWriter.write(tempSpan.toString());
-      sent++;
     }
-    logger.info(sent + " spans saved to file!");
+    LOGGER.info(spansCount + " spans saved to file  " + file.getAbsolutePath());
   }
 }

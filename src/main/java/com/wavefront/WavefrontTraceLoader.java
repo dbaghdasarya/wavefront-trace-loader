@@ -30,10 +30,10 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
       throw new IOException("Application config should contain proxy or direction ingestion info.");
     }
     // TODO do we need additional checks here??
-    WavefrontSender wavefrontSender;
     if (!Strings.isNullOrEmpty(config.getOutputFile())) {
       spanSender = new SpanSender(config.getOutputFile());
     } else {
+      WavefrontSender wavefrontSender;
       if (config.getProxyServer() != null) {
         wavefrontSender = new WavefrontProxyClient.Builder(config.getProxyServer()).
             metricsPort(config.getMetricsPort()).

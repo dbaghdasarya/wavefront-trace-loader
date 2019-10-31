@@ -1,8 +1,7 @@
 package com.wavefront;
 
-import com.google.common.base.Strings;
-
 import com.wavefront.sdk.common.Pair;
+import com.wavefront.sdk.common.Utils;
 import com.wavefront.sdk.entities.tracing.SpanLog;
 
 import java.util.LinkedList;
@@ -17,23 +16,23 @@ import javax.annotation.Nullable;
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
 public class Span {
-  protected String name;
-  protected long startMillis;
-  protected long durationMillis;
+  private String name;
+  private long startMillis;
+  private long durationMillis;
   @Nullable
-  protected String source;
-  protected UUID traceUUID;
+  private String source;
+  private UUID traceUUID;
   private final UUID spanUUID;
   @Nullable
-  protected List<UUID> parents;
+  private List<UUID> parents;
   @Nullable
-  protected List<UUID> followsFrom;
+  private List<UUID> followsFrom;
   @Nullable
-  protected List<Pair<String, String>> tags;
+  private List<Pair<String, String>> tags;
   @Nullable
-  protected List<SpanLog> spanLogs;
+  private List<SpanLog> spanLogs;
 
-  protected LinkedList<Span> children = new LinkedList<>();
+  private LinkedList<Span> children = new LinkedList<>();
 
   public Span() {
     spanUUID = UUID.randomUUID();
@@ -122,30 +121,9 @@ public class Span {
   public String toString() {
     // name duration start traceId spanId tags ...
     // children
-    StringBuilder sb = new StringBuilder().append(name);
-
-    sb.append(" traceId=").append(traceUUID);
-    sb.append(" spanId=").append(spanUUID);
-
-    if (parents != null) {
-      parents.forEach(parent -> sb.append(" parent=").append(parent));
-    }
-
-    if (followsFrom != null) {
-      followsFrom.forEach(predecessor -> sb.append(" followsFrom=").append(predecessor));
-    }
-
-    if (!Strings.isNullOrEmpty(source)) {
-      sb.append(" source=").append(source);
-    }
-
-    if (tags.size() > 0) {
-      tags.forEach(tag -> sb.append(" ").append(tag._1).append("=").append(tag._2));
-    }
-
-    sb.append(" ").append(startMillis);
-    sb.append(" ").append(durationMillis);
-    sb.append("\n");
+    final StringBuilder sb = new StringBuilder();
+    sb.append(Utils.tracingSpanToLineData(name, getStartMillis(), getDuration(), source,
+        traceUUID, spanUUID, parents, followsFrom, tags, spanLogs, source));
 
     if (children != null) {
       children.forEach(child -> sb.append(child.toString()));
