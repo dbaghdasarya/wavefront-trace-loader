@@ -33,7 +33,7 @@ public class TraceTypePattern {
    * Class represents distribution need for generation of spans and durations per trace type.
    */
   public static class Distribution {
-    private final Random random = new Random(System.currentTimeMillis());
+    private static final Random random = new Random(System.currentTimeMillis());
     /**
      * Start value of the bin values.
      */

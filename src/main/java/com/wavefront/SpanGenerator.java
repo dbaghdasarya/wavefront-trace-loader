@@ -1,5 +1,8 @@
 package com.wavefront;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 
 import com.wavefront.TraceTypePattern.Distribution;
@@ -10,8 +13,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import javax.annotation.Nonnull;
 
 /**
  * TODO
@@ -22,6 +28,16 @@ public class SpanGenerator {
   private static final Logger logger = Logger.getLogger(SpanSender.class.getCanonicalName());
   private static final Random RANDOM = new Random(System.currentTimeMillis());
   private static final int HUNDRED_PERCENT = 100;
+  private final LoadingCache<TraceTypePattern, List<Integer>> spansDistributionsPercentages =
+      CacheBuilder.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).
+          build(new CacheLoader<>() {
+            @Override
+            public List<Integer> load(@Nonnull TraceTypePattern traceTypePattern) {
+              return traceTypePattern.spansDistributions.stream().map(distribution ->
+                  distribution.percentage).collect(Collectors.toList());
+            }
+          });
+  private List<Integer> tracePercentages;
 
   public SpanQueue generate(GeneratorConfig config) {
     SpanQueue spanQueue = new SpanQueue();
@@ -30,6 +46,8 @@ public class SpanGenerator {
 
     // normalize percentages of distribution to fix wrong inputs
     normalizeDistributions(config.getTraceTypes());
+    tracePercentages = config.getTraceTypes().stream().
+        map(traceTypePattern -> traceTypePattern.tracePercentage).collect(Collectors.toList());
 
     while (spanQueue.size() < spansCount) {
       // get next items based on distributions
@@ -42,8 +60,9 @@ public class SpanGenerator {
     return spanQueue;
   }
 
-  private List<List<Span>> generateTrace(TraceTypePattern pattern,
-                                         Distribution spanDistribution) {
+  private List<List<Span>> generateTrace(@Nonnull TraceTypePattern pattern,
+                                         @Nonnull Distribution spanDistribution) {
+
     int levels = pattern.nestingLevel;
     int spanNumbers = spanDistribution.getValue() - 1;
 
@@ -120,7 +139,7 @@ public class SpanGenerator {
   /**
    * Normalize all distributions. ie trace type, spans counts and so on.
    */
-  private void normalizeDistributions(List<TraceTypePattern> traceTypePatterns) {
+  private void normalizeDistributions(@Nonnull List<TraceTypePattern> traceTypePatterns) {
     // trace types and spans count distribution
     double tracePercRatio = getNormalizationRatio(traceTypePatterns.stream().
         mapToDouble(t -> t.tracePercentage).sum());
@@ -149,10 +168,9 @@ public class SpanGenerator {
   /**
    * Get next span distribution for the given trace type.
    */
-  private Distribution getNextSpanDistribution(TraceTypePattern traceTypePattern) {
-    List<Integer> percentages = traceTypePattern.spansDistributions.stream().map(distribution ->
-        distribution.percentage).collect(Collectors.toList());
-    return traceTypePattern.spansDistributions.get(getIndexOfNextItem(percentages));
+  private Distribution getNextSpanDistribution(@Nonnull TraceTypePattern traceTypePattern) {
+    return traceTypePattern.spansDistributions.get(
+        getIndexOfNextItem(spansDistributionsPercentages.getUnchecked(traceTypePattern)));
   }
 
   /**
@@ -160,10 +178,8 @@ public class SpanGenerator {
    *
    * @param traceTypePatterns List of trace types to be generated.
    */
-  private TraceTypePattern getNextTraceType(List<TraceTypePattern> traceTypePatterns) {
-    List<Integer> percentages = traceTypePatterns.stream().
-        map(traceTypePattern -> traceTypePattern.tracePercentage).collect(Collectors.toList());
-    return traceTypePatterns.get(getIndexOfNextItem(percentages));
+  private TraceTypePattern getNextTraceType(@Nonnull List<TraceTypePattern> traceTypePatterns) {
+    return traceTypePatterns.get(getIndexOfNextItem(tracePercentages));
   }
 
   /**
@@ -173,7 +189,7 @@ public class SpanGenerator {
    * @param percentages List of distribution percentages.
    * @return Return an index of the next item.
    */
-  private int getIndexOfNextItem(List<Integer> percentages) {
+  private int getIndexOfNextItem(@Nonnull List<Integer> percentages) {
     int randomPercent = RANDOM.nextInt(HUNDRED_PERCENT) + 1;
     int left = 0;
     for (int i = 0; i < percentages.size(); i++) {
