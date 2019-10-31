@@ -1,5 +1,7 @@
 package com.wavefront.config;
 
+import com.google.common.collect.Lists;
+
 import com.beust.jcommander.Parameter;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -15,8 +17,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
-
-import javax.print.attribute.IntegerSyntax;
 
 /**
  * Configuration stores settings for generating spans.
@@ -34,12 +34,12 @@ public class GeneratorConfig {
   @Parameter(names = {"--configFile"}, description = "Location of application config yaml file.")
   private String appConfigFile = "applicationConfig.yaml";
 
-  @Parameter(names = {"--rate"}, description = "Rate at which the traces will be ingested.")
-  private Double tracesRate = 0.0;
+  @Parameter(names = {"--rate"}, description = "Rate at which the spans will be ingested.")
+  private Integer spansRate = 100;
 
-  @Parameter(names = {"--traceTypesNumber"}, description = "Number of traces types for " +
+  @Parameter(names = {"--traceTypesCount"}, description = "Number of traces types for " +
       "auto-generation.")
-  private Integer traceTypesNumber = 0;
+  private Integer traceTypesCount = 0;
 
   @Parameter(names = {"--errorRate"}, description = "Percentage of erroneous traces.")
   private Integer errorRate = 0;
@@ -69,23 +69,25 @@ public class GeneratorConfig {
 
     //read JSON like DOM Parser
     JsonNode rootNode = objectMapper.readTree(jsonData);
-    tracesRate = rootNode.path("tracesRate").asDouble();
+    spansRate = rootNode.path("spansRate").asInt();
     duration = (new DurationStringConverter()).convert(rootNode.path("duration").asText());
     errorRate = rootNode.path("errorRate").asInt();
-    traceTypesNumber = rootNode.path("traceTypesNumber").asInt(0);
-    if (traceTypesNumber <= 0) {
+    // if traceTypesCount is set, it has precedence so the traces will be generated with default
+    // parameters
+    traceTypesCount = rootNode.path("traceTypesCount").asInt(0);
+    if (traceTypesCount <= 0) {
       traceTypes = objectMapper.readValue(rootNode.path("traceTypes").toString(),
           new TypeReference<LinkedList<TraceTypePattern>>() {
           });
     } else {
+      // generate traces with default parameters
       traceTypes = new LinkedList<>();
-      Random rand = new Random();
-      for (int n = 0; n < traceTypesNumber; n++) {
-        // TODO: tracesNumber should be calculated more accurately
+      Random rand = new Random(System.currentTimeMillis());
+      for (int n = 0; n < traceTypesCount; n++) {
         traceTypes.add(new TraceTypePattern("traceType_" + n,
             rand.nextInt(6) + 4,
-            rand.nextInt(20) + 4,
-            100,
+            100 / traceTypesCount,
+            Lists.newArrayList(new TraceTypePattern.Distribution(3, rand.nextInt(10) + 5, 100)),
             errorRate));
       }
     }
@@ -99,8 +101,8 @@ public class GeneratorConfig {
     return appConfigFile;
   }
 
-  public Double getTracesRate() {
-    return tracesRate;
+  public Integer getSpansRate() {
+    return spansRate;
   }
 
   public Duration getDuration() {
