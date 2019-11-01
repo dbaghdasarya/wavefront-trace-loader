@@ -20,7 +20,18 @@
           "percentage": 90
         }
       ],
-
+      "traceDurations": [
+        {
+          "startValue": 50,
+          "endValue": 100,
+          "percentage": 20
+        },
+        {
+          "startValue": 200,
+          "endValue": 500,
+          "percentage": 80
+        }
+      ],
       "mandatoryTags": [
         {
           "services": [
@@ -55,7 +66,14 @@
           "percentage": 100
         }
       ],
-      "tracePercentage": 50
+      "tracePercentage": 50,
+      "traceDurations": [
+        {
+          "startValue": 50,
+          "endValue": 100,
+          "percentage": 100
+        }
+      ]
     }
   ]
 }

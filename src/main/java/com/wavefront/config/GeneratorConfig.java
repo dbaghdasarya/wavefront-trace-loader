@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wavefront.TraceTypePattern;
+import com.wavefront.TraceTypePattern.Distribution;
 import com.wavefront.helpers.DurationStringConverter;
 
 import java.io.IOException;
@@ -87,7 +88,8 @@ public class GeneratorConfig {
         traceTypes.add(new TraceTypePattern("traceType_" + n,
             rand.nextInt(6) + 4,
             100 / traceTypesCount,
-            Lists.newArrayList(new TraceTypePattern.Distribution(3, rand.nextInt(10) + 5, 100)),
+            Lists.newArrayList(new Distribution(3, rand.nextInt(10) + 5, 100)),
+            Lists.newArrayList(new Distribution(200, rand.nextInt(500) + 200, 100)),
             errorRate));
       }
     }
