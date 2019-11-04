@@ -37,6 +37,15 @@ public class SpanGenerator {
                   distribution.percentage).collect(Collectors.toList());
             }
           });
+  private final LoadingCache<TraceTypePattern, List<Integer>> traceDurationsPercentages =
+      CacheBuilder.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).
+          build(new CacheLoader<>() {
+            @Override
+            public List<Integer> load(@Nonnull TraceTypePattern traceTypePattern) {
+              return traceTypePattern.traceDurations.stream().map(distribution ->
+                  distribution.percentage).collect(Collectors.toList());
+            }
+          });
   private List<Integer> tracePercentages;
 
   public SpanQueue generate(GeneratorConfig config) {
@@ -50,23 +59,27 @@ public class SpanGenerator {
         map(traceTypePattern -> traceTypePattern.tracePercentage).collect(Collectors.toList());
 
     while (spanQueue.size() < spansCount) {
-      // get next items based on distributions
+      // get next trace type to be generated
       TraceTypePattern traceTypePattern = getNextTraceType(config.getTraceTypes());
-      Distribution spansDistribution = getNextSpanDistribution(traceTypePattern);
 
-      spanQueue.addTrace(generateTrace(traceTypePattern, spansDistribution));
+      spanQueue.addTrace(generateTrace(traceTypePattern));
     }
     LOGGER.info("Generation complete!");
     return spanQueue;
   }
 
-  private List<List<Span>> generateTrace(@Nonnull TraceTypePattern pattern,
-                                         @Nonnull Distribution spanDistribution) {
+  /**
+   * Generate trace for a given trace type.
+   */
+  private List<List<Span>> generateTrace(@Nonnull TraceTypePattern traceType) {
+    int levels = traceType.nestingLevel;
+    int spanNumbers = getNextSpanDistribution(traceType).getValue() - 1;
 
-    int levels = pattern.nestingLevel;
-    int spanNumbers = spanDistribution.getValue() - 1;
+    int traceDuration = getNextTraceDuration(traceType).getValue();
+    // currently all spans have the same duration, expect last one to ensure expected duration
+    int spanDuration = spanNumbers == 0 ? traceDuration : traceDuration / spanNumbers;
+    int lastSpanDuration = spanNumbers == 0 ? 0 : traceDuration % spanNumbers;
 
-    long spanDuration = RANDOM.nextInt(200) + 1; // FIXME make distribution
     long currentTime = System.currentTimeMillis();
     String suffixes = "abcdefg";
     int sufLen = suffixes.length();
@@ -79,7 +92,7 @@ public class SpanGenerator {
     // Head span
     UUID traceUUID = UUID.randomUUID();
     trace.get(0).add(new Span(
-        pattern.traceTypeName,
+        traceType.traceTypeName,
         currentTime,
         spanDuration,
         "localhost", // + suffixes.charAt(rand.nextInt(sufLen)),
@@ -87,12 +100,18 @@ public class SpanGenerator {
         UUID.randomUUID(),
         null,
         null,
-        getTags(pattern.errorRate),
+        getTags(traceType.errorRate),
         null));
 
     while (spanNumbers > 0) {
       for (int n = 1; n < levels && spanNumbers > 0; n++) {
         for (int m = n; m < levels && spanNumbers > 0; m++) {
+          currentTime += spanDuration;
+
+          // the remaining part of duration will be added to last span
+          if (spanNumbers == 1) {
+            spanDuration = lastSpanDuration;
+          }
           trace.get(m).add(new Span(
               "name_" + suffixes.charAt(RANDOM.nextInt(sufLen)),
               currentTime,
@@ -105,9 +124,9 @@ public class SpanGenerator {
               getTags(0), //FIXME Errors only in the first span
               null));
           spanNumbers--;
-          currentTime += spanDuration;
         }
       }
+
     }
 
     int upperLevelSize;
@@ -143,13 +162,27 @@ public class SpanGenerator {
     // trace types and spans count distribution
     double tracePercRatio = getNormalizationRatio(traceTypePatterns.stream().
         mapToDouble(t -> t.tracePercentage).sum());
+
     traceTypePatterns.forEach(traceType -> {
       traceType.tracePercentage = (int) Math.round(traceType.tracePercentage * tracePercRatio);
-      double spansPercRatio = getNormalizationRatio(traceType.spansDistributions.stream().
-          mapToDouble(d -> d.percentage).sum());
-      traceType.spansDistributions.forEach(d ->
-          d.percentage = (int) Math.round(d.percentage * spansPercRatio));
+      normalizeCanonicalDistributions(traceType.spansDistributions);
+      normalizeCanonicalDistributions(traceType.traceDurations);
     });
+  }
+
+  /**
+   * Normalize distributions which are inherited from Distribution class.
+   *
+   * @param distributions Distributions to be normalized.
+   */
+  private void normalizeCanonicalDistributions(List<Distribution> distributions) {
+    double ratio = getNormalizationRatio(distributions.stream().
+        mapToDouble(d -> d.percentage).sum());
+    // don't do anything if input values are already normalized
+    if (Double.compare(ratio, 1) != 0) {
+      distributions.forEach(d ->
+          d.percentage = (int) Math.round(d.percentage * ratio));
+    }
   }
 
   /**
@@ -180,6 +213,14 @@ public class SpanGenerator {
    */
   private TraceTypePattern getNextTraceType(@Nonnull List<TraceTypePattern> traceTypePatterns) {
     return traceTypePatterns.get(getIndexOfNextItem(tracePercentages));
+  }
+
+  /**
+   * Get next trace duration distribution of the given trace type.
+   */
+  private Distribution getNextTraceDuration(@Nonnull TraceTypePattern traceTypePattern) {
+    return traceTypePattern.traceDurations.get(
+        getIndexOfNextItem(traceDurationsPercentages.getUnchecked(traceTypePattern)));
   }
 
   /**

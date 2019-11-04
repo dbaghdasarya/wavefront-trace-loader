@@ -13,15 +13,18 @@ public class TraceTypePattern {
   public int tracePercentage;
   public int errorRate;
   public List<Distribution> spansDistributions;
+  public List<Distribution> traceDurations;
 //  public LinkedList<Pair<String, LinkedList<String>>> mandatoryTags;
 //  public HashMap<String, LinkedList<String>> optionalTags;
 
   public TraceTypePattern(String traceTypeName, int nestingLevel, int tracePercentage,
-                          List<Distribution> distributions, int errorRate) {
+                          List<Distribution> spansDistributions, List<Distribution> traceDurations,
+                          int errorRate) {
     this.traceTypeName = traceTypeName;
     this.nestingLevel = nestingLevel;
     this.tracePercentage = tracePercentage;
-    this.spansDistributions = distributions;
+    this.spansDistributions = spansDistributions;
+    this.traceDurations = traceDurations;
     this.errorRate = errorRate;
   }
 
@@ -33,7 +36,7 @@ public class TraceTypePattern {
    * Class represents distribution need for generation of spans and durations per trace type.
    */
   public static class Distribution {
-    private static final Random random = new Random(System.currentTimeMillis());
+    private static final Random RANDOM = new Random(System.currentTimeMillis());
     /**
      * Start value of the bin values.
      */
@@ -58,10 +61,10 @@ public class TraceTypePattern {
     }
 
     /**
-     * Get random number from the range [startValue, endValue]
+     * Get random number from the distribution range [startValue, endValue]
      */
     public int getValue() {
-      return startValue + random.nextInt(endValue - startValue + 1);
+      return startValue + RANDOM.nextInt(endValue - startValue + 1);
     }
   }
 }

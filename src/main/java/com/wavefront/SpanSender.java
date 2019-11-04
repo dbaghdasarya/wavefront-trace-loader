@@ -67,6 +67,7 @@ public class SpanSender {
       TimeUnit.MILLISECONDS.sleep(50);
     }
 
+    spanSender.close();
     LOGGER.info("Sending complete!");
   }
 
