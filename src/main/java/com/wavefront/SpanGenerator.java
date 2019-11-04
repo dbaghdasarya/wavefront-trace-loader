@@ -142,12 +142,11 @@ public class SpanGenerator {
     List<Pair<String, String>> tags = new LinkedList<>();
 
     // add all mandatory tags
-    pattern.mandatoryTags.forEach(tag -> {
-      tags.add(new Pair<>(tag.tagName, tag.tagValues.get(RANDOM.nextInt(tag.tagValues.size()))));
-    });
+    pattern.mandatoryTags.forEach(tag ->
+        tags.add(new Pair<>(tag.tagName, tag.tagValues.get(RANDOM.nextInt(tag.tagValues.size())))));
 
     // add some of optional tags if exist
-    if (pattern.optionalTagsPercentage > 0 && pattern.optionalTags != null && pattern.optionalTags.size() > 0) {
+    if (pattern.optionalTagsPercentage > 0 && pattern.optionalTags != null) {
       pattern.optionalTags.forEach(tag -> {
         if (RANDOM.nextInt(HUNDRED_PERCENT) + 1 <= pattern.optionalTagsPercentage) {
           tags.add(new Pair<>(tag.tagName, tag.tagValues.get(RANDOM.nextInt(tag.tagValues.size()))));
