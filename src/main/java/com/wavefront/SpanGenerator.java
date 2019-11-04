@@ -162,13 +162,27 @@ public class SpanGenerator {
     // trace types and spans count distribution
     double tracePercRatio = getNormalizationRatio(traceTypePatterns.stream().
         mapToDouble(t -> t.tracePercentage).sum());
+
     traceTypePatterns.forEach(traceType -> {
       traceType.tracePercentage = (int) Math.round(traceType.tracePercentage * tracePercRatio);
-      double spansPercRatio = getNormalizationRatio(traceType.spansDistributions.stream().
-          mapToDouble(d -> d.percentage).sum());
-      traceType.spansDistributions.forEach(d ->
-          d.percentage = (int) Math.round(d.percentage * spansPercRatio));
+      normalizeCanonicalDistributions(traceType.spansDistributions);
+      normalizeCanonicalDistributions(traceType.traceDurations);
     });
+  }
+
+  /**
+   * Normalize distributions which are inherited from Distribution class.
+   *
+   * @param distributions Distributions to be normalized.
+   */
+  private void normalizeCanonicalDistributions(List<Distribution> distributions) {
+    double ratio = getNormalizationRatio(distributions.stream().
+        mapToDouble(d -> d.percentage).sum());
+    // don't do anything if input values are already normalized
+    if (Double.compare(ratio, 1) != 0) {
+      distributions.forEach(d ->
+          d.percentage = (int) Math.round(d.percentage * ratio));
+    }
   }
 
   /**
