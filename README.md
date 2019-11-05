@@ -33,3 +33,11 @@ token: "Wavefront_token" "bdc66030-a1a8-493b-b416-5559fdcfa45d"
 ```
 IMPORTANT: disable or remove `outputFile:` option.
 Follow the [instruction](https://docs.wavefront.com/users_account_managing.html#generating-an-api-token) for getting your Wavefront token.
+### The traces generation
+#### - Simple way
+The traces generation parameters could be simply provided via command line options:
+- `--duration=00h00m00s` - Duration of ingestion time.
+- `--errorRate=10` - Percentage of erroneous traces (0-100). Default: 0
+- `--rate=50` - Rate at which the spans will be ingested (integer number of spans per second). Default: 100
+- `--traceTypesCount=5` - Number of traces types for auto-generation. Default: 0
+#### - Advanced way
