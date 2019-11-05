@@ -41,3 +41,87 @@ The traces generation parameters could be simply provided via command line optio
 - `--rate=50` - Rate at which the spans will be ingested (integer number of spans per second). Default: 100
 - `--traceTypesCount=5` - Number of traces types for auto-generation. Default: 0
 #### - Advanced way
+The traces generation parameters could be set via Trace Types Pattern file (`json`):
+- `-f pattern.json` - Generator config file.
+
+This option will disable all other generation related options.
+The `json` file has the following structure:
+```
+{
+  "spansRate": 50,
+  "duration": "2m",
+  "traceTypesCount": 0,
+  "errorRate": 20,
+  "traceTypes": [
+    {
+      "traceTypeName": "TType_1",
+      "nestingLevel": 5,
+      "tracePercentage": 50,
+      "spansDistributions": [
+        {
+          "startValue": 10,
+          "endValue": 15,
+          "percentage": 10
+        },
+        {
+          "startValue": 20,
+          "endValue": 40,
+          "percentage": 90
+        }
+      ],
+      "traceDurations": [
+        {
+          "startValue": 50,
+          "endValue": 100,
+          "percentage": 20
+        },
+        {
+          "startValue": 200,
+          "endValue": 500,
+          "percentage": 80
+        }
+      ],
+      "mandatoryTags": [
+        {
+          "tagName": "application",
+          "tagValues": [...]
+        },
+        {
+          "tagName": "service",
+          "tagValues": [...]
+        }
+      ],
+      "optionalTags": [
+        {
+          "tagName": "some_param1",
+          "tagValues": [...]
+        },
+        {
+          "tagName": "payment2",
+          "tagValues": [...]
+        }
+      ],
+      "optionalTagsPercentage": -1
+    }
+  ]
+}
+```
+
+`"spansRate"`, `"duration"`, `"traceTypesCount"` and `"errorRate"` keys have the same meaning that the similar command line options.
+- `"traceTypes"` - is a list of traces types patterns. This option is disabled if `"traceTypesCount" > 0`
+    - `"traceTypeName"` - This name will be set to the root span of a trace.
+    - `"nestingLevel"` - number of levels in the trace tree.
+    - `"tracePercentage"` - percentage of traces of the given trace type among all generated traces.
+    - `"spansDistributions"` - distribution of spans count among traces of the given trace type.
+        -  `"startValue"` , `"endValue"` - range of the spans count.
+        -  `"percentage"` - a percentage of the traces with spans count in the given range.
+    - `"traceDurations"` - distribution of durations among traces of the given trace type.
+        - `"startValue"`, `"endValue"` - range of the duration in milliseconds.
+        - `"percentage"` - a percentage of the traces with duration in the given range.
+    - `"mandatoryTags"` - some of the span tags are mandatory, it means that every span will have the given set of tags. Some tags are defined as mandatory by Wavefront (`application`, `service`). Trace generator will add missing mandatory tags and will warn the user about it.
+        - `"tagName"` - name of the tag.
+        - `"tagValues"` - list of possible values. The Generator will randomly select values from the list.
+    - `"optionalTags"` - some tags are optional and may be missing in the tags list of a span.
+        - `"tagName"` - name of the tag.
+        - `"tagValues"` - list of possible values. The Generator will randomly select values from the list.
+    - `"optionalTagsPercentage"` - defines a percentage of optional tags wich should be added to span. For instance, if a user provides 5 optional tags and sets `"optionalTagsPercentage": 40` every span will have randomly selected 2 optional tags.
