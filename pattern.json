@@ -74,7 +74,7 @@
           ]
         }
       ],
-      "optionalTagsPercentage": -1
+      "optionalTagsPercentage": 0
     },
     {
       "traceTypeName": "TType_2",
@@ -87,11 +87,16 @@
         }
       ],
       "tracePercentage": 50,
-      "traceDurations": [
+      "spansDurations": [
         {
-          "startValue": 50,
-          "endValue": 100,
-          "percentage": 100
+          "startValue": 10,
+          "endValue": 20,
+          "percentage": 10
+        },
+        {
+          "startValue": 20,
+          "endValue": 40,
+          "percentage": 90
         }
       ],
       "mandatoryTags": [
