@@ -100,7 +100,7 @@ public class SpanGenerator {
         UUID.randomUUID(),
         null,
         null,
-        getTags(traceType.errorRate),
+        getTags(traceType, traceType.errorRate),
         null));
 
     while (spanNumbers > 0) {
@@ -121,12 +121,11 @@ public class SpanGenerator {
               UUID.randomUUID(),
               null,
               null,
-              getTags(0), //FIXME Errors only in the first span
+              getTags(traceType, 0), //FIXME Errors only in the first span
               null));
           spanNumbers--;
         }
       }
-
     }
 
     int upperLevelSize;
@@ -139,15 +138,24 @@ public class SpanGenerator {
     return trace;
   }
 
-  private List<Pair<String, String>> getTags(int errorRate) {
-    // TODO: now it looks static, but for RCA we will generate tags variation for spans
+  private List<Pair<String, String>> getTags(TraceTypePattern pattern, int errorRate) {
     List<Pair<String, String>> tags = new LinkedList<>();
-    tags.add(new Pair<>("application", "trace loader"));
-    tags.add(new Pair<>("service", "generator"));
-    tags.add(new Pair<>("host", "ip-10.20.30.40"));
+
+    // add all mandatory tags
+    pattern.mandatoryTags.forEach(tag ->
+        tags.add(new Pair<>(tag.tagName, tag.tagValues.get(RANDOM.nextInt(tag.tagValues.size())))));
+
+    // add some of optional tags if exist
+    if (pattern.optionalTagsPercentage > 0 && pattern.optionalTags != null) {
+      pattern.optionalTags.forEach(tag -> {
+        if (RANDOM.nextInt(HUNDRED_PERCENT) + 1 <= pattern.optionalTagsPercentage) {
+          tags.add(new Pair<>(tag.tagName, tag.tagValues.get(RANDOM.nextInt(tag.tagValues.size()))));
+        }
+      });
+    }
 
     if (errorRate > 0) {
-      if (RANDOM.nextInt(100) < errorRate) {
+      if (RANDOM.nextInt(HUNDRED_PERCENT) + 1 < errorRate) {
         tags.add(new Pair<>("error", "true"));
       }
     }

@@ -1,7 +1,7 @@
 {
   "spansRate": 50,
   "duration": "2m",
-  "traceTypesCount" : 0,
+  "traceTypesCount": 0,
   "errorRate": 20,
   "traceTypes": [
     {
@@ -34,7 +34,16 @@
       ],
       "mandatoryTags": [
         {
-          "services": [
+          "tagName": "application",
+          "tagValues": [
+            "hotel",
+            "guesthouse",
+            "B&B"
+          ]
+        },
+        {
+          "tagName": "service",
+          "tagValues": [
             "front-desk",
             "room-service",
             "gym",
@@ -45,7 +54,17 @@
       ],
       "optionalTags": [
         {
-          "payment": [
+          "tagName": "days",
+          "tagValues": [
+            5,
+            2,
+            1,
+            7
+          ]
+        },
+        {
+          "tagName": "payment",
+          "tagValues": [
             10,
             20,
             30,
@@ -54,7 +73,8 @@
             55
           ]
         }
-      ]
+      ],
+      "optionalTagsPercentage": -1
     },
     {
       "traceTypeName": "TType_2",
@@ -72,6 +92,11 @@
           "startValue": 50,
           "endValue": 100,
           "percentage": 100
+        }
+      ],
+      "mandatoryTags": [
+        {
+          "tagName": "application"
         }
       ]
     }

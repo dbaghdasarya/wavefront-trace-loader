@@ -90,6 +90,8 @@ public class GeneratorConfig {
             100 / traceTypesCount,
             Lists.newArrayList(new Distribution(3, rand.nextInt(10) + 5, 100)),
             Lists.newArrayList(new Distribution(200, rand.nextInt(500) + 200, 100)),
+            null,
+            null,
             errorRate));
       }
     }
