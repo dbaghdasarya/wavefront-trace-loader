@@ -18,23 +18,23 @@ public class TraceTypePattern {
   public int nestingLevel;
   public int tracePercentage;
   public int errorRate;
-  public List<Distribution> spansDistributions;
   public List<Distribution> traceDurations;
+  public List<Distribution> spansDistributions;
+  public List<Distribution> spansDurations;
   public List<TagVariation> mandatoryTags;
   public List<TagVariation> optionalTags;
   public int optionalTagsPercentage = 100;
 
   public TraceTypePattern(String traceTypeName, int nestingLevel, int tracePercentage,
                           List<Distribution> spansDistributions, List<Distribution> traceDurations,
-                          List<TagVariation> mandatoryTags, List<TagVariation> optionalTags,
-                          int errorRate) {
+                          List<TagVariation> mandatoryTags, int errorRate) {
     this.traceTypeName = traceTypeName;
     this.nestingLevel = nestingLevel;
     this.tracePercentage = tracePercentage;
     this.spansDistributions = spansDistributions;
+    this.spansDurations = new ArrayList<>();
     this.traceDurations = traceDurations;
     this.mandatoryTags = mandatoryTags;
-    this.optionalTags = optionalTags;
     this.errorRate = errorRate;
   }
 
@@ -67,6 +67,15 @@ public class TraceTypePattern {
       this.startValue = startValue;
       this.endValue = endValue;
       this.percentage = percentage;
+    }
+
+    @Override
+    public String toString() {
+      return "Distribution {" +
+          "startValue = " + startValue +
+          ", endValue = " + endValue +
+          ", percentage = " + percentage +
+          '}';
     }
 
     /**

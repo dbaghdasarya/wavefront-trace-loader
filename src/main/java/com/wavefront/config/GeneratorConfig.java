@@ -1,13 +1,11 @@
 package com.wavefront.config;
 
-import com.google.common.collect.Lists;
-
 import com.beust.jcommander.Parameter;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wavefront.TraceTypePattern;
-import com.wavefront.TraceTypePattern.Distribution;
+import com.wavefront.helpers.Defaults;
 import com.wavefront.helpers.DurationStringConverter;
 
 import java.io.IOException;
@@ -61,8 +59,6 @@ public class GeneratorConfig {
   }
 
   public void initPropertiesFromFile() throws IOException {
-    LOGGER.info("initPropertiesFromFile() function is called.");
-
     //read json file data to String
     byte[] jsonData = Files.readAllBytes(Paths.get(getGeneratorConfigFile()));
     //create ObjectMapper instance
@@ -85,13 +81,12 @@ public class GeneratorConfig {
       traceTypes = new LinkedList<>();
       Random rand = new Random(System.currentTimeMillis());
       for (int n = 0; n < traceTypesCount; n++) {
-        traceTypes.add(new TraceTypePattern("traceType_" + n,
-            rand.nextInt(6) + 4,
+        traceTypes.add(new TraceTypePattern(Defaults.DEFAULT_TYPE_NAME_PREFIX + n,
+            Defaults.DEFAULT_NESTING_LEVEL,
             100 / traceTypesCount,
-            Lists.newArrayList(new Distribution(3, rand.nextInt(10) + 5, 100)),
-            Lists.newArrayList(new Distribution(200, rand.nextInt(500) + 200, 100)),
-            null,
-            null,
+            Defaults.DEFAULT_SPANS_DISTRIBUTIONS,
+            Defaults.DEFAULT_TRACE_DURATIONS,
+            Defaults.DEFAULT_MANDATORY_TAGS,
             errorRate));
       }
     }

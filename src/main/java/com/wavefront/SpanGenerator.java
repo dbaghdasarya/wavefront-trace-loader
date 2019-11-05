@@ -28,6 +28,7 @@ public class SpanGenerator {
   private static final Logger LOGGER = Logger.getLogger(SpanSender.class.getCanonicalName());
   private static final Random RANDOM = new Random(System.currentTimeMillis());
   private static final int HUNDRED_PERCENT = 100;
+
   private final LoadingCache<TraceTypePattern, List<Integer>> spansDistributionsPercentages =
       CacheBuilder.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).
           build(new CacheLoader<>() {
@@ -43,6 +44,15 @@ public class SpanGenerator {
             @Override
             public List<Integer> load(@Nonnull TraceTypePattern traceTypePattern) {
               return traceTypePattern.traceDurations.stream().map(distribution ->
+                  distribution.percentage).collect(Collectors.toList());
+            }
+          });
+  private final LoadingCache<TraceTypePattern, List<Integer>> spansDurationsPercentages =
+      CacheBuilder.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).
+          build(new CacheLoader<>() {
+            @Override
+            public List<Integer> load(@Nonnull TraceTypePattern traceTypePattern) {
+              return traceTypePattern.spansDurations.stream().map(distribution ->
                   distribution.percentage).collect(Collectors.toList());
             }
           });
@@ -74,11 +84,20 @@ public class SpanGenerator {
   private List<List<Span>> generateTrace(@Nonnull TraceTypePattern traceType) {
     int levels = traceType.nestingLevel;
     int spanNumbers = getNextSpanDistribution(traceType).getValue() - 1;
+    int spanDuration;
+    int lastSpanDuration = 0;
+    boolean useSpansDistribution = false;
 
-    int traceDuration = getNextTraceDuration(traceType).getValue();
-    // currently all spans have the same duration, expect last one to ensure expected duration
-    int spanDuration = spanNumbers == 0 ? traceDuration : traceDuration / spanNumbers;
-    int lastSpanDuration = spanNumbers == 0 ? 0 : traceDuration % spanNumbers;
+    // traceDurations has priority,so if it is set spansDurations is skipped
+    if (!traceType.traceDurations.isEmpty()) {
+      int traceDuration = getNextTraceDuration(traceType).getValue();
+      // currently all spans have the same duration, expect last one to ensure expected duration
+      spanDuration = spanNumbers == 0 ? traceDuration : traceDuration / spanNumbers;
+      lastSpanDuration = spanNumbers == 0 ? 0 : traceDuration % spanNumbers;
+    } else {
+      useSpansDistribution = true;
+      spanDuration = getNextSpanDuration(traceType).getValue();
+    }
 
     long currentTime = System.currentTimeMillis();
     String suffixes = "abcdefg";
@@ -108,8 +127,11 @@ public class SpanGenerator {
         for (int m = n; m < levels && spanNumbers > 0; m++) {
           currentTime += spanDuration;
 
-          // the remaining part of duration will be added to last span
-          if (spanNumbers == 1) {
+          if (useSpansDistribution) {
+            spanDuration = getNextSpanDuration(traceType).getValue();
+          } else if (spanNumbers == 1) {
+            // in case of traceDuration is usedthe remaining part of duration will be added to the
+            // last span
             spanDuration = lastSpanDuration;
           }
           trace.get(m).add(new Span(
@@ -175,6 +197,7 @@ public class SpanGenerator {
       traceType.tracePercentage = (int) Math.round(traceType.tracePercentage * tracePercRatio);
       normalizeCanonicalDistributions(traceType.spansDistributions);
       normalizeCanonicalDistributions(traceType.traceDurations);
+      normalizeCanonicalDistributions(traceType.spansDurations);
     });
   }
 
@@ -212,6 +235,14 @@ public class SpanGenerator {
   private Distribution getNextSpanDistribution(@Nonnull TraceTypePattern traceTypePattern) {
     return traceTypePattern.spansDistributions.get(
         getIndexOfNextItem(spansDistributionsPercentages.getUnchecked(traceTypePattern)));
+  }
+
+  /**
+   * Get next span duration for the given trace type.
+   */
+  private Distribution getNextSpanDuration(@Nonnull TraceTypePattern traceTypePattern) {
+    return traceTypePattern.spansDurations.get(
+        getIndexOfNextItem(spansDurationsPercentages.getUnchecked(traceTypePattern)));
   }
 
   /**
