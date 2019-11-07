@@ -33,7 +33,8 @@ public class TraceTypePatternSanitizer extends StdConverter<TraceTypePattern, Tr
     // check nesting level
     if (value.nestingLevel <= 0) {
       value.nestingLevel = DEFAULT_NESTING_LEVEL;
-      LOGGER.warning("Incorrect value for nestingLevel was replaced by " + value.nestingLevel);
+      LOGGER.warning(value.traceTypeName + ": Incorrect value for nestingLevel was replaced by " +
+          value.nestingLevel);
     }
 
     // Check and fix the tags set
@@ -47,13 +48,15 @@ public class TraceTypePatternSanitizer extends StdConverter<TraceTypePattern, Tr
               filter(givenTag -> givenTag.tagName.equals(tagVariation.tagName)).findFirst().
               orElseGet(() -> {
                 value.mandatoryTags.add(tagVariation);
-                LOGGER.warning("Missing mandatory tag was added - " + tagVariation.tagName);
+                LOGGER.warning(value.traceTypeName + ": Missing mandatory tag was added - " +
+                    tagVariation.tagName);
                 return tagVariation;
               });
 
           if (tempTagVariation.tagValues.isEmpty()) {
             tempTagVariation.tagValues.addAll(tagVariation.tagValues);
-            LOGGER.warning("Values for mandatory tag were added - " + tagVariation.tagName);
+            LOGGER.warning(value.traceTypeName + ": Values for mandatory tag were added - " +
+                tagVariation.tagName);
           }
         }
     );
@@ -61,7 +64,8 @@ public class TraceTypePatternSanitizer extends StdConverter<TraceTypePattern, Tr
     // Check and fix optionalTagsPercentage value
     if (value.optionalTagsPercentage < 0 || value.optionalTagsPercentage > 100) {
       value.optionalTagsPercentage = 100;
-      LOGGER.warning("Meaningless value of the optionalTagsPercentage was replaced with 100%");
+      LOGGER.warning(value.traceTypeName + ": Meaningless value of the optionalTagsPercentage" +
+          " was replaced with 100%");
     }
 
     // check traceDurations and spansDurations. As traceDurations have priority over spansDurations
@@ -74,11 +78,12 @@ public class TraceTypePatternSanitizer extends StdConverter<TraceTypePattern, Tr
     }
     if (value.traceDurations.isEmpty() && value.spansDurations.isEmpty()) {
       value.traceDurations.addAll(DEFAULT_TRACE_DURATIONS);
-      LOGGER.warning("Neither traceDurations nor spansDurations were provided. traceDurations " +
-          "were defaulted to " + value.traceDurations.toString());
+      LOGGER.warning(value.traceTypeName + ": Neither traceDurations nor spansDurations were " +
+          "provided. traceDurations were defaulted to " + value.traceDurations.toString());
     }
     if (!value.traceDurations.isEmpty() && !value.spansDurations.isEmpty()) {
-      LOGGER.warning("spansDurations will be skipped, as traceDurations is set.");
+      LOGGER.warning(value.traceTypeName + ": spansDurations will be skipped, " +
+          "as traceDurations is set.");
     }
 
     // spans distributions
@@ -87,8 +92,21 @@ public class TraceTypePatternSanitizer extends StdConverter<TraceTypePattern, Tr
     }
     if (value.spansDistributions.isEmpty()) {
       value.spansDistributions.addAll(DEFAULT_SPANS_DISTRIBUTIONS);
-      LOGGER.warning("spansDistributions were not provided. Defaulted to " +
+      LOGGER.warning(value.traceTypeName + ": spansDistributions were not provided. Defaulted to " +
           value.spansDistributions.toString());
+    }
+
+    // errorConditions
+    if (value.errorConditions != null) {
+      if (value.errorConditions.removeIf(condition -> condition.errorRate < 1 || condition.errorRate > 100)) {
+        LOGGER.warning(value.traceTypeName + ": Some of the errorConditions were removed " +
+            "because the errorRate was not in the [1..100] range!");
+      }
+      if (value.errorConditions.isEmpty()) {
+        value.errorConditions = null;
+        LOGGER.warning(value.traceTypeName + ": Empty errorConditions block was completely " +
+            "removed and the common errorRate will be applied!");
+      }
     }
 
     return value;

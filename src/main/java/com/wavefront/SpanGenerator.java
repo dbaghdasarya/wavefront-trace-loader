@@ -100,7 +100,7 @@ public class SpanGenerator {
     }
 
     long currentTime = System.currentTimeMillis();
-    String suffixes = "abcdefg";
+    String suffixes = "abcdefghijklmnopqrstuvxyz";
     int sufLen = suffixes.length();
 
     List<List<Span>> trace = Lists.newArrayListWithExpectedSize(levels);
@@ -143,7 +143,8 @@ public class SpanGenerator {
               UUID.randomUUID(),
               null,
               null,
-              getTags(traceType, 0), //FIXME Errors only in the first span
+              // Not root spans will have error tag if ErrorConditions defined
+              getTags(traceType, 0),
               null));
           spanNumbers--;
         }
@@ -174,6 +175,25 @@ public class SpanGenerator {
           tags.add(new Pair<>(tag.tagName, tag.tagValues.get(RANDOM.nextInt(tag.tagValues.size()))));
         }
       });
+    }
+
+    // Check error conditions.
+    // If user sets errorConditions for the trace type it will override
+    // the common errorRate. Otherwise the common errorRate will be applied to the first span.
+    if (pattern.errorConditions != null) {
+      errorRate = 0;
+      for (TraceTypePattern.ErrorCondition condition : pattern.errorConditions) {
+        if (tags.stream().
+            anyMatch(tag -> tag._1.equals(condition.tagName) && tag._2.equals(condition.tagValue))) {
+          // the effective Error Rate will be treated as a summary of probability of independent
+          // events
+          errorRate =
+              (100 * errorRate + 100 * condition.errorRate - errorRate * condition.errorRate) / 100;
+          if (errorRate > HUNDRED_PERCENT) {
+            break;
+          }
+        }
+      }
     }
 
     if (errorRate > 0) {
