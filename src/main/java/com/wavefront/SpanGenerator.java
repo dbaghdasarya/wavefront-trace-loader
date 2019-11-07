@@ -186,9 +186,8 @@ public class SpanGenerator {
         if (tags.stream().
             anyMatch(tag -> tag._1.equals(condition.tagName) && tag._2.equals(condition.tagValue))) {
           // the effective Error Rate will be treated as a summary of probability of independent
-          // events
-          errorRate =
-              (100 * errorRate + 100 * condition.errorRate - errorRate * condition.errorRate) / 100;
+          // events P(AB) = P(A) + P(B) - P(A) * P(B)
+          errorRate += condition.errorRate - errorRate * condition.errorRate / HUNDRED_PERCENT;
           if (errorRate > HUNDRED_PERCENT) {
             break;
           }
