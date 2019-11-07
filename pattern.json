@@ -36,9 +36,7 @@
         {
           "tagName": "application",
           "tagValues": [
-            "hotel",
-            "guesthouse",
-            "B&B"
+            "hotel"
           ]
         },
         {
@@ -63,7 +61,7 @@
           ]
         },
         {
-          "tagName": "payment",
+          "tagName": "amount",
           "tagValues": [
             10,
             20,
@@ -72,9 +70,79 @@
             50,
             55
           ]
+        },
+        {
+          "tagName": "quantity",
+          "tagValues": [
+            10,
+            20,
+            30,
+            40,
+            50,
+            55
+          ]
+        },
+        {
+          "tagName": "host",
+          "tagValues": [
+            "ip-10.1.2.3",
+            "ip-11.2.3.4",
+            "ip-12.3.4.5",
+            "ip-13.4.5.6",
+            "ip-14.5.6.7",
+            "ip-15.6.7.8"
+          ]
+        },
+        {
+          "tagName": "tour-agent",
+          "tagValues": [
+            "hyur-service",
+            "menua-travel",
+            "visa-concord",
+            "findarmenia"
+          ]
+        },
+        {
+          "tagName": "payment",
+          "tagValues": [
+            "visa",
+            "mastercard",
+            "amex",
+            "cash"
+          ]
+        },
+        {
+          "tagName": "partner",
+          "tagValues": [
+            "vmware",
+            "credence",
+            "synopsis",
+            "subaru"
+          ]
+        },
+        {
+          "tagName": "loyalty",
+          "tagValues": [
+            "dinners",
+            "platinum",
+            "gold",
+            "standard"
+          ]
         }
       ],
-      "optionalTagsPercentage": 0
+      "optionalTagsPercentage": 10,
+      "errorConditions": [
+        {
+          "tagName": "loyalty",
+          "tagValue": "platinum",
+          "errorRate": 80
+        },
+        {
+          "tagName": "partner",
+          "tagValue": "vmware",
+          "errorRate": 0
+        }
+      ]
     },
     {
       "traceTypeName": "TType_2",
@@ -103,7 +171,8 @@
         {
           "tagName": "application"
         }
-      ]
+      ],
+      "errorConditions": []
     }
   ]
 }

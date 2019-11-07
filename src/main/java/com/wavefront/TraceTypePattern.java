@@ -24,6 +24,7 @@ public class TraceTypePattern {
   public List<TagVariation> mandatoryTags;
   public List<TagVariation> optionalTags;
   public int optionalTagsPercentage = 100;
+  public List<ErrorCondition> errorConditions;
 
   public TraceTypePattern(String traceTypeName, int nestingLevel, int tracePercentage,
                           List<Distribution> spansDistributions, List<Distribution> traceDurations,
@@ -109,6 +110,37 @@ public class TraceTypePattern {
 
     public TagVariation() {
       this.tagValues = new ArrayList<>();
+    }
+  }
+
+  /**
+   * Class represents condition on which error tag should be set for a span
+   */
+  public static class ErrorCondition {
+    /**
+     * Name of a tag which is route cause of the error
+     */
+    public String tagName;
+
+    /**
+     * Value of a tag which is a route cause of the error
+     */
+    public String tagValue;
+
+    /**
+     * Errors rate for the given tag-value pair
+     */
+    public int errorRate;
+
+    public ErrorCondition() {
+    }
+
+    public ErrorCondition(@Nonnull String tagName,
+                          @Nonnull String tagValue,
+                          int errorRate) {
+      this.tagName = tagName;
+      this.tagValue = tagValue;
+      this.errorRate = errorRate;
     }
   }
 }

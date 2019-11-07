@@ -33,7 +33,8 @@ public class GeneratorConfig {
   @Parameter(names = {"--configFile"}, description = "Location of application config yaml file.")
   private String appConfigFile = "applicationConfig.yaml";
 
-  @Parameter(names = {"--rate"}, description = "Rate at which the spans will be ingested.")
+  @Parameter(names = {"--rate"}, description = "Rate at which the spans will be ingested (spans " +
+      "per second).")
   private Integer spansRate = 100;
 
   @Parameter(names = {"--traceTypesCount"}, description = "Number of traces types for " +
@@ -43,7 +44,7 @@ public class GeneratorConfig {
   @Parameter(names = {"--errorRate"}, description = "Percentage of erroneous traces.")
   private Integer errorRate = 0;
 
-  @Parameter(names = {"--duration"}, description = "Duration of ingestion time in minutes.",
+  @Parameter(names = {"--duration"}, description = "Duration of ingestion time (00h00m00s).",
       converter = DurationStringConverter.class)
   private Duration duration;
 
