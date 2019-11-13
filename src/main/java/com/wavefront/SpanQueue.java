@@ -10,6 +10,7 @@ import java.util.List;
  */
 public class SpanQueue {
   private LinkedList<Span> spanQueue = new LinkedList<>();
+  private int traceCount = 0;
 
   public void addLast(Span e) {
     spanQueue.addLast(e);
@@ -23,6 +24,11 @@ public class SpanQueue {
     trace.forEach(spans -> {
       spanQueue.addAll(spans);
     });
+    traceCount++;
+  }
+
+  public int getTraceCount() {
+    return traceCount;
   }
 
   public Span pollFirst() {

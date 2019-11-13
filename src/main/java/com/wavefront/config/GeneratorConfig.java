@@ -41,6 +41,10 @@ public class GeneratorConfig {
       "auto-generation.")
   private Integer traceTypesCount = 0;
 
+  @Parameter(names = {"--totalTraceCount"}, description = "Total number of traces for " +
+      "auto-generation. This parameter disables duration")
+  private Integer totalTraceCount = 0;
+
   @Parameter(names = {"--errorRate"}, description = "Percentage of erroneous traces.")
   private Integer errorRate = 0;
 
@@ -73,6 +77,10 @@ public class GeneratorConfig {
     // if traceTypesCount is set, it has precedence so the traces will be generated with default
     // parameters
     traceTypesCount = rootNode.path("traceTypesCount").asInt(0);
+    totalTraceCount = rootNode.path("totalTraceCount").asInt(0);
+    if (totalTraceCount < 0) {
+      totalTraceCount = 0;
+    }
     if (traceTypesCount <= 0) {
       traceTypePatterns = objectMapper.readValue(rootNode.path("traceTypePatterns").toString(),
           new TypeReference<LinkedList<TraceTypePattern>>() {
@@ -119,5 +127,9 @@ public class GeneratorConfig {
 
   public LinkedList<TraceTypePattern> getTraceTypePatterns() {
     return traceTypePatterns;
+  }
+
+  public Integer getTotalTraceCount() {
+    return totalTraceCount;
   }
 }

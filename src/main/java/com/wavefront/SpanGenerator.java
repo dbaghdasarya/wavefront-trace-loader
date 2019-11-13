@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -60,15 +61,25 @@ public class SpanGenerator {
 
   public SpanQueue generate(GeneratorConfig config) {
     SpanQueue spanQueue = new SpanQueue();
-    int spansCount = config.getSpansRate() * (int) config.getDuration().toSeconds();
-    LOGGER.info("Should be generated " + spansCount + " spans.");
 
     // normalize percentages of distribution to fix wrong inputs
     normalizeDistributions(config.getTraceTypePatterns());
     tracePercentages = config.getTraceTypePatterns().stream().
         map(traceTypePattern -> traceTypePattern.tracePercentage).collect(Collectors.toList());
 
-    while (spanQueue.size() < spansCount) {
+    Function<SpanQueue, Boolean> whileCheck;
+    int traceCount = config.getTotalTraceCount();
+    int spansCount;
+    if (traceCount > 0) {
+      LOGGER.info("Should be generated " + traceCount + " traces.");
+      whileCheck = queue -> queue.getTraceCount() < traceCount;
+    } else {
+      spansCount = config.getSpansRate() * (int) config.getDuration().toSeconds();
+      LOGGER.info("Should be generated " + spansCount + " spans.");
+      whileCheck = queue -> queue.size() < spansCount;
+    }
+
+    while (whileCheck.apply(spanQueue)) {
       // get next trace type to be generated
       TraceTypePattern traceTypePattern = getNextTraceType(config.getTraceTypePatterns());
 

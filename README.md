@@ -40,6 +40,8 @@ The traces generation parameters could be simply provided via command line optio
 - `--errorRate=10` - Percentage of erroneous traces (0-100). Default: 0
 - `--rate=50` - Rate at which the spans will be ingested (integer number of spans per second). Default: 100
 - `--traceTypesCount=5` - Number of traces types for auto-generation. Default: 0
+- `--totalTraceCount=16` - Number of traces for auto-generation. If this parameter greater
+ than 0, `duration` will be ignored. Default: 0
 #### - Advanced way
 The traces generation parameters could be set via Trace Types Pattern file (`json`):
 - `-f pattern.json` - Generator config file.
@@ -51,6 +53,7 @@ The `json` file has the following structure:
   "spansRate": 50,
   "duration": "2m",
   "errorRate": 20,
+  "totalTraceCount": 16,
   "traceTypePatterns": [
     {
       "traceTypeName": "TType_1",
@@ -124,7 +127,8 @@ The `json` file has the following structure:
 }
 ```
 
-`"spansRate"`, `"duration"`, `"traceTypesCount"` and `"errorRate"` keys have the same meaning that the similar command line options.
+`"spansRate"`, `"duration"`, `"traceTypesCount"`, `"errorRate"` and `"totalTraceCount"` keys have the same meaning that
+ the similar command line options.
 - `"traceTypePatterns"` - is a list of traces type patterns. This option is disabled if `"traceTypesCount" > 0`
     - `"traceTypeName"` - This name will be set to the root span of a trace.
     - `"nestingLevel"` - number of levels in the trace tree.
