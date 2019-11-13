@@ -17,6 +17,8 @@ public class Defaults {
 
   public static final List<TraceTypePattern.TagVariation> DEFAULT_MANDATORY_TAGS = List.of(
       new TagVariation("application", List.of("Application_1")),
+      new TagVariation("cluster", List.of("us-west")),
+      new TagVariation("shard", List.of("primary")),
       new TagVariation("service", List.of("Service_1", "Service_2")));
 
   public static final List<Distribution> DEFAULT_TRACE_DURATIONS = List.of(

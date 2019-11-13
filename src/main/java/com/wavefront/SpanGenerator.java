@@ -64,13 +64,13 @@ public class SpanGenerator {
     LOGGER.info("Should be generated " + spansCount + " spans.");
 
     // normalize percentages of distribution to fix wrong inputs
-    normalizeDistributions(config.getTraceTypes());
-    tracePercentages = config.getTraceTypes().stream().
+    normalizeDistributions(config.getTraceTypePatterns());
+    tracePercentages = config.getTraceTypePatterns().stream().
         map(traceTypePattern -> traceTypePattern.tracePercentage).collect(Collectors.toList());
 
     while (spanQueue.size() < spansCount) {
       // get next trace type to be generated
-      TraceTypePattern traceTypePattern = getNextTraceType(config.getTraceTypes());
+      TraceTypePattern traceTypePattern = getNextTraceType(config.getTraceTypePatterns());
 
       spanQueue.addTrace(generateTrace(traceTypePattern));
     }

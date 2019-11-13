@@ -50,11 +50,11 @@ The `json` file has the following structure:
 {
   "spansRate": 50,
   "duration": "2m",
-  "traceTypesCount": 0,
   "errorRate": 20,
-  "traceTypes": [
+  "traceTypePatterns": [
     {
       "traceTypeName": "TType_1",
+      "traceTypesCount": 20,
       "nestingLevel": 5,
       "tracePercentage": 50,
       "spansDistributions": [
@@ -99,16 +99,33 @@ The `json` file has the following structure:
         {
           "tagName": "payment2",
           "tagValues": [...]
+        },
+        {
+        "tagName": "loyalty",
+        "tagValues": [
+            "dinners",
+            "platinum",
+            "gold",
+            "standard"
+        ]
         }
       ],
-      "optionalTagsPercentage": -1
+      "optionalTagsPercentage": -1,
+      "errorConditions": [
+        {
+          "tagName": "loyalty",
+          "tagValue": "platinum",
+          "errorRate": 80
+        },
+        ...
+      ]
     }
   ]
 }
 ```
 
 `"spansRate"`, `"duration"`, `"traceTypesCount"` and `"errorRate"` keys have the same meaning that the similar command line options.
-- `"traceTypes"` - is a list of traces types patterns. This option is disabled if `"traceTypesCount" > 0`
+- `"traceTypePatterns"` - is a list of traces type patterns. This option is disabled if `"traceTypesCount" > 0`
     - `"traceTypeName"` - This name will be set to the root span of a trace.
     - `"nestingLevel"` - number of levels in the trace tree.
     - `"tracePercentage"` - percentage of traces of the given trace type among all generated traces.
@@ -125,3 +142,6 @@ The `json` file has the following structure:
         - `"tagName"` - name of the tag.
         - `"tagValues"` - list of possible values. The Generator will randomly select values from the list.
     - `"optionalTagsPercentage"` - defines a percentage of optional tags wich should be added to span. For instance, if a user provides 5 optional tags and sets `"optionalTagsPercentage": 40` every span will have randomly selected 2 optional tags.
+    - `"errorConditions"` - conditions on which errors will be generated
+        - `"tagName"` - route cause tag of the error condition 
+        - `"tagValues"` - route cause value of the tag of the error condition

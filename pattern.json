@@ -3,7 +3,7 @@
   "duration": "2m",
   "traceTypesCount": 0,
   "errorRate": 20,
-  "traceTypes": [
+  "traceTypePatterns": [
     {
       "traceTypeName": "TType_1",
       "nestingLevel": 5,

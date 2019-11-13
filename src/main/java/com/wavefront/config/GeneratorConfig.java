@@ -54,7 +54,7 @@ public class GeneratorConfig {
   @Parameter
   private List<String> unparsedParams;
 
-  private LinkedList<TraceTypePattern> traceTypes;
+  private LinkedList<TraceTypePattern> traceTypePatterns;
 
   public GeneratorConfig() {
   }
@@ -74,15 +74,15 @@ public class GeneratorConfig {
     // parameters
     traceTypesCount = rootNode.path("traceTypesCount").asInt(0);
     if (traceTypesCount <= 0) {
-      traceTypes = objectMapper.readValue(rootNode.path("traceTypes").toString(),
+      traceTypePatterns = objectMapper.readValue(rootNode.path("traceTypePatterns").toString(),
           new TypeReference<LinkedList<TraceTypePattern>>() {
           });
     } else {
       // generate traces with default parameters
-      traceTypes = new LinkedList<>();
+      traceTypePatterns = new LinkedList<>();
       Random rand = new Random(System.currentTimeMillis());
       for (int n = 0; n < traceTypesCount; n++) {
-        traceTypes.add(new TraceTypePattern(Defaults.DEFAULT_TYPE_NAME_PREFIX + n,
+        traceTypePatterns.add(new TraceTypePattern(Defaults.DEFAULT_TYPE_NAME_PREFIX + n,
             Defaults.DEFAULT_NESTING_LEVEL,
             100 / traceTypesCount,
             Defaults.DEFAULT_SPANS_DISTRIBUTIONS,
@@ -117,7 +117,7 @@ public class GeneratorConfig {
     return unparsedParams;
   }
 
-  public LinkedList<TraceTypePattern> getTraceTypes() {
-    return traceTypes;
+  public LinkedList<TraceTypePattern> getTraceTypePatterns() {
+    return traceTypePatterns;
   }
 }
