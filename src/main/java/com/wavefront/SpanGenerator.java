@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 
 import com.wavefront.TraceTypePattern.Distribution;
 import com.wavefront.config.GeneratorConfig;
+import com.wavefront.helpers.Statistics;
 import com.wavefront.sdk.common.Pair;
 
 import java.util.LinkedList;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 /**
- * TODO
+ * Class generates traces based on {@link GeneratorConfig} parameters.
  *
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
@@ -29,6 +30,7 @@ public class SpanGenerator {
   private static final Logger LOGGER = Logger.getLogger(SpanSender.class.getCanonicalName());
   private static final Random RANDOM = new Random(System.currentTimeMillis());
   private static final int HUNDRED_PERCENT = 100;
+  private final Statistics statistics = new Statistics();
 
   private final LoadingCache<TraceTypePattern, List<Integer>> spansDistributionsPercentages =
       CacheBuilder.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).
@@ -90,6 +92,13 @@ public class SpanGenerator {
   }
 
   /**
+   * Returns statistics about the generated traces.
+   */
+  public Statistics getStatistics() {
+    return statistics;
+  }
+
+  /**
    * Generate trace for a given trace type.
    */
   private List<List<Span>> generateTrace(@Nonnull TraceTypePattern traceType) {
@@ -98,16 +107,18 @@ public class SpanGenerator {
     int spanDuration;
     int lastSpanDuration = 0;
     boolean useSpansDistribution = false;
+    int traceDuration = 0;
 
     // traceDurations has priority,so if it is set spansDurations is skipped
     if (!traceType.traceDurations.isEmpty()) {
-      int traceDuration = getNextTraceDuration(traceType).getValue();
+      traceDuration = getNextTraceDuration(traceType).getValue();
       // currently all spans have the same duration, expect last one to ensure expected duration
       spanDuration = spanNumbers == 0 ? traceDuration : traceDuration / spanNumbers;
       lastSpanDuration = spanNumbers == 0 ? 0 : traceDuration % spanNumbers;
     } else {
       useSpansDistribution = true;
       spanDuration = getNextSpanDuration(traceType).getValue();
+      traceDuration += spanDuration;
     }
 
     long currentTime = System.currentTimeMillis();
@@ -140,6 +151,7 @@ public class SpanGenerator {
 
           if (useSpansDistribution) {
             spanDuration = getNextSpanDuration(traceType).getValue();
+            traceDuration += spanDuration;
           } else if (spanNumbers == 1) {
             // in case of traceDuration is usedthe remaining part of duration will be added to the
             // last span
@@ -169,6 +181,7 @@ public class SpanGenerator {
         childSpan.addParent(trace.get(n - 1).get(RANDOM.nextInt(upperLevelSize)));
       }
     }
+    statistics.offer(traceType.traceTypeName, trace, traceDuration);
     return trace;
   }
 

@@ -57,6 +57,7 @@ public abstract class AbstractTraceLoader {
       setupSenders();
       generateSpans();
       sendSpans();
+      dumpStatistics();
     } catch (Throwable t) {
       LOGGER.log(Level.SEVERE, "Aborting start-up", t);
       System.exit(1);
@@ -93,4 +94,6 @@ public abstract class AbstractTraceLoader {
   abstract void generateSpans();
 
   abstract void sendSpans() throws Exception;
+
+  abstract void dumpStatistics() throws Exception;
 }

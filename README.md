@@ -42,6 +42,8 @@ The traces generation parameters could be simply provided via command line optio
 - `--traceTypesCount=5` - Number of traces types for auto-generation. Default: 0
 - `--totalTraceCount=16` - Total number of traces for generation. If this parameter greater
  than 0, `duration` will be ignored. Default: 0
+- `--stat output.json` - To dump statistics about generated traces to the given file in JSON format.
+ By default the statistics will be shown in the console.
 #### - Advanced way
 The traces generation parameters could be set via Trace Types Pattern file (`json`):
 - `-f pattern.json` - Generator config file.
