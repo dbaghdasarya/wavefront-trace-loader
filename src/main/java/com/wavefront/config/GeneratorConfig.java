@@ -42,7 +42,7 @@ public class GeneratorConfig {
   private Integer traceTypesCount = 0;
 
   @Parameter(names = {"--totalTraceCount"}, description = "Total number of traces for " +
-      "auto-generation. This parameter disables duration")
+      "generation. This parameter disables duration")
   private Integer totalTraceCount = 0;
 
   @Parameter(names = {"--errorRate"}, description = "Percentage of erroneous traces.")
@@ -78,9 +78,7 @@ public class GeneratorConfig {
     // parameters
     traceTypesCount = rootNode.path("traceTypesCount").asInt(0);
     totalTraceCount = rootNode.path("totalTraceCount").asInt(0);
-    if (totalTraceCount < 0) {
-      totalTraceCount = 0;
-    }
+
     if (traceTypesCount <= 0) {
       traceTypePatterns = objectMapper.readValue(rootNode.path("traceTypePatterns").toString(),
           new TypeReference<LinkedList<TraceTypePattern>>() {
