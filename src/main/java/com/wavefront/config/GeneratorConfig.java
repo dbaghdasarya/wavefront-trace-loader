@@ -55,6 +55,10 @@ public class GeneratorConfig {
   @Parameter(names = {"-f", "--file"}, description = "Generator config file.", order = 0)
   private String generatorConfigFile = null;
 
+  @Parameter(names = {"-stat"}, description = "Output file to dump statistics about generated " +
+      "traces.")
+  private String statisticsFile = null;
+
   @Parameter
   private List<String> unparsedParams;
 
@@ -129,5 +133,9 @@ public class GeneratorConfig {
 
   public Integer getTotalTraceCount() {
     return totalTraceCount;
+  }
+
+  public String getStatisticsFile() {
+    return statisticsFile;
   }
 }

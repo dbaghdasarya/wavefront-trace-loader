@@ -47,7 +47,6 @@ public class SpanSender {
     while (spanQueue.size() > 0) {
       current = System.currentTimeMillis();
       mustBeSent = (int) (rate * (current - start) / 1000);
-      System.out.println("mustBeSent = " + mustBeSent + ", sent = " + sent);
       while (sent < mustBeSent && (tempSpan = spanQueue.pollFirst()) != null) {
         spanSender.sendSpan(
             tempSpan.getName(),
@@ -60,7 +59,6 @@ public class SpanSender {
             null,
             tempSpan.getTags(),
             null);
-        System.out.println("timestamp - " + tempSpan.getStartMillis());
         sent++;
       }
 

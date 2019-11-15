@@ -7,10 +7,12 @@ import com.wavefront.sdk.common.WavefrontSender;
 import com.wavefront.sdk.direct.ingestion.WavefrontDirectIngestionClient;
 import com.wavefront.sdk.proxy.WavefrontProxyClient;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 
 /**
- * TODO
+ * Input point of application to generate and send traces to wavefront.
  *
  * @author Sirak Ghazaryan (sghazaryan@vmware.com)
  */
@@ -55,5 +57,16 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
   @Override
   void sendSpans() throws Exception {
     spanSender.startSending(spanQueue);
+  }
+
+  @Override
+  void dumpStatistics() throws Exception {
+    if (!Strings.isNullOrEmpty(generatorConfig.getStatisticsFile())) {
+      FileWriter fileWriter = new FileWriter(new File(generatorConfig.getStatisticsFile()));
+      fileWriter.write(spanGenerator.getStatistics().toJSONString());
+      fileWriter.close();
+    } else {
+      System.out.println(spanGenerator.getStatistics());
+    }
   }
 }
