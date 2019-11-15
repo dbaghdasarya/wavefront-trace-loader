@@ -151,3 +151,4 @@ The `json` file has the following structure:
     - `"errorConditions"` - conditions on which errors will be generated
         - `"tagName"` - route cause tag of the error condition 
         - `"tagValues"` - route cause value of the tag of the error condition
+        - `"errorRate"` - the percentage of the produced errors that meet the given condition. If multiple conditions could be applied the result rate will be P(AB)=P(A)+P(B)-P(A)*P(B), P(ABC) = P(AB)+P(C)-P(AB)*P(C) ...
