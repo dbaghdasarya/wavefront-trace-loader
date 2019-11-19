@@ -108,6 +108,7 @@ public class SpanGenerator {
     int lastSpanDuration = 0;
     boolean useSpansDistribution = false;
     int traceDuration = 0;
+    boolean error = false;
 
     // traceDurations has priority,so if it is set spansDurations is skipped
     if (!traceType.traceDurations.isEmpty()) {
@@ -132,7 +133,7 @@ public class SpanGenerator {
 
     // Head span
     UUID traceUUID = UUID.randomUUID();
-    trace.get(0).add(new Span(
+    Span span = new Span(
         traceType.traceTypeName,
         currentTime,
         spanDuration,
@@ -142,7 +143,12 @@ public class SpanGenerator {
         null,
         null,
         getTags(traceType, traceType.errorRate),
-        null));
+        null);
+    trace.get(0).add(span);
+    if (span.getTags() != null && span.getTags().contains(new Pair<>("error", "true"))) {
+      error = true;
+    }
+
 
     while (spanNumbers > 0) {
       for (int n = 1; n < levels && spanNumbers > 0; n++) {
@@ -179,9 +185,12 @@ public class SpanGenerator {
       upperLevelSize = trace.get(n - 1).size();
       for (Span childSpan : trace.get(n)) {
         childSpan.addParent(trace.get(n - 1).get(RANDOM.nextInt(upperLevelSize)));
+        if (childSpan.getTags() != null && childSpan.getTags().contains(new Pair<>("error", "true"))) {
+          error = true;
+        }
       }
     }
-    statistics.offer(traceType.traceTypeName, trace, traceDuration);
+    statistics.offer(traceType.traceTypeName, trace, traceDuration, error);
     return trace;
   }
 
@@ -220,7 +229,7 @@ public class SpanGenerator {
     }
 
     if (errorRate > 0) {
-      if (RANDOM.nextInt(HUNDRED_PERCENT) + 1 < errorRate) {
+      if (RANDOM.nextInt(HUNDRED_PERCENT) < errorRate) {
         tags.add(new Pair<>("error", "true"));
       }
     }
