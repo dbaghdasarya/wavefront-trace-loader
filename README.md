@@ -56,10 +56,12 @@ The `json` file has the following structure:
   "duration": "2m",
   "errorRate": 20,
   "totalTraceCount": 16,
+  "traceTypesCount": 5,
   "traceTypePatterns": [
     {
       "traceTypeName": "TType_1",
       "traceTypesCount": 20,
+      "errorRate": 15,
       "nestingLevel": 5,
       "tracePercentage": 50,
       "spansDistributions": [
@@ -131,10 +133,12 @@ The `json` file has the following structure:
 
 `"spansRate"`, `"duration"`, `"traceTypesCount"`, `"errorRate"` and `"totalTraceCount"` keys have the same meaning that
  the similar command line options.
-- `"traceTypePatterns"` - is a list of traces type patterns. This option is disabled if `"traceTypesCount" > 0`
+- `"errorRate"` - is applicable only if `"traceTypesCount" > 0`.
+- `"traceTypePatterns"` - is a list of traces type patterns. This option is disabled if `"traceTypesCount" > 0`.
     - `"traceTypeName"` - This name will be set to the root span of a trace.
     - `"nestingLevel"` - number of levels in the trace tree.
     - `"tracePercentage"` - percentage of traces of the given trace type among all generated traces.
+    - `"errorRate"` - if `"traceTypePatterns"` exists, every trace type pattern should provide `"errorRate"` value for producing erroneous traces. 
     - `"spansDistributions"` - distribution of spans count among traces of the given trace type.
         -  `"startValue"` , `"endValue"` - range of the spans count.
         -  `"percentage"` - a percentage of the traces with spans count in the given range.
@@ -148,7 +152,7 @@ The `json` file has the following structure:
         - `"tagName"` - name of the tag.
         - `"tagValues"` - list of possible values. The Generator will randomly select values from the list.
     - `"optionalTagsPercentage"` - defines a percentage of optional tags wich should be added to span. For instance, if a user provides 5 optional tags and sets `"optionalTagsPercentage": 40` every span will have randomly selected 2 optional tags.
-    - `"errorConditions"` - conditions on which errors will be generated
+    - `"errorConditions"` - conditions on which errors will be generated. `"errorConditions"` disables all previously defined `"errorRates"`.
         - `"tagName"` - route cause tag of the error condition 
         - `"tagValues"` - route cause value of the tag of the error condition
         - `"errorRate"` - the percentage of the produced errors that meet the given condition. If multiple conditions could be applied the result rate will be P(AB)=P(A)+P(B)-P(A)*P(B), P(ABC) = P(AB)+P(C)-P(AB)*P(C) ...
