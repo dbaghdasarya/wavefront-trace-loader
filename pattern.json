@@ -9,6 +9,7 @@
       "traceTypeName": "TType_1",
       "nestingLevel": 5,
       "tracePercentage": 50,
+      "errorRate": 30,
       "spansDistributions": [
         {
           "startValue": 10,
@@ -148,6 +149,7 @@
     {
       "traceTypeName": "TType_2",
       "nestingLevel": 2,
+      "errorRate": 10,
       "spansDistributions": [
         {
           "startValue": 1,
