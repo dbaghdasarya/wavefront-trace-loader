@@ -38,7 +38,7 @@
         {
           "tagName": "application",
           "tagValues": [
-            "hotel"
+            "TestApp"
           ]
         },
         {
@@ -46,9 +46,7 @@
           "tagValues": [
             "front-desk",
             "room-service",
-            "gym",
-            "restaurant",
-            "pool"
+            "gym"
           ]
         }
       ],
@@ -172,7 +170,18 @@
       ],
       "mandatoryTags": [
         {
-          "tagName": "application"
+          "tagName": "application",
+          "tagValues": [
+            "TestApp"
+          ]
+        },
+        {
+          "tagName": "service",
+          "tagValues": [
+            "front-desk",
+            "room-service",
+            "gym"
+          ]
         }
       ],
       "errorConditions": []
