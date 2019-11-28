@@ -38,10 +38,11 @@ Follow the [instruction](https://docs.wavefront.com/users_account_managing.html#
 The traces generation parameters could be simply provided via command line options:
 - `--duration=00h00m00s` - Duration of ingestion time.
 - `--errorRate=10` - Percentage of erroneous traces (0-100). Default: 0
+- `--debugRate=20` - Percentage of debug spans in traces (0-100). Default: 0
 - `--rate=50` - Rate at which the spans will be ingested (integer number of spans per second). Default: 100
-- `--traceTypesCount=5` - Number of traces types for auto-generation. Default: 0
+- `--traceTypesCount=5` - Number of traces types for auto-generation. Default: 3
 - `--totalTraceCount=16` - Total number of traces for generation. If this parameter greater
- than 0, `duration` will be ignored. Default: 0
+ than 0, `duration` will be ignored. Default: 5 minute
 - `--stat output.json` - To dump statistics about generated traces to the given file in JSON format.
  By default the statistics will be shown in the console.
 #### - Advanced way
@@ -134,11 +135,13 @@ The `json` file has the following structure:
 `"spansRate"`, `"duration"`, `"traceTypesCount"`, `"errorRate"` and `"totalTraceCount"` keys have the same meaning that
  the similar command line options.
 - `"errorRate"` - is applicable only if `"traceTypesCount" > 0`.
+- `"debugRate"` - is applicable only if `"traceTypesCount" > 0`.
 - `"traceTypePatterns"` - is a list of traces type patterns. This option is disabled if `"traceTypesCount" > 0`.
     - `"traceTypeName"` - This name will be set to the root span of a trace.
     - `"nestingLevel"` - number of levels in the trace tree.
     - `"tracePercentage"` - percentage of traces of the given trace type among all generated traces.
     - `"errorRate"` - if `"traceTypePatterns"` exists, every trace type pattern should provide `"errorRate"` value for producing erroneous traces. 
+     - `"errorRate"` - if `"traceTypePatterns"` exists, every trace type pattern should provide `"errorRate"` value for producing debug spans in trace type.
     - `"spansDistributions"` - distribution of spans count among traces of the given trace type.
         -  `"startValue"` , `"endValue"` - range of the spans count.
         -  `"percentage"` - a percentage of the traces with spans count in the given range.
