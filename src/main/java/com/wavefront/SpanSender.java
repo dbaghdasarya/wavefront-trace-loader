@@ -34,6 +34,7 @@ public class SpanSender {
   }
 
   public void startSending(SpanQueue spanQueue) throws Exception {
+    LOGGER.info("Sending spans ...");
     if (!Strings.isNullOrEmpty(outputFile)) {
       saveToFile(spanQueue);
       return;

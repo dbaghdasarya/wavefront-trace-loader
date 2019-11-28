@@ -31,6 +31,7 @@ public class SpanGenerator {
   private static final Random RANDOM = new Random(System.currentTimeMillis());
   private static final int HUNDRED_PERCENT = 100;
   private final Statistics statistics = new Statistics();
+  private final GeneratorConfig generatorConfig;
 
   private final LoadingCache<TraceTypePattern, List<Integer>> spansDistributionsPercentages =
       CacheBuilder.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).
@@ -61,29 +62,33 @@ public class SpanGenerator {
           });
   private List<Integer> tracePercentages;
 
-  public SpanQueue generate(GeneratorConfig config) {
+  public SpanGenerator(GeneratorConfig config) {
+    this.generatorConfig = config;
+  }
+
+  public SpanQueue generate() {
     SpanQueue spanQueue = new SpanQueue();
 
     // normalize percentages of distribution to fix wrong inputs
-    normalizeDistributions(config.getTraceTypePatterns());
-    tracePercentages = config.getTraceTypePatterns().stream().
+    normalizeDistributions(generatorConfig.getTraceTypePatterns());
+    tracePercentages = generatorConfig.getTraceTypePatterns().stream().
         map(traceTypePattern -> traceTypePattern.tracePercentage).collect(Collectors.toList());
 
     Function<SpanQueue, Boolean> whileCheck;
-    int traceCount = config.getTotalTraceCount();
+    int traceCount = generatorConfig.getTotalTraceCount();
     int spansCount;
     if (traceCount > 0) {
       LOGGER.info("Should be generated " + traceCount + " traces.");
       whileCheck = queue -> queue.getTraceCount() < traceCount;
     } else {
-      spansCount = config.getSpansRate() * (int) config.getDuration().toSeconds();
+      spansCount = generatorConfig.getSpansRate() * (int) generatorConfig.getDuration().toSeconds();
       LOGGER.info("Should be generated " + spansCount + " spans.");
       whileCheck = queue -> queue.size() < spansCount;
     }
 
     while (whileCheck.apply(spanQueue)) {
       // get next trace type to be generated
-      TraceTypePattern traceTypePattern = getNextTraceType(config.getTraceTypePatterns());
+      TraceTypePattern traceTypePattern = getNextTraceType(generatorConfig.getTraceTypePatterns());
 
       spanQueue.addTrace(generateTrace(traceTypePattern));
     }
@@ -133,7 +138,7 @@ public class SpanGenerator {
 
     // Head span
     UUID traceUUID = UUID.randomUUID();
-    Span span = new Span(
+    trace.get(0).add(new Span(
         traceType.traceTypeName,
         currentTime,
         spanDuration,
@@ -143,11 +148,7 @@ public class SpanGenerator {
         null,
         null,
         getTags(traceType, traceType.errorRate),
-        null);
-    trace.get(0).add(span);
-    if (span.getTags() != null && span.getTags().contains(new Pair<>("error", "true"))) {
-      error = true;
-    }
+        null));
 
 
     while (spanNumbers > 0) {
@@ -185,12 +186,9 @@ public class SpanGenerator {
       upperLevelSize = trace.get(n - 1).size();
       for (Span childSpan : trace.get(n)) {
         childSpan.addParent(trace.get(n - 1).get(RANDOM.nextInt(upperLevelSize)));
-        if (childSpan.getTags() != null && childSpan.getTags().contains(new Pair<>("error", "true"))) {
-          error = true;
-        }
       }
     }
-    statistics.offer(traceType.traceTypeName, trace, traceDuration, error);
+    statistics.offer(traceType.traceTypeName, trace, traceDuration);
     return trace;
   }
 
@@ -231,6 +229,11 @@ public class SpanGenerator {
     if (errorRate > 0) {
       if (RANDOM.nextInt(HUNDRED_PERCENT) < errorRate) {
         tags.add(new Pair<>("error", "true"));
+      }
+    }
+    if (pattern.debugRate > 0) {
+      if (RANDOM.nextInt(HUNDRED_PERCENT) < pattern.debugRate) {
+        tags.add(new Pair<>("debug", "true"));
       }
     }
 

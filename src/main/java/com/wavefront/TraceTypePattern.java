@@ -18,6 +18,7 @@ public class TraceTypePattern {
   public int nestingLevel;
   public int tracePercentage;
   public int errorRate;
+  public int debugRate;
   public List<Distribution> traceDurations;
   public List<Distribution> spansDistributions;
   public List<Distribution> spansDurations;
@@ -28,7 +29,7 @@ public class TraceTypePattern {
 
   public TraceTypePattern(String traceTypeName, int nestingLevel, int tracePercentage,
                           List<Distribution> spansDistributions, List<Distribution> traceDurations,
-                          List<TagVariation> mandatoryTags, int errorRate) {
+                          List<TagVariation> mandatoryTags, int errorRate, int debugRate) {
     this.traceTypeName = traceTypeName;
     this.nestingLevel = nestingLevel;
     this.tracePercentage = tracePercentage;
@@ -37,6 +38,7 @@ public class TraceTypePattern {
     this.traceDurations = traceDurations;
     this.mandatoryTags = mandatoryTags;
     this.errorRate = errorRate;
+    this.debugRate = debugRate;
   }
 
   public TraceTypePattern() {

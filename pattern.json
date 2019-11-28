@@ -3,6 +3,7 @@
   "duration": "2m",
   "traceTypesCount": 0,
   "errorRate": 20,
+  "debugRate": 30,
   "totalTraceCount": 0,
   "traceTypePatterns": [
     {
@@ -38,7 +39,7 @@
         {
           "tagName": "application",
           "tagValues": [
-            "hotel"
+            "TestApp"
           ]
         },
         {
@@ -46,9 +47,7 @@
           "tagValues": [
             "front-desk",
             "room-service",
-            "gym",
-            "restaurant",
-            "pool"
+            "gym"
           ]
         }
       ],
@@ -172,7 +171,18 @@
       ],
       "mandatoryTags": [
         {
-          "tagName": "application"
+          "tagName": "application",
+          "tagValues": [
+            "TestApp"
+          ]
+        },
+        {
+          "tagName": "service",
+          "tagValues": [
+            "front-desk",
+            "room-service",
+            "gym"
+          ]
         }
       ],
       "errorConditions": []

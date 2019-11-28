@@ -3,6 +3,7 @@ package com.wavefront.helpers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.wavefront.Span;
+import com.wavefront.sdk.common.Pair;
 
 import java.util.HashMap;
 import java.util.List;
@@ -16,21 +17,39 @@ import java.util.stream.Collectors;
  * @author Sirak Ghazaryan(sghazaryan@vmware.com)
  */
 public class Statistics {
+  private final Map<String, TypeStatistic> tracesByType = new HashMap<>();
   private int tracesSum = 0;
   private int errorsSum = 0;
-  private final Map<String, TypeStatistic> tracesByType = new HashMap<>();
+  private int debugSpansSum = 0;
 
-  public void offer(String traceTypeName, List<List<Span>> trace, int traceDuration, boolean error) {
+  public void offer(String traceTypeName, List<List<Span>> trace, int traceDuration) {
     tracesSum++;
+
+    boolean error = false;
+    int debugSpansCount = 0;
+    for (int i = 0; i < trace.size(); i++) {
+      for (int j = 0; j < trace.get(i).size(); j++) {
+        Span span = trace.get(i).get(j);
+        if (span.getTags() != null) {
+          if (span.getTags().contains(new Pair<>("error", "true"))) {
+            error = true;
+          }
+          if (span.getTags().contains(new Pair<>("debug", "true"))) {
+            debugSpansCount++;
+          }
+        }
+      }
+    }
     if (error) {
       errorsSum++;
     }
+    debugSpansSum += debugSpansCount;
     int spansCount = trace.stream().flatMap(List::stream).collect(Collectors.toList()).size();
+
     tracesByType.putIfAbsent(traceTypeName, new TypeStatistic());
-    tracesByType.computeIfPresent(traceTypeName, (k, v) -> {
-      v.update(spansCount, traceDuration, error);
-      return v;
-    });
+    TypeStatistic tobeUpdated = tracesByType.get(traceTypeName);
+    tobeUpdated.update(spansCount, traceDuration, error, debugSpansCount);
+    tracesByType.put(traceTypeName, tobeUpdated);
   }
 
   @Override
@@ -39,6 +58,7 @@ public class Statistics {
     sb.append("Total traces: ").append(tracesSum).append('\n');
     sb.append("Total errors: ").append(errorsSum).append('\n');
     sb.append("Total errors percentage: ").append(Math.round((double) errorsSum / tracesSum * 100)).append('\n');
+    sb.append("Total debug spans: ").append(debugSpansSum).append('\n');
     tracesByType.forEach((k, v) -> {
       sb.append("\nType: ").append(k).append('\n');
       sb.append("Count ").append(v.count).append('\n');
@@ -54,6 +74,7 @@ public class Statistics {
       sb.append("Errors count ").append(v.errorCount).append('\n');
       sb.append("Errors percentage ").
           append(Math.round((double) v.errorCount / errorsSum * 100)).append('\n');
+      sb.append("Debug spans count ").append(v.debugSpansCount).append('\n');
     });
     return sb.toString();
   }
@@ -64,6 +85,7 @@ public class Statistics {
     rootNode.put("Total traces", tracesSum);
     rootNode.put("Total errors", errorsSum);
     rootNode.put("Total errors percentage", Math.round((double) errorsSum / tracesSum * 100));
+    rootNode.put("Total debug spans ", debugSpansSum);
     tracesByType.forEach((k, v) -> {
       ObjectNode node = mapper.createObjectNode();
       node.put("Count", v.count);
@@ -76,6 +98,7 @@ public class Statistics {
       node.put("Trace duration max", v.traceDurationMax);
       node.put("Errors count", v.errorCount);
       node.put("Errors percentage", Math.round((double) v.errorCount / errorsSum * 100));
+      node.put("Debug spans count ", v.debugSpansCount);
       rootNode.set(k, node);
     });
     return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootNode);
@@ -85,6 +108,7 @@ public class Statistics {
   private static class TypeStatistic {
     int count = 0;
     int errorCount = 0;
+    int debugSpansCount = 0;
     int spansSum = 0;
     int spansMin = Integer.MAX_VALUE;
     int spansMax = Integer.MIN_VALUE;
@@ -92,10 +116,11 @@ public class Statistics {
     int traceDurationMin = Integer.MAX_VALUE;
     int traceDurationMax = Integer.MIN_VALUE;
 
-    void update(int spansCount, int duration, boolean error) {
+    void update(int spansCount, int duration, boolean error, int debugSpansCount) {
       if (error) {
         errorCount++;
       }
+      this.debugSpansCount += debugSpansCount;
       count++;
       spansSum += spansCount;
       spansMin = Math.min(spansMin, spansCount);
