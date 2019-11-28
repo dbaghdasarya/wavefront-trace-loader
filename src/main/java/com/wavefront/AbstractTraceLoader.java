@@ -55,6 +55,7 @@ public abstract class AbstractTraceLoader {
 
       loadGeneratorConfigurationFile();
       setupSenders();
+      setupGenerators();
       generateSpans();
       sendSpans();
       dumpStatistics();
@@ -70,6 +71,8 @@ public abstract class AbstractTraceLoader {
       if (generatorConfig.getGeneratorConfigFile() != null) {
         generatorConfig.initPropertiesFromFile();
       }
+      generatorConfig.initMissingPropertiesWithDefaults();
+
     } catch (Throwable e) {
       LOGGER.severe("Could not load generator configuration file " + generatorConfig.getGeneratorConfigFile());
       throw e;
@@ -96,4 +99,6 @@ public abstract class AbstractTraceLoader {
   abstract void sendSpans() throws Exception;
 
   abstract void dumpStatistics() throws Exception;
+
+  abstract void setupGenerators() throws Exception;
 }

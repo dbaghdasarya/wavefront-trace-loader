@@ -39,7 +39,7 @@ public class GeneratorConfig {
 
   @Parameter(names = {"--traceTypesCount"}, description = "Number of traces types for " +
       "auto-generation.")
-  private Integer traceTypesCount = 0;
+  private Integer traceTypesCount = 3;
 
   @Parameter(names = {"--totalTraceCount"}, description = "Total number of traces for " +
       "generation. This parameter disables duration")
@@ -48,14 +48,17 @@ public class GeneratorConfig {
   @Parameter(names = {"--errorRate"}, description = "Percentage of erroneous traces.")
   private Integer errorRate = 0;
 
+  @Parameter(names = {"--debugRate"}, description = "Percentage of debug spans in traces.")
+  private Integer debugRate = 0;
+
   @Parameter(names = {"--duration"}, description = "Duration of ingestion time (00h00m00s).",
       converter = DurationStringConverter.class)
-  private Duration duration;
+  private Duration duration = Duration.ofMinutes(5);
 
   @Parameter(names = {"-f", "--file"}, description = "Generator config file.", order = 0)
   private String generatorConfigFile = null;
 
-  @Parameter(names = {"-stat"}, description = "Output file to dump statistics about generated " +
+  @Parameter(names = {"--stat"}, description = "Output file to dump statistics about generated " +
       "traces.")
   private String statisticsFile = null;
 
@@ -77,7 +80,8 @@ public class GeneratorConfig {
     JsonNode rootNode = objectMapper.readTree(jsonData);
     spansRate = rootNode.path("spansRate").asInt();
     duration = (new DurationStringConverter()).convert(rootNode.path("duration").asText());
-    errorRate = rootNode.path("errorRate").asInt();
+    errorRate = rootNode.path("errorRate").asInt(0);
+    debugRate = rootNode.path("debugRate").asInt(0);
     // if traceTypesCount is set, it has precedence so the traces will be generated with default
     // parameters
     traceTypesCount = rootNode.path("traceTypesCount").asInt(0);
@@ -87,19 +91,29 @@ public class GeneratorConfig {
       traceTypePatterns = objectMapper.readValue(rootNode.path("traceTypePatterns").toString(),
           new TypeReference<LinkedList<TraceTypePattern>>() {
           });
-    } else {
-      // generate traces with default parameters
-      traceTypePatterns = new LinkedList<>();
-      Random rand = new Random(System.currentTimeMillis());
-      for (int n = 0; n < traceTypesCount; n++) {
-        traceTypePatterns.add(new TraceTypePattern(Defaults.DEFAULT_TYPE_NAME_PREFIX + n,
-            Defaults.DEFAULT_NESTING_LEVEL,
-            100 / traceTypesCount,
-            Defaults.DEFAULT_SPANS_DISTRIBUTIONS,
-            Defaults.DEFAULT_TRACE_DURATIONS,
-            Defaults.DEFAULT_MANDATORY_TAGS,
-            errorRate));
-      }
+    }
+  }
+
+  /**
+   * Constructs traceTypePatterns list based on traceTypesCount input parameter.
+   * If it's not set or smaller than 0, this function does nothing.
+   */
+  public void initMissingPropertiesWithDefaults() {
+    if (traceTypesCount <= 0) {
+      return;
+    }
+    // generate traces with default parameters
+    traceTypePatterns = new LinkedList<>();
+    Random rand = new Random(System.currentTimeMillis());
+    for (int n = 0; n < traceTypesCount; n++) {
+      traceTypePatterns.add(new TraceTypePattern(Defaults.DEFAULT_TYPE_NAME_PREFIX + (n + 1),
+          Defaults.DEFAULT_NESTING_LEVEL,
+          100 / traceTypesCount,
+          Defaults.DEFAULT_SPANS_DISTRIBUTIONS,
+          Defaults.DEFAULT_TRACE_DURATIONS,
+          Defaults.DEFAULT_MANDATORY_TAGS,
+          errorRate,
+          debugRate));
     }
   }
 

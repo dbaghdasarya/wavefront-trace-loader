@@ -17,7 +17,7 @@ import java.io.IOException;
  * @author Sirak Ghazaryan (sghazaryan@vmware.com)
  */
 public class WavefrontTraceLoader extends AbstractTraceLoader {
-  private final SpanGenerator spanGenerator = new SpanGenerator();
+  private SpanGenerator spanGenerator;
   private SpanSender spanSender;
   private SpanQueue spanQueue;
 
@@ -50,8 +50,13 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
   }
 
   @Override
+  void setupGenerators() {
+    this.spanGenerator = new SpanGenerator(generatorConfig);
+  }
+
+  @Override
   void generateSpans() {
-    spanQueue = spanGenerator.generate(generatorConfig);
+    spanQueue = spanGenerator.generate();
   }
 
   @Override

@@ -3,6 +3,7 @@
   "duration": "2m",
   "traceTypesCount": 0,
   "errorRate": 20,
+  "debugRate": 30,
   "totalTraceCount": 0,
   "traceTypePatterns": [
     {
