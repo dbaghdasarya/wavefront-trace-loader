@@ -17,12 +17,6 @@ public class SpanQueue {
   private final AtomicInteger traceCount = new AtomicInteger(0);
   private final AtomicInteger spanCount = new AtomicInteger(0);
 
-  public void addLast(Span e) {
-    synchronized (spanQueue) {
-      spanQueue.addLast(e);
-    }
-  }
-
   public void addTrace(List<List<Span>> trace) {
     if (trace == null) {
       return;
@@ -46,11 +40,9 @@ public class SpanQueue {
   }
 
   public Span pollFirst() {
-    Span span;
     synchronized (spanQueue) {
-      span = spanQueue.pollFirst();
+      return spanQueue.pollFirst();
     }
-    return span;
   }
 
   /**
@@ -59,19 +51,16 @@ public class SpanQueue {
    * @return Generated spans
    */
   public List<Span> getReadySpans() {
-    List<Span> spans;
     synchronized (spanQueue) {
-      spans = List.copyOf(spanQueue);
+      List<Span> spans = List.copyOf(spanQueue);
       spanQueue.clear();
+      return spans;
     }
-    return spans;
   }
 
   public int size() {
-    int size;
     synchronized (spanQueue) {
-      size = spanQueue.size();
+      return spanQueue.size();
     }
-    return size;
   }
 }

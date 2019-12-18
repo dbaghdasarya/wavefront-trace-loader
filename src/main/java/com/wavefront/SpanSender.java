@@ -1,5 +1,6 @@
 package com.wavefront;
 
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 
 import com.wavefront.sdk.common.WavefrontSender;
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 /**
@@ -19,11 +21,11 @@ import java.util.logging.Logger;
  */
 public class SpanSender implements Runnable {
   private static final Logger LOGGER = Logger.getLogger(SpanSender.class.getCanonicalName());
-  private WavefrontSender spanSender;
+  private final WavefrontSender spanSender;
   private final Integer rate;
   private final String outputFile;
   private final SpanQueue spanQueue;
-  private boolean stopSending = false;
+  private final AtomicBoolean stopSending = new AtomicBoolean(false);
 
 
   public SpanSender(WavefrontSender wavefrontSender, Integer rate, SpanQueue spanQueue) {
@@ -41,6 +43,11 @@ public class SpanSender implements Runnable {
   }
 
   public void saveToFile() throws Exception {
+    if (Strings.isNullOrEmpty(outputFile)) {
+      LOGGER.severe("For saving spans to file, the output file name must be provided!");
+      return;
+    }
+
     final File file = new File(outputFile);
     final FileWriter fileWriter = new FileWriter(file);
     int spansCount = spanQueue.size();
@@ -54,15 +61,24 @@ public class SpanSender implements Runnable {
   @Override
   public void run() {
     LOGGER.info("Sending spans ...");
+    if (rate == null || spanSender == null) {
+      LOGGER.severe("SpanSender doesn't completely initialized!");
+      return;
+    }
 
-    long sleepMillis = Math.max(10, 1000 / rate);
+    long start = System.currentTimeMillis();
+    long current;
+    int mustBeSentSpans;
+    int sentSpans = 0;
     List<Span> spansToSend = new LinkedList<>();
     try {
-      Thread.sleep(sleepMillis / 4);
-      while (!stopSending) {
+      while (!stopSending.get() || spansToSend.size() > 0) {
         spansToSend.addAll(spanQueue.getReadySpans());
+        current = System.currentTimeMillis();
+        mustBeSentSpans = (int) (rate * (current - start) / 1000);
+
         ListIterator<Span> iter = spansToSend.listIterator();
-        while (iter.hasNext()) {
+        while (iter.hasNext() && sentSpans < mustBeSentSpans) {
           Span tempSpan = iter.next();
           if (tempSpan.getStartMillis() < System.currentTimeMillis()) {
             try {
@@ -77,14 +93,15 @@ public class SpanSender implements Runnable {
                   null,
                   tempSpan.getTags(),
                   null);
+              sentSpans++;
+              iter.remove();
             } catch (IOException e) {
               LOGGER.severe(Throwables.getStackTraceAsString(e));
             }
-            iter.remove();
           }
         }
 
-        Thread.sleep(sleepMillis);
+        Thread.sleep(5);
       }
     } catch (InterruptedException e) {
       LOGGER.severe(Throwables.getStackTraceAsString(e));
@@ -101,6 +118,6 @@ public class SpanSender implements Runnable {
    * Thread.join(), for waiting while sender completes its job.
    */
   public void stopSending() {
-    stopSending = true;
+    stopSending.set(true);
   }
 }

@@ -363,7 +363,6 @@ public class SpanGenerator implements Runnable {
     long current;
     int mustBeGeneratedSpans;
     int generatedSpans = 0;
-    long sleepMillis = Math.max(10, 1000 / generatorConfig.getSpansRate());
     while (whileCheck.apply(spanQueue)) {
       current = System.currentTimeMillis();
       mustBeGeneratedSpans = (int) (rate * (current - start) / 1000);
@@ -380,7 +379,7 @@ public class SpanGenerator implements Runnable {
       }
 
       try {
-        Thread.sleep(sleepMillis);
+        Thread.sleep(5);
       } catch (InterruptedException e) {
         LOGGER.severe(Throwables.getStackTraceAsString(e));
       }
