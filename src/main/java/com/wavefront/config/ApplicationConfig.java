@@ -28,12 +28,12 @@ public class ApplicationConfig {
    * Port used for distribution.
    */
   @JsonProperty
-  private Integer distributionPort = 30000;
+  private Integer distributionPort = 40000;
   /**
    * Port used for tracing.
    */
   @JsonProperty
-  private Integer tracingPort = 40000;
+  private Integer tracingPort = 30000;
   /**
    * Server URL used for direct ingestion.
    */

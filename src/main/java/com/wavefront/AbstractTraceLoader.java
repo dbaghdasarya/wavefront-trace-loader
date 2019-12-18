@@ -1,6 +1,7 @@
 package com.wavefront;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 
 import com.beust.jcommander.JCommander;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,7 +23,12 @@ import java.util.stream.Collectors;
  */
 public abstract class AbstractTraceLoader {
   protected static final Logger LOGGER = Logger.getLogger("traceloader");
-  protected GeneratorConfig generatorConfig = new GeneratorConfig();
+  protected final GeneratorConfig generatorConfig = new GeneratorConfig();
+  protected final SpanQueue spanQueue = new SpanQueue();
+  protected ApplicationConfig applicationConfig;
+  protected SpanGenerator spanGenerator;
+  protected SpanSender spanSender;
+
 
   private void parseArguments(String[] args) {
     LOGGER.info("Arguments: " + Arrays.stream(args).
@@ -50,14 +56,34 @@ public abstract class AbstractTraceLoader {
    */
   public void start(String[] args) throws IOException {
     try {
-      // Parse commandline arguments
+      // Parse commandline arguments.
       parseArguments(args);
 
+      // Keep config files loading sequence.
       loadGeneratorConfigurationFile();
+      loadApplicationConfig();
+
       setupSenders();
       setupGenerators();
-      generateSpans();
-      sendSpans();
+
+      if (Strings.isNullOrEmpty(applicationConfig.getOutputFile())) {
+        // Send spans to host.
+        Thread generator = new Thread(spanGenerator);
+        Thread sender = new Thread(spanSender);
+        generator.start();
+        sender.start();
+        // Waiting while generation completes.
+        generator.join();
+        // Inform sender that generation completes.
+        spanSender.stopSending();
+        // Wait while sender devastates the span queue.
+        sender.join();
+      } else {
+        // Saving generated spans to file.
+        generateSpans();
+        saveSpansToFile();
+      }
+
       dumpStatistics();
     } catch (Throwable t) {
       LOGGER.log(Level.SEVERE, "Aborting start-up", t);
@@ -79,13 +105,15 @@ public abstract class AbstractTraceLoader {
     }
   }
 
-  protected ApplicationConfig loadApplicationConfig() throws IOException {
+  protected void loadApplicationConfig() throws Exception {
     try {
       if (generatorConfig.getAppConfigFile() == null) {
-        return null;
+        throw new Exception("Application config can be loaded only after proper loading of " +
+            "generator file!");
       }
       ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-      return objectMapper.readValue(new File(generatorConfig.getAppConfigFile()), ApplicationConfig.class);
+      applicationConfig = objectMapper.readValue(new File(generatorConfig.getAppConfigFile()),
+          ApplicationConfig.class);
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "Could not load application config", e);
       throw e;
@@ -96,7 +124,7 @@ public abstract class AbstractTraceLoader {
 
   abstract void generateSpans();
 
-  abstract void sendSpans() throws Exception;
+  abstract void saveSpansToFile() throws Exception;
 
   abstract void dumpStatistics() throws Exception;
 

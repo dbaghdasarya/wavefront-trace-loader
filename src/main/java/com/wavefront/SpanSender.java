@@ -1,12 +1,16 @@
 package com.wavefront;
 
-import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 
+import com.wavefront.helpers.Defaults;
 import com.wavefront.sdk.common.WavefrontSender;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.util.concurrent.TimeUnit;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.logging.Logger;
 
 /**
@@ -14,63 +18,30 @@ import java.util.logging.Logger;
  *
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
-public class SpanSender {
+public class SpanSender implements Runnable {
   private static final Logger LOGGER = Logger.getLogger(SpanSender.class.getCanonicalName());
   private WavefrontSender spanSender;
   private final Integer rate;
   private final String outputFile;
+  private final SpanQueue spanQueue;
+  private boolean stopSending = false;
 
 
-  public SpanSender(WavefrontSender wavefrontSender, Integer rate) {
+  public SpanSender(WavefrontSender wavefrontSender, Integer rate, SpanQueue spanQueue) {
     this.spanSender = wavefrontSender;
     this.rate = rate;
+    this.spanQueue = spanQueue;
     this.outputFile = null;
   }
 
-  public SpanSender(String outputFile) {
+  public SpanSender(String outputFile, SpanQueue spanQueue) {
     this.spanSender = null;
     this.rate = null;
+    this.spanQueue = spanQueue;
     this.outputFile = outputFile;
   }
 
-  public void startSending(SpanQueue spanQueue) throws Exception {
-    LOGGER.info("Sending spans ...");
-    if (!Strings.isNullOrEmpty(outputFile)) {
-      saveToFile(spanQueue);
-      return;
-    }
-
-    long start = System.currentTimeMillis();
-    long current;
-    int sent = 0;
-    int mustBeSent;
-    Span tempSpan;
-    while (spanQueue.size() > 0) {
-      current = System.currentTimeMillis();
-      mustBeSent = (int) (rate * (current - start) / 1000);
-      while (sent < mustBeSent && (tempSpan = spanQueue.pollFirst()) != null) {
-        spanSender.sendSpan(
-            tempSpan.getName(),
-            tempSpan.getStartMillis(),
-            tempSpan.getDuration(),
-            tempSpan.getSource(),
-            tempSpan.getTraceUUID(),
-            tempSpan.getSpanUUID(),
-            tempSpan.getParents(),
-            null,
-            tempSpan.getTags(),
-            null);
-        sent++;
-      }
-
-      TimeUnit.MILLISECONDS.sleep(50);
-    }
-
-    spanSender.close();
-    LOGGER.info("Sending complete!");
-  }
-
-  private void saveToFile(SpanQueue spanQueue) throws Exception {
+  public void saveToFile() throws Exception {
     final File file = new File(outputFile);
     final FileWriter fileWriter = new FileWriter(file);
     int spansCount = spanQueue.size();
@@ -79,5 +50,58 @@ public class SpanSender {
       fileWriter.write(tempSpan.toString());
     }
     LOGGER.info(spansCount + " spans saved to file  " + file.getAbsolutePath());
+  }
+
+  @Override
+  public void run() {
+    LOGGER.info("Sending spans ...");
+
+    long sleepMillis = Math.max(Defaults.MIN_SLEEP_MILLIS, 1000 / rate);
+    List<Span> spansToSend = new LinkedList<>();
+    while (!stopSending) {
+      spansToSend.addAll(spanQueue.getReadySpans());
+      ListIterator<Span> iter = spansToSend.listIterator();
+      while (iter.hasNext()) {
+        Span tempSpan = iter.next();
+        if (tempSpan.getStartMillis() < System.currentTimeMillis()) {
+          try {
+            spanSender.sendSpan(
+                tempSpan.getName(),
+                tempSpan.getStartMillis(),
+                tempSpan.getDuration(),
+                tempSpan.getSource(),
+                tempSpan.getTraceUUID(),
+                tempSpan.getSpanUUID(),
+                tempSpan.getParents(),
+                null,
+                tempSpan.getTags(),
+                null);
+          } catch (IOException e) {
+            LOGGER.severe(Throwables.getStackTraceAsString(e));
+          }
+          iter.remove();
+        }
+      }
+
+      try {
+        Thread.sleep(sleepMillis);
+      } catch (InterruptedException e) {
+        LOGGER.severe(Throwables.getStackTraceAsString(e));
+      }
+    }
+
+    try {
+      spanSender.close();
+    } catch (IOException e) {
+      LOGGER.severe(Throwables.getStackTraceAsString(e));
+    }
+  }
+
+  /**
+   * This method only inform the sender that generation is complete. User still have to call
+   * Thread.join(), for waiting while sender completes its job.
+   */
+  public void stopSending() {
+    stopSending = true;
   }
 }

@@ -1,5 +1,6 @@
 package com.wavefront;
 
+import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -7,6 +8,7 @@ import com.google.common.collect.Lists;
 
 import com.wavefront.TraceTypePattern.Distribution;
 import com.wavefront.config.GeneratorConfig;
+import com.wavefront.helpers.Defaults;
 import com.wavefront.helpers.Statistics;
 import com.wavefront.sdk.common.Pair;
 
@@ -26,12 +28,13 @@ import javax.annotation.Nonnull;
  *
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
-public class SpanGenerator {
+public class SpanGenerator implements Runnable {
   private static final Logger LOGGER = Logger.getLogger(SpanSender.class.getCanonicalName());
   private static final Random RANDOM = new Random(System.currentTimeMillis());
   private static final int HUNDRED_PERCENT = 100;
   private final Statistics statistics = new Statistics();
   private final GeneratorConfig generatorConfig;
+  private final SpanQueue spanQueue;
 
   private final LoadingCache<TraceTypePattern, List<Integer>> spansDistributionsPercentages =
       CacheBuilder.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).
@@ -62,13 +65,12 @@ public class SpanGenerator {
           });
   private List<Integer> tracePercentages;
 
-  public SpanGenerator(GeneratorConfig config) {
+  public SpanGenerator(GeneratorConfig config, SpanQueue spanQueue) {
     this.generatorConfig = config;
+    this.spanQueue = spanQueue;
   }
 
-  public SpanQueue generate() {
-    SpanQueue spanQueue = new SpanQueue();
-
+  public void generate() {
     // normalize percentages of distribution to fix wrong inputs
     normalizeDistributions(generatorConfig.getTraceTypePatterns());
     tracePercentages = generatorConfig.getTraceTypePatterns().stream().
@@ -79,11 +81,11 @@ public class SpanGenerator {
     int spansCount;
     if (traceCount > 0) {
       LOGGER.info("Should be generated " + traceCount + " traces.");
-      whileCheck = queue -> queue.getTraceCount() < traceCount;
+      whileCheck = queue -> queue.getEnteredTraceCount() < traceCount;
     } else {
       spansCount = generatorConfig.getSpansRate() * (int) generatorConfig.getDuration().toSeconds();
       LOGGER.info("Should be generated " + spansCount + " spans.");
-      whileCheck = queue -> queue.size() < spansCount;
+      whileCheck = queue -> queue.getEnteredTraceCount() < spansCount;
     }
 
     while (whileCheck.apply(spanQueue)) {
@@ -93,7 +95,6 @@ public class SpanGenerator {
       spanQueue.addTrace(generateTrace(traceTypePattern));
     }
     LOGGER.info("Generation complete!");
-    return spanQueue;
   }
 
   /**
@@ -336,5 +337,55 @@ public class SpanGenerator {
     }
     LOGGER.warning("Next item index doesn't matched. Return first item index.");
     return 0;
+  }
+
+  @Override
+  public void run() {
+    LOGGER.info("Generating spans ...");
+    // normalize percentages of distribution to fix wrong inputs
+    normalizeDistributions(generatorConfig.getTraceTypePatterns());
+    tracePercentages = generatorConfig.getTraceTypePatterns().stream().
+        map(traceTypePattern -> traceTypePattern.tracePercentage).collect(Collectors.toList());
+
+    Function<SpanQueue, Boolean> whileCheck;
+    int traceCount = generatorConfig.getTotalTraceCount();
+    int spansCount;
+    int rate = generatorConfig.getSpansRate();
+    if (traceCount > 0) {
+      LOGGER.info("Should be generated " + traceCount + " traces.");
+      whileCheck = queue -> queue.getEnteredTraceCount() < traceCount;
+    } else {
+      spansCount = rate * (int) generatorConfig.getDuration().toSeconds();
+      LOGGER.info("Should be generated " + spansCount + " spans.");
+      whileCheck = queue -> queue.getEnteredSpanCount() < spansCount;
+    }
+
+    long start = System.currentTimeMillis();
+    long current;
+    int mustBeGeneratedSpans;
+    int generatedSpans = 0;
+    long sleepMillis = Math.max(Defaults.MIN_SLEEP_MILLIS, 1000 / generatorConfig.getSpansRate());
+    while (whileCheck.apply(spanQueue)) {
+      current = System.currentTimeMillis();
+      mustBeGeneratedSpans = (int) (rate * (current - start) / 1000);
+
+      while (generatedSpans < mustBeGeneratedSpans) {
+        // get next trace type to be generated
+        TraceTypePattern traceTypePattern = getNextTraceType(generatorConfig.getTraceTypePatterns());
+        List<List<Span>> trace = generateTrace(traceTypePattern);
+        spanQueue.addTrace(trace);
+        for (List<Span> spanList :
+            trace) {
+          generatedSpans += spanList.size();
+        }
+      }
+
+      try {
+        Thread.sleep(sleepMillis);
+      } catch (InterruptedException e) {
+        LOGGER.severe(Throwables.getStackTraceAsString(e));
+      }
+    }
+    LOGGER.info("Generation complete!");
   }
 }
