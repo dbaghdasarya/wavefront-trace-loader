@@ -8,7 +8,6 @@ import com.google.common.collect.Lists;
 
 import com.wavefront.TraceTypePattern.Distribution;
 import com.wavefront.config.GeneratorConfig;
-import com.wavefront.helpers.Defaults;
 import com.wavefront.helpers.Statistics;
 import com.wavefront.sdk.common.Pair;
 
@@ -364,7 +363,7 @@ public class SpanGenerator implements Runnable {
     long current;
     int mustBeGeneratedSpans;
     int generatedSpans = 0;
-    long sleepMillis = Math.max(Defaults.MIN_SLEEP_MILLIS, 1000 / generatorConfig.getSpansRate());
+    long sleepMillis = Math.max(10, 1000 / generatorConfig.getSpansRate());
     while (whileCheck.apply(spanQueue)) {
       current = System.currentTimeMillis();
       mustBeGeneratedSpans = (int) (rate * (current - start) / 1000);

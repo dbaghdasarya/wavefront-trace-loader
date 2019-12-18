@@ -2,7 +2,6 @@ package com.wavefront;
 
 import com.google.common.base.Throwables;
 
-import com.wavefront.helpers.Defaults;
 import com.wavefront.sdk.common.WavefrontSender;
 
 import java.io.File;
@@ -56,40 +55,40 @@ public class SpanSender implements Runnable {
   public void run() {
     LOGGER.info("Sending spans ...");
 
-    long sleepMillis = Math.max(Defaults.MIN_SLEEP_MILLIS, 1000 / rate);
+    long sleepMillis = Math.max(10, 1000 / rate);
     List<Span> spansToSend = new LinkedList<>();
-    while (!stopSending) {
-      spansToSend.addAll(spanQueue.getReadySpans());
-      ListIterator<Span> iter = spansToSend.listIterator();
-      while (iter.hasNext()) {
-        Span tempSpan = iter.next();
-        if (tempSpan.getStartMillis() < System.currentTimeMillis()) {
-          try {
-            spanSender.sendSpan(
-                tempSpan.getName(),
-                tempSpan.getStartMillis(),
-                tempSpan.getDuration(),
-                tempSpan.getSource(),
-                tempSpan.getTraceUUID(),
-                tempSpan.getSpanUUID(),
-                tempSpan.getParents(),
-                null,
-                tempSpan.getTags(),
-                null);
-          } catch (IOException e) {
-            LOGGER.severe(Throwables.getStackTraceAsString(e));
+    try {
+      Thread.sleep(sleepMillis / 4);
+      while (!stopSending) {
+        spansToSend.addAll(spanQueue.getReadySpans());
+        ListIterator<Span> iter = spansToSend.listIterator();
+        while (iter.hasNext()) {
+          Span tempSpan = iter.next();
+          if (tempSpan.getStartMillis() < System.currentTimeMillis()) {
+            try {
+              spanSender.sendSpan(
+                  tempSpan.getName(),
+                  tempSpan.getStartMillis(),
+                  tempSpan.getDuration(),
+                  tempSpan.getSource(),
+                  tempSpan.getTraceUUID(),
+                  tempSpan.getSpanUUID(),
+                  tempSpan.getParents(),
+                  null,
+                  tempSpan.getTags(),
+                  null);
+            } catch (IOException e) {
+              LOGGER.severe(Throwables.getStackTraceAsString(e));
+            }
+            iter.remove();
           }
-          iter.remove();
         }
-      }
 
-      try {
         Thread.sleep(sleepMillis);
-      } catch (InterruptedException e) {
-        LOGGER.severe(Throwables.getStackTraceAsString(e));
       }
+    } catch (InterruptedException e) {
+      LOGGER.severe(Throwables.getStackTraceAsString(e));
     }
-
     try {
       spanSender.close();
     } catch (IOException e) {

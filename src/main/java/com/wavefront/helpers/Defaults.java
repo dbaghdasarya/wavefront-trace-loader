@@ -30,9 +30,4 @@ public class Defaults {
   public static final int DEFAULT_NESTING_LEVEL = RANDOM.nextInt(6) + 4;
 
   public static final String DEFAULT_TYPE_NAME_PREFIX = "traceType_";
-
-  /**
-   * Timeout for sleeping of the generation and the sending threads
-   */
-  public static final long MIN_SLEEP_MILLIS = 10;
 }

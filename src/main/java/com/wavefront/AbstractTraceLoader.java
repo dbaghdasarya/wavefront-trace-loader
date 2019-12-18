@@ -1,7 +1,6 @@
 package com.wavefront;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 
 import com.beust.jcommander.JCommander;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,11 +23,7 @@ import java.util.stream.Collectors;
 public abstract class AbstractTraceLoader {
   protected static final Logger LOGGER = Logger.getLogger("traceloader");
   protected final GeneratorConfig generatorConfig = new GeneratorConfig();
-  protected final SpanQueue spanQueue = new SpanQueue();
   protected ApplicationConfig applicationConfig;
-  protected SpanGenerator spanGenerator;
-  protected SpanSender spanSender;
-
 
   private void parseArguments(String[] args) {
     LOGGER.info("Arguments: " + Arrays.stream(args).
@@ -66,23 +61,7 @@ public abstract class AbstractTraceLoader {
       setupSenders();
       setupGenerators();
 
-      if (Strings.isNullOrEmpty(applicationConfig.getOutputFile())) {
-        // Send spans to host.
-        Thread generator = new Thread(spanGenerator);
-        Thread sender = new Thread(spanSender);
-        generator.start();
-        sender.start();
-        // Waiting while generation completes.
-        generator.join();
-        // Inform sender that generation completes.
-        spanSender.stopSending();
-        // Wait while sender devastates the span queue.
-        sender.join();
-      } else {
-        // Saving generated spans to file.
-        generateSpans();
-        saveSpansToFile();
-      }
+      startLoading();
 
       dumpStatistics();
     } catch (Throwable t) {
@@ -122,9 +101,7 @@ public abstract class AbstractTraceLoader {
 
   abstract void setupSenders() throws IOException;
 
-  abstract void generateSpans();
-
-  abstract void saveSpansToFile() throws Exception;
+  abstract void startLoading() throws Exception;
 
   abstract void dumpStatistics() throws Exception;
 

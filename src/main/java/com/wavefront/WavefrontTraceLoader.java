@@ -16,6 +16,9 @@ import java.io.IOException;
  * @author Sirak Ghazaryan (sghazaryan@vmware.com)
  */
 public class WavefrontTraceLoader extends AbstractTraceLoader {
+  protected final SpanQueue spanQueue = new SpanQueue();
+  protected SpanGenerator spanGenerator;
+  protected SpanSender spanSender;
 
   public static void main(String[] args) throws IOException {
     new WavefrontTraceLoader().start(args);
@@ -46,18 +49,20 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
   }
 
   @Override
+  void startLoading() throws Exception {
+    if (Strings.isNullOrEmpty(applicationConfig.getOutputFile())) {
+      // Generate and send spans at the same time
+      realTimeSending();
+    } else {
+      // Saving generated spans to file.
+      generateSpans();
+      saveSpansToFile();
+    }
+  }
+
+  @Override
   void setupGenerators() {
     this.spanGenerator = new SpanGenerator(generatorConfig, spanQueue);
-  }
-
-  @Override
-  void generateSpans() {
-    spanGenerator.generate();
-  }
-
-  @Override
-  void saveSpansToFile() throws Exception {
-    spanSender.saveToFile();
   }
 
   @Override
@@ -69,5 +74,27 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
     } else {
       System.out.println(spanGenerator.getStatistics());
     }
+  }
+
+  void realTimeSending() throws InterruptedException {
+    // Send spans to host.
+    Thread generator = new Thread(spanGenerator);
+    Thread sender = new Thread(spanSender);
+    generator.start();
+    sender.start();
+    // Waiting while generation completes.
+    generator.join();
+    // Inform sender that generation completes.
+    spanSender.stopSending();
+    // Wait while sender devastates the span queue.
+    sender.join();
+  }
+
+  void generateSpans() {
+    spanGenerator.generate();
+  }
+
+  void saveSpansToFile() throws Exception {
+    spanSender.saveToFile();
   }
 }
