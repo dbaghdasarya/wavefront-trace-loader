@@ -84,7 +84,7 @@ public class SpanGenerator implements Runnable {
     } else {
       spansCount = generatorConfig.getSpansRate() * (int) generatorConfig.getDuration().toSeconds();
       LOGGER.info("Should be generated " + spansCount + " spans.");
-      whileCheck = queue -> queue.getEnteredTraceCount() < spansCount;
+      whileCheck = queue -> queue.getEnteredSpanCount() < spansCount;
     }
 
     while (whileCheck.apply(spanQueue)) {
