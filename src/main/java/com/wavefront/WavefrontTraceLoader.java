@@ -16,9 +16,9 @@ import java.io.IOException;
  * @author Sirak Ghazaryan (sghazaryan@vmware.com)
  */
 public class WavefrontTraceLoader extends AbstractTraceLoader {
-  protected final SpanQueue spanQueue = new SpanQueue();
-  protected SpanGenerator spanGenerator;
-  protected SpanSender spanSender;
+  private final SpanQueue spanQueue = new SpanQueue();
+  private SpanGenerator spanGenerator;
+  private SpanSender spanSender;
 
   public static void main(String[] args) throws IOException {
     new WavefrontTraceLoader().start(args);
@@ -55,8 +55,8 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
       realTimeSending();
     } else {
       // Saving generated spans to file.
-      generateSpans();
-      saveSpansToFile();
+      spanGenerator.generateForFile();
+      spanSender.saveToFile();
     }
   }
 
@@ -88,13 +88,5 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
     spanSender.stopSending();
     // Wait while sender devastates the span queue.
     sender.join();
-  }
-
-  void generateSpans() {
-    spanGenerator.generate();
-  }
-
-  void saveSpansToFile() throws Exception {
-    spanSender.saveToFile();
   }
 }

@@ -69,24 +69,8 @@ public class SpanGenerator implements Runnable {
     this.spanQueue = spanQueue;
   }
 
-  public void generate() {
-    // normalize percentages of distribution to fix wrong inputs
-    normalizeDistributions(generatorConfig.getTraceTypePatterns());
-    tracePercentages = generatorConfig.getTraceTypePatterns().stream().
-        map(traceTypePattern -> traceTypePattern.tracePercentage).collect(Collectors.toList());
-
-    Function<SpanQueue, Boolean> whileCheck;
-    int traceCount = generatorConfig.getTotalTraceCount();
-    int spansCount;
-    if (traceCount > 0) {
-      LOGGER.info("Should be generated " + traceCount + " traces.");
-      whileCheck = queue -> queue.getEnteredTraceCount() < traceCount;
-    } else {
-      spansCount = generatorConfig.getSpansRate() * (int) generatorConfig.getDuration().toSeconds();
-      LOGGER.info("Should be generated " + spansCount + " spans.");
-      whileCheck = queue -> queue.getEnteredSpanCount() < spansCount;
-    }
-
+  public void generateForFile() {
+    Function<SpanQueue, Boolean> whileCheck = getWhileCheck();
     while (whileCheck.apply(spanQueue)) {
       // get next trace type to be generated
       TraceTypePattern traceTypePattern = getNextTraceType(generatorConfig.getTraceTypePatterns());
@@ -341,28 +325,13 @@ public class SpanGenerator implements Runnable {
   @Override
   public void run() {
     LOGGER.info("Generating spans ...");
-    // normalize percentages of distribution to fix wrong inputs
-    normalizeDistributions(generatorConfig.getTraceTypePatterns());
-    tracePercentages = generatorConfig.getTraceTypePatterns().stream().
-        map(traceTypePattern -> traceTypePattern.tracePercentage).collect(Collectors.toList());
 
-    Function<SpanQueue, Boolean> whileCheck;
-    int traceCount = generatorConfig.getTotalTraceCount();
-    int spansCount;
-    int rate = generatorConfig.getSpansRate();
-    if (traceCount > 0) {
-      LOGGER.info("Should be generated " + traceCount + " traces.");
-      whileCheck = queue -> queue.getEnteredTraceCount() < traceCount;
-    } else {
-      spansCount = rate * (int) generatorConfig.getDuration().toSeconds();
-      LOGGER.info("Should be generated " + spansCount + " spans.");
-      whileCheck = queue -> queue.getEnteredSpanCount() < spansCount;
-    }
-
+    Function<SpanQueue, Boolean> whileCheck = getWhileCheck();
     long start = System.currentTimeMillis();
     long current;
     int mustBeGeneratedSpans;
     int generatedSpans = 0;
+    int rate = generatorConfig.getSpansRate();
     while (whileCheck.apply(spanQueue)) {
       current = System.currentTimeMillis();
       mustBeGeneratedSpans = (int) (rate * (current - start) / 1000);
@@ -372,8 +341,7 @@ public class SpanGenerator implements Runnable {
         TraceTypePattern traceTypePattern = getNextTraceType(generatorConfig.getTraceTypePatterns());
         List<List<Span>> trace = generateTrace(traceTypePattern);
         spanQueue.addTrace(trace);
-        for (List<Span> spanList :
-            trace) {
+        for (List<Span> spanList : trace) {
           generatedSpans += spanList.size();
         }
       }
@@ -385,5 +353,26 @@ public class SpanGenerator implements Runnable {
       }
     }
     LOGGER.info("Generation complete!");
+  }
+
+  private Function<SpanQueue, Boolean> getWhileCheck() {
+    // normalize percentages of distribution to fix wrong inputs
+    normalizeDistributions(generatorConfig.getTraceTypePatterns());
+    tracePercentages = generatorConfig.getTraceTypePatterns().stream().
+        map(traceTypePattern -> traceTypePattern.tracePercentage).collect(Collectors.toList());
+
+    Function<SpanQueue, Boolean> whileCheck;
+    int traceCount = generatorConfig.getTotalTraceCount();
+    int spansCount;
+    if (traceCount > 0) {
+      LOGGER.info("Should be generated " + traceCount + " traces.");
+      whileCheck = queue -> queue.getEnteredTraceCount() < traceCount;
+    } else {
+      spansCount = generatorConfig.getSpansRate() * (int) generatorConfig.getDuration().toSeconds();
+      LOGGER.info("Should be generated " + spansCount + " spans.");
+      whileCheck = queue -> queue.getEnteredSpanCount() < spansCount;
+    }
+
+    return whileCheck;
   }
 }
