@@ -82,6 +82,7 @@ public class SpanSender implements Runnable {
           Span tempSpan = iter.next();
           if (tempSpan.getStartMillis() < System.currentTimeMillis()) {
             try {
+              Thread.sleep(1);
               spanSender.sendSpan(
                   tempSpan.getName(),
                   tempSpan.getStartMillis(),
@@ -100,8 +101,6 @@ public class SpanSender implements Runnable {
             }
           }
         }
-
-        Thread.sleep(5);
       }
     } catch (InterruptedException e) {
       LOGGER.severe(Throwables.getStackTraceAsString(e));
