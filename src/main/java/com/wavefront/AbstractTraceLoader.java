@@ -22,7 +22,8 @@ import java.util.stream.Collectors;
  */
 public abstract class AbstractTraceLoader {
   protected static final Logger LOGGER = Logger.getLogger("traceloader");
-  protected GeneratorConfig generatorConfig = new GeneratorConfig();
+  protected final GeneratorConfig generatorConfig = new GeneratorConfig();
+  protected ApplicationConfig applicationConfig;
 
   private void parseArguments(String[] args) {
     LOGGER.info("Arguments: " + Arrays.stream(args).
@@ -50,14 +51,18 @@ public abstract class AbstractTraceLoader {
    */
   public void start(String[] args) throws IOException {
     try {
-      // Parse commandline arguments
+      // Parse commandline arguments.
       parseArguments(args);
 
+      // Keep config files loading sequence.
       loadGeneratorConfigurationFile();
+      loadApplicationConfig();
+
       setupSenders();
       setupGenerators();
-      generateSpans();
-      sendSpans();
+
+      startLoading();
+
       dumpStatistics();
     } catch (Throwable t) {
       LOGGER.log(Level.SEVERE, "Aborting start-up", t);
@@ -79,13 +84,15 @@ public abstract class AbstractTraceLoader {
     }
   }
 
-  protected ApplicationConfig loadApplicationConfig() throws IOException {
+  protected void loadApplicationConfig() throws Exception {
     try {
       if (generatorConfig.getAppConfigFile() == null) {
-        return null;
+        throw new Exception("Application config can be loaded only after proper loading of " +
+            "generator file!");
       }
       ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-      return objectMapper.readValue(new File(generatorConfig.getAppConfigFile()), ApplicationConfig.class);
+      applicationConfig = objectMapper.readValue(new File(generatorConfig.getAppConfigFile()),
+          ApplicationConfig.class);
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "Could not load application config", e);
       throw e;
@@ -94,9 +101,7 @@ public abstract class AbstractTraceLoader {
 
   abstract void setupSenders() throws IOException;
 
-  abstract void generateSpans();
-
-  abstract void sendSpans() throws Exception;
+  abstract void startLoading() throws Exception;
 
   abstract void dumpStatistics() throws Exception;
 

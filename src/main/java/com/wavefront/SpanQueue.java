@@ -2,44 +2,65 @@ package com.wavefront;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.annotation.concurrent.ThreadSafe;
 
 /**
- * TODO
+ * A thread-safe span queue where Generators add traces and from which Senders pick them up.
  *
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
+@ThreadSafe
 public class SpanQueue {
-  private LinkedList<Span> spanQueue = new LinkedList<>();
-  private int traceCount = 0;
-
-  public void addLast(Span e) {
-    spanQueue.addLast(e);
-  }
+  private final LinkedList<Span> spanQueue = new LinkedList<>();
+  private final AtomicInteger traceCount = new AtomicInteger(0);
+  private final AtomicInteger spanCount = new AtomicInteger(0);
 
   public void addTrace(List<List<Span>> trace) {
     if (trace == null) {
       return;
     }
 
-    trace.forEach(spans -> {
-      spanQueue.addAll(spans);
-    });
-    traceCount++;
+    synchronized (spanQueue) {
+      trace.forEach(spans -> {
+        spanQueue.addAll(spans);
+        spanCount.addAndGet(spans.size());
+      });
+    }
+    traceCount.addAndGet(1);
   }
 
-  public int getTraceCount() {
-    return traceCount;
+  public int getEnteredTraceCount() {
+    return traceCount.get();
+  }
+
+  public int getEnteredSpanCount() {
+    return spanCount.get();
   }
 
   public Span pollFirst() {
-    return spanQueue.pollFirst();
+    synchronized (spanQueue) {
+      return spanQueue.pollFirst();
+    }
   }
 
-  public void clear() {
-    spanQueue.clear();
+  /**
+   * Gets all generated spans and clear the span queue
+   *
+   * @return Generated spans
+   */
+  public List<Span> getReadySpans() {
+    synchronized (spanQueue) {
+      List<Span> spans = List.copyOf(spanQueue);
+      spanQueue.clear();
+      return spans;
+    }
   }
 
   public int size() {
-    return spanQueue.size();
+    synchronized (spanQueue) {
+      return spanQueue.size();
+    }
   }
 }

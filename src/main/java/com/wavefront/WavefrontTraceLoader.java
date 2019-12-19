@@ -2,7 +2,6 @@ package com.wavefront;
 
 import com.google.common.base.Strings;
 
-import com.wavefront.config.ApplicationConfig;
 import com.wavefront.sdk.common.WavefrontSender;
 import com.wavefront.sdk.direct.ingestion.WavefrontDirectIngestionClient;
 import com.wavefront.sdk.proxy.WavefrontProxyClient;
@@ -17,9 +16,9 @@ import java.io.IOException;
  * @author Sirak Ghazaryan (sghazaryan@vmware.com)
  */
 public class WavefrontTraceLoader extends AbstractTraceLoader {
+  private final SpanQueue spanQueue = new SpanQueue();
   private SpanGenerator spanGenerator;
   private SpanSender spanSender;
-  private SpanQueue spanQueue;
 
   public static void main(String[] args) throws IOException {
     new WavefrontTraceLoader().start(args);
@@ -27,41 +26,43 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
 
   @Override
   void setupSenders() throws IOException {
-    ApplicationConfig config = loadApplicationConfig();
-    if (config == null) {
+    if (applicationConfig == null) {
       throw new IOException("Application config should contain proxy or direction ingestion info.");
     }
     // TODO do we need additional checks here??
-    if (!Strings.isNullOrEmpty(config.getOutputFile())) {
-      spanSender = new SpanSender(config.getOutputFile());
+    if (!Strings.isNullOrEmpty(applicationConfig.getOutputFile())) {
+      spanSender = new SpanSender(applicationConfig.getOutputFile(), spanQueue);
     } else {
       WavefrontSender wavefrontSender;
-      if (config.getProxyServer() != null) {
-        wavefrontSender = new WavefrontProxyClient.Builder(config.getProxyServer()).
-            metricsPort(config.getMetricsPort()).
-            distributionPort(config.getDistributionPort()).
-            tracingPort(config.getTracingPort()).build();
+      if (applicationConfig.getProxyServer() != null) {
+        wavefrontSender = new WavefrontProxyClient.Builder(applicationConfig.getProxyServer()).
+            metricsPort(applicationConfig.getMetricsPort()).
+            distributionPort(applicationConfig.getDistributionPort()).
+            tracingPort(applicationConfig.getTracingPort()).build();
       } else {
-        wavefrontSender = new WavefrontDirectIngestionClient.Builder(config.getServer(), config.getToken()).build();
+        wavefrontSender = new WavefrontDirectIngestionClient.Builder(applicationConfig.getServer(),
+            applicationConfig.getToken()).build();
       }
 
-      spanSender = new SpanSender(wavefrontSender, generatorConfig.getSpansRate());
+      spanSender = new SpanSender(wavefrontSender, generatorConfig.getSpansRate(), spanQueue);
+    }
+  }
+
+  @Override
+  void startLoading() throws Exception {
+    if (Strings.isNullOrEmpty(applicationConfig.getOutputFile())) {
+      // Generate and send spans at the same time
+      realTimeSending();
+    } else {
+      // Saving generated spans to file.
+      spanGenerator.generateForFile();
+      spanSender.saveToFile();
     }
   }
 
   @Override
   void setupGenerators() {
-    this.spanGenerator = new SpanGenerator(generatorConfig);
-  }
-
-  @Override
-  void generateSpans() {
-    spanQueue = spanGenerator.generate();
-  }
-
-  @Override
-  void sendSpans() throws Exception {
-    spanSender.startSending(spanQueue);
+    this.spanGenerator = new SpanGenerator(generatorConfig, spanQueue);
   }
 
   @Override
@@ -73,5 +74,19 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
     } else {
       System.out.println(spanGenerator.getStatistics());
     }
+  }
+
+  void realTimeSending() throws InterruptedException {
+    // Send spans to host.
+    Thread generator = new Thread(spanGenerator);
+    Thread sender = new Thread(spanSender);
+    generator.start();
+    sender.start();
+    // Waiting while generation completes.
+    generator.join();
+    // Inform sender that generation completes.
+    spanSender.stopSending();
+    // Wait while sender devastates the span queue.
+    sender.join();
   }
 }
