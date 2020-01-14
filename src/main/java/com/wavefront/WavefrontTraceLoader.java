@@ -16,7 +16,7 @@ import java.io.IOException;
  * @author Sirak Ghazaryan (sghazaryan@vmware.com)
  */
 public class WavefrontTraceLoader extends AbstractTraceLoader {
-  private final SpanQueue spanQueue = new SpanQueue();
+  private SpanQueue spanQueue;
   private SpanGenerator spanGenerator;
   private SpanSender spanSender;
 
@@ -29,9 +29,11 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
     if (applicationConfig == null) {
       throw new IOException("Application config should contain proxy or direction ingestion info.");
     }
-    // TODO do we need additional checks here??
-    if (!Strings.isNullOrEmpty(applicationConfig.getOutputFile())) {
-      spanSender = new SpanSender(applicationConfig.getOutputFile(), spanQueue);
+    // Spans or Traces should be exported to file.
+    if (!Strings.isNullOrEmpty(applicationConfig.getSpanOutputFile())
+        || !Strings.isNullOrEmpty(applicationConfig.getTraceOutputFile())) {
+      spanSender = new SpanSender(applicationConfig.getSpanOutputFile(),
+          applicationConfig.getTraceOutputFile(), spanQueue);
     } else {
       WavefrontSender wavefrontSender;
       if (applicationConfig.getProxyServer() != null) {
@@ -49,8 +51,14 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
   }
 
   @Override
+  void applyConfigs() {
+    spanQueue = new SpanQueue(!Strings.isNullOrEmpty(applicationConfig.getTraceOutputFile()));
+  }
+
+  @Override
   void startLoading() throws Exception {
-    if (Strings.isNullOrEmpty(applicationConfig.getOutputFile())) {
+    if (Strings.isNullOrEmpty(applicationConfig.getSpanOutputFile())
+        && Strings.isNullOrEmpty(applicationConfig.getTraceOutputFile())) {
       // Generate and send spans at the same time
       realTimeSending();
     } else {

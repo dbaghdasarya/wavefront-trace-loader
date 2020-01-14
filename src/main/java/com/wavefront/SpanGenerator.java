@@ -4,7 +4,6 @@ import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Lists;
 
 import com.wavefront.TraceTypePattern.Distribution;
 import com.wavefront.config.GeneratorConfig;
@@ -90,7 +89,7 @@ public class SpanGenerator implements Runnable {
   /**
    * Generate trace for a given trace type.
    */
-  private List<List<Span>> generateTrace(@Nonnull TraceTypePattern traceType) {
+  private Trace generateTrace(@Nonnull TraceTypePattern traceType) {
     int levels = traceType.nestingLevel;
     int spanNumbers = getNextSpanDistribution(traceType).getValue() - 1;
     int spanDuration;
@@ -115,14 +114,11 @@ public class SpanGenerator implements Runnable {
     String suffixes = "abcdefghijklmnopqrstuvxyz";
     int sufLen = suffixes.length();
 
-    List<List<Span>> trace = Lists.newArrayListWithExpectedSize(levels);
-    for (int n = 0; n < levels; n++) {
-      trace.add(new LinkedList<>());
-    }
+    Trace trace = new Trace(levels);
 
     // Head span
     UUID traceUUID = UUID.randomUUID();
-    trace.get(0).add(new Span(
+    trace.add(0, new Span(
         traceType.traceTypeName,
         currentTime,
         spanDuration,
@@ -148,7 +144,7 @@ public class SpanGenerator implements Runnable {
             // last span
             spanDuration = lastSpanDuration;
           }
-          trace.get(m).add(new Span(
+          trace.add(m, new Span(
               "name_" + suffixes.charAt(RANDOM.nextInt(sufLen)),
               currentTime,
               spanDuration,
@@ -165,13 +161,8 @@ public class SpanGenerator implements Runnable {
       }
     }
 
-    int upperLevelSize;
-    for (int n = levels - 1; n > 0; n--) {
-      upperLevelSize = trace.get(n - 1).size();
-      for (Span childSpan : trace.get(n)) {
-        childSpan.addParent(trace.get(n - 1).get(RANDOM.nextInt(upperLevelSize)));
-      }
-    }
+    trace.createRandomConnections();
+
     statistics.offer(traceType.traceTypeName, trace, traceDuration);
     return trace;
   }
@@ -339,11 +330,9 @@ public class SpanGenerator implements Runnable {
       while (generatedSpans < mustBeGeneratedSpans) {
         // get next trace type to be generated
         TraceTypePattern traceTypePattern = getNextTraceType(generatorConfig.getTraceTypePatterns());
-        List<List<Span>> trace = generateTrace(traceTypePattern);
+        Trace trace = generateTrace(traceTypePattern);
         spanQueue.addTrace(trace);
-        for (List<Span> spanList : trace) {
-          generatedSpans += spanList.size();
-        }
+        generatedSpans += trace.getSpansCount();
       }
 
       try {

@@ -21,9 +21,14 @@ Application configuration should be set via a `yaml` file. The default version i
 #### - Saving traces to file
 For just generation of traces and saving them to file add the following line to the `applicationConfig.yaml` file:
 ```
-outputFile: "<output_file_path>"
+spanOutputFile: "<span_output_file_path>"
+traceOutputFile: "<trace_output_file_path>"
 ```
-Be aware that this option has the highest priority, and if it exists traces will be saved to file regardless of other options.
+`spanOutputFile` will contain a plain list of spans compatible for providing as a spans source to
+ other loader tools (for instance `loadgen`), `traceOutputFile` will contain consistent traces in
+  JSON format convenient for further analysis.
+ Be aware that this option has the highest priority, and if it exists traces will be saved to
+  file regardless of other options.
 
 #### - Direct Ingestion to Wavefront
 For direct ingestion of traces to Wavefront add the following lines to the `applicationConfig.yaml` file:
@@ -31,7 +36,7 @@ For direct ingestion of traces to Wavefront add the following lines to the `appl
 server: "Wavefront_hostname" # "http://localhost:8080"
 token: "Wavefront_token" "bdc66030-a1a8-493b-b416-5559fdcfa45d"
 ```
-IMPORTANT: disable or remove `outputFile:` option.
+IMPORTANT: disable or remove `spanOutputFile:` and `traceOutputFile:` options.
 Follow the [instruction](https://docs.wavefront.com/users_account_managing.html#generating-an-api-token) for getting your Wavefront token.
 ### The traces generation
 #### - Simple way
@@ -159,3 +164,10 @@ The `json` file has the following structure:
         - `"tagName"` - route cause tag of the error condition 
         - `"tagValues"` - route cause value of the tag of the error condition
         - `"errorRate"` - the percentage of the produced errors that meet the given condition. If multiple conditions could be applied the result rate will be P(AB)=P(A)+P(B)-P(A)*P(B), P(ABC) = P(AB)+P(C)-P(AB)*P(C) ...
+
+#### - Example
+
+```
+// Execution from the "wavefront-trace-loader" directory
+$ java -jar target/wavefront-trace-loader-1.0-SNAPSHOT-jar-with-dependencies.jar -f pattern.json
+```

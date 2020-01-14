@@ -1,10 +1,11 @@
 ## Uncomment for generating traces to file.
 ## This option has the highest priority and will block trace ingestion to Wavefront.
-#outputFile: "traces.txt"
+spanOutputFile: "spans.txt"
+traceOutputFile: "traces.txt"
 
 ## Uncomment for ingesting traces through proxy.
 ## This option priority is the next after generation to file option.
-proxyServer: "localhost"
+#proxyServer: "localhost"
 
 ## Uncomment and setup for direct ingestion.
 server: "http://localhost:8080"

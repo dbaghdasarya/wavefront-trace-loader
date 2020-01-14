@@ -14,16 +14,30 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public class SpanQueue {
   private final LinkedList<Span> spanQueue = new LinkedList<>();
+  private final LinkedList<Trace> traceQueue;
   private final AtomicInteger traceCount = new AtomicInteger(0);
   private final AtomicInteger spanCount = new AtomicInteger(0);
+  private boolean keepTraces = false;
 
-  public void addTrace(List<List<Span>> trace) {
+  SpanQueue(boolean keepTraces) {
+    this.keepTraces = keepTraces;
+    if (this.keepTraces) {
+      traceQueue = new LinkedList<>();
+    } else {
+      traceQueue = null;
+    }
+  }
+
+  public void addTrace(Trace trace) {
     if (trace == null) {
       return;
     }
 
     synchronized (spanQueue) {
-      trace.forEach(spans -> {
+      if (keepTraces) {
+        traceQueue.add(trace);
+      }
+      trace.getSpans().forEach(spans -> {
         spanQueue.addAll(spans);
         spanCount.addAndGet(spans.size());
       });
@@ -39,10 +53,18 @@ public class SpanQueue {
     return spanCount.get();
   }
 
-  public Span pollFirst() {
+  public Span pollFirstSpan() {
     synchronized (spanQueue) {
       return spanQueue.pollFirst();
     }
+  }
+
+  public Trace pollFirstTrace() {
+    if (!keepTraces) {
+      return null;
+    }
+    // Trace dump perfromed only in case saving to file and no need in synchronization.
+    return traceQueue.pollFirst();
   }
 
   /**
