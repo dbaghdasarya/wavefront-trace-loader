@@ -16,7 +16,7 @@ import java.io.IOException;
  * @author Sirak Ghazaryan (sghazaryan@vmware.com)
  */
 public class WavefrontTraceLoader extends AbstractTraceLoader {
-  private SpanQueue spanQueue;
+  private DataQueue dataQueue;
   private SpanGenerator spanGenerator;
   private SpanSender spanSender;
 
@@ -33,7 +33,7 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
     if (!Strings.isNullOrEmpty(applicationConfig.getSpanOutputFile())
         || !Strings.isNullOrEmpty(applicationConfig.getTraceOutputFile())) {
       spanSender = new SpanSender(applicationConfig.getSpanOutputFile(),
-          applicationConfig.getTraceOutputFile(), spanQueue);
+          applicationConfig.getTraceOutputFile(), dataQueue);
     } else {
       WavefrontSender wavefrontSender;
       if (applicationConfig.getProxyServer() != null) {
@@ -46,13 +46,13 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
             applicationConfig.getToken()).build();
       }
 
-      spanSender = new SpanSender(wavefrontSender, generatorConfig.getSpansRate(), spanQueue);
+      spanSender = new SpanSender(wavefrontSender, generatorConfig.getSpansRate(), dataQueue);
     }
   }
 
   @Override
-  void applyConfigs() {
-    spanQueue = new SpanQueue(!Strings.isNullOrEmpty(applicationConfig.getTraceOutputFile()));
+  void initialize() {
+    dataQueue = new DataQueue(!Strings.isNullOrEmpty(applicationConfig.getTraceOutputFile()));
   }
 
   @Override
@@ -70,7 +70,7 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
 
   @Override
   void setupGenerators() {
-    this.spanGenerator = new SpanGenerator(generatorConfig, spanQueue);
+    this.spanGenerator = new SpanGenerator(generatorConfig, dataQueue);
   }
 
   @Override

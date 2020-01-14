@@ -9,6 +9,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Data structure representing a trace.
+ *
+ * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
+ */
 public class Trace {
   private static final Random RANDOM = new Random(System.currentTimeMillis());
   private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
@@ -29,6 +34,7 @@ public class Trace {
 
   /**
    * Add a span on the mentioned level.
+   *
    * @param level Level number for adding (root is 0).
    * @param span  Span to be added.
    */

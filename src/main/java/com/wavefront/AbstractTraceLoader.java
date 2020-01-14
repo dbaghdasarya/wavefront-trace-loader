@@ -58,7 +58,7 @@ public abstract class AbstractTraceLoader {
       loadGeneratorConfigurationFile();
       loadApplicationConfig();
 
-      applyConfigs();
+      initialize();
       setupSenders();
       setupGenerators();
 
@@ -100,7 +100,7 @@ public abstract class AbstractTraceLoader {
     }
   }
 
-  abstract void applyConfigs();
+  abstract void initialize();
 
   abstract void setupSenders() throws IOException;
 

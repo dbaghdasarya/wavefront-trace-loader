@@ -11,7 +11,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 /**
- * TODO
+ * Data structure representing a span.
  *
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  */

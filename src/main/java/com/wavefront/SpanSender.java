@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 /**
- * TODO
+ * Performs spans sending and span/trace saving to file.
  *
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
@@ -25,22 +25,22 @@ public class SpanSender implements Runnable {
   private final Integer rate;
   private final String spanOutputFile;
   private final String traceOutputFile;
-  private final SpanQueue spanQueue;
+  private final DataQueue dataQueue;
   private final AtomicBoolean stopSending = new AtomicBoolean(false);
 
 
-  public SpanSender(WavefrontSender wavefrontSender, Integer rate, SpanQueue spanQueue) {
+  public SpanSender(WavefrontSender wavefrontSender, Integer rate, DataQueue dataQueue) {
     this.spanSender = wavefrontSender;
     this.rate = rate;
-    this.spanQueue = spanQueue;
+    this.dataQueue = dataQueue;
     this.spanOutputFile = null;
     this.traceOutputFile = null;
   }
 
-  public SpanSender(String spanOutputFile, String traceOutputFile, SpanQueue spanQueue) {
+  public SpanSender(String spanOutputFile, String traceOutputFile, DataQueue dataQueue) {
     this.spanSender = null;
     this.rate = null;
-    this.spanQueue = spanQueue;
+    this.dataQueue = dataQueue;
     this.spanOutputFile = spanOutputFile;
     this.traceOutputFile = traceOutputFile;
   }
@@ -56,21 +56,21 @@ public class SpanSender implements Runnable {
       final File file = new File(spanOutputFile);
       final FileWriter fileWriter = new FileWriter(file);
       Span tempSpan;
-      while ((tempSpan = spanQueue.pollFirstSpan()) != null) {
+      while ((tempSpan = dataQueue.pollFirstSpan()) != null) {
         fileWriter.write(tempSpan.toString());
       }
-      LOGGER.info(spanQueue.getEnteredSpanCount() + " spans saved to file  " +
+      LOGGER.info(dataQueue.getEnteredSpanCount() + " spans saved to file  " +
           file.getAbsolutePath());
     }
 
-    if (!Strings.isNullOrEmpty(traceOutputFile) && spanQueue.getEnteredTraceCount() > 0) {
+    if (!Strings.isNullOrEmpty(traceOutputFile) && dataQueue.getEnteredTraceCount() > 0) {
       final File file = new File(traceOutputFile);
       final FileWriter fileWriter = new FileWriter(file);
       Trace tempTrace;
-      while ((tempTrace = spanQueue.pollFirstTrace()) != null) {
+      while ((tempTrace = dataQueue.pollFirstTrace()) != null) {
         fileWriter.write(tempTrace.toJSONString());
       }
-      LOGGER.info(spanQueue.getEnteredTraceCount() + " trace saved to file  " +
+      LOGGER.info(dataQueue.getEnteredTraceCount() + " trace saved to file  " +
           file.getAbsolutePath());
     }
   }
@@ -90,7 +90,7 @@ public class SpanSender implements Runnable {
     List<Span> spansToSend = new LinkedList<>();
     try {
       while (!stopSending.get() || spansToSend.size() > 0) {
-        spansToSend.addAll(spanQueue.getReadySpans());
+        spansToSend.addAll(dataQueue.getReadySpans());
         current = System.currentTimeMillis();
         mustBeSentSpans = (int) (rate * (current - start) / 1000);
 

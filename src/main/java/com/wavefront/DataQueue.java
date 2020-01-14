@@ -12,14 +12,14 @@ import javax.annotation.concurrent.ThreadSafe;
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
 @ThreadSafe
-public class SpanQueue {
+public class DataQueue {
   private final LinkedList<Span> spanQueue = new LinkedList<>();
   private final LinkedList<Trace> traceQueue;
   private final AtomicInteger traceCount = new AtomicInteger(0);
   private final AtomicInteger spanCount = new AtomicInteger(0);
   private boolean keepTraces = false;
 
-  SpanQueue(boolean keepTraces) {
+  DataQueue(boolean keepTraces) {
     this.keepTraces = keepTraces;
     if (this.keepTraces) {
       traceQueue = new LinkedList<>();

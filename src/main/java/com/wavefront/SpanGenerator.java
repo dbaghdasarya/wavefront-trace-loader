@@ -32,7 +32,7 @@ public class SpanGenerator implements Runnable {
   private static final int HUNDRED_PERCENT = 100;
   private final Statistics statistics = new Statistics();
   private final GeneratorConfig generatorConfig;
-  private final SpanQueue spanQueue;
+  private final DataQueue dataQueue;
 
   private final LoadingCache<TraceTypePattern, List<Integer>> spansDistributionsPercentages =
       CacheBuilder.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).
@@ -63,18 +63,18 @@ public class SpanGenerator implements Runnable {
           });
   private List<Integer> tracePercentages;
 
-  public SpanGenerator(GeneratorConfig config, SpanQueue spanQueue) {
+  public SpanGenerator(GeneratorConfig config, DataQueue dataQueue) {
     this.generatorConfig = config;
-    this.spanQueue = spanQueue;
+    this.dataQueue = dataQueue;
   }
 
   public void generateForFile() {
-    Function<SpanQueue, Boolean> whileCheck = getWhileCheck();
-    while (whileCheck.apply(spanQueue)) {
+    Function<DataQueue, Boolean> whileCheck = getWhileCheck();
+    while (whileCheck.apply(dataQueue)) {
       // get next trace type to be generated
       TraceTypePattern traceTypePattern = getNextTraceType(generatorConfig.getTraceTypePatterns());
 
-      spanQueue.addTrace(generateTrace(traceTypePattern));
+      dataQueue.addTrace(generateTrace(traceTypePattern));
     }
     LOGGER.info("Generation complete!");
   }
@@ -317,13 +317,13 @@ public class SpanGenerator implements Runnable {
   public void run() {
     LOGGER.info("Generating spans ...");
 
-    Function<SpanQueue, Boolean> whileCheck = getWhileCheck();
+    Function<DataQueue, Boolean> whileCheck = getWhileCheck();
     long start = System.currentTimeMillis();
     long current;
     int mustBeGeneratedSpans;
     int generatedSpans = 0;
     int rate = generatorConfig.getSpansRate();
-    while (whileCheck.apply(spanQueue)) {
+    while (whileCheck.apply(dataQueue)) {
       current = System.currentTimeMillis();
       mustBeGeneratedSpans = (int) (rate * (current - start) / 1000);
 
@@ -331,7 +331,7 @@ public class SpanGenerator implements Runnable {
         // get next trace type to be generated
         TraceTypePattern traceTypePattern = getNextTraceType(generatorConfig.getTraceTypePatterns());
         Trace trace = generateTrace(traceTypePattern);
-        spanQueue.addTrace(trace);
+        dataQueue.addTrace(trace);
         generatedSpans += trace.getSpansCount();
       }
 
@@ -344,13 +344,13 @@ public class SpanGenerator implements Runnable {
     LOGGER.info("Generation complete!");
   }
 
-  private Function<SpanQueue, Boolean> getWhileCheck() {
+  private Function<DataQueue, Boolean> getWhileCheck() {
     // normalize percentages of distribution to fix wrong inputs
     normalizeDistributions(generatorConfig.getTraceTypePatterns());
     tracePercentages = generatorConfig.getTraceTypePatterns().stream().
         map(traceTypePattern -> traceTypePattern.tracePercentage).collect(Collectors.toList());
 
-    Function<SpanQueue, Boolean> whileCheck;
+    Function<DataQueue, Boolean> whileCheck;
     int traceCount = generatorConfig.getTotalTraceCount();
     int spansCount;
     if (traceCount > 0) {
