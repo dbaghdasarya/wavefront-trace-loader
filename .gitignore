@@ -27,3 +27,4 @@ hs_err_pid*
 /wavefront-trace-loader.iml
 /src/main/java/com/.DS_Store
 /traces.txt
+/spans.txt

@@ -9,10 +9,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class ApplicationConfig {
   /**
-   * Saving to file has the highest priority.
+   * Output file name for exporting the plain list of spans. Saving to file has the highest
+   * priority.
    */
   @JsonProperty
-  private String outputFile = null;
+  private String spanOutputFile = null;
+  /**
+   * Output file name for exporting consistent traces. Saving to file has the highest priority.
+   */
+  @JsonProperty
+  private String traceOutputFile = null;
   /**
    * Proxy server for routing traffic to wavefront. If it's set, the direct ingestion configs will
    * be ignored.
@@ -46,8 +52,12 @@ public class ApplicationConfig {
   private String token = null;
 
 
-  public String getOutputFile() {
-    return outputFile;
+  public String getSpanOutputFile() {
+    return spanOutputFile;
+  }
+
+  public String getTraceOutputFile() {
+    return traceOutputFile;
   }
 
   public String getServer() {

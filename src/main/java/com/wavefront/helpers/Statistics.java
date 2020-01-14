@@ -2,13 +2,10 @@ package com.wavefront.helpers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.wavefront.Span;
-import com.wavefront.sdk.common.Pair;
+import com.wavefront.Trace;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Class collects statistics about generated traces such as traces count, spans count and trace
@@ -22,33 +19,18 @@ public class Statistics {
   private int errorsSum = 0;
   private int debugSpansSum = 0;
 
-  public void offer(String traceTypeName, List<List<Span>> trace, int traceDuration) {
+  public void offer(String traceTypeName, Trace trace, int traceDuration) {
     tracesSum++;
 
-    boolean error = false;
-    int debugSpansCount = 0;
-    for (int i = 0; i < trace.size(); i++) {
-      for (int j = 0; j < trace.get(i).size(); j++) {
-        Span span = trace.get(i).get(j);
-        if (span.getTags() != null) {
-          if (span.getTags().contains(new Pair<>("error", "true"))) {
-            error = true;
-          }
-          if (span.getTags().contains(new Pair<>("debug", "true"))) {
-            debugSpansCount++;
-          }
-        }
-      }
-    }
-    if (error) {
+    if (trace.isError()) {
       errorsSum++;
     }
-    debugSpansSum += debugSpansCount;
-    int spansCount = trace.stream().flatMap(List::stream).collect(Collectors.toList()).size();
+    debugSpansSum += trace.getDebugSpansCount();
 
     tracesByType.putIfAbsent(traceTypeName, new TypeStatistic());
     TypeStatistic tobeUpdated = tracesByType.get(traceTypeName);
-    tobeUpdated.update(spansCount, traceDuration, error, debugSpansCount);
+    tobeUpdated.update(trace.getSpansCount(), traceDuration, trace.isError(),
+        trace.getDebugSpansCount());
     tracesByType.put(traceTypeName, tobeUpdated);
   }
 
