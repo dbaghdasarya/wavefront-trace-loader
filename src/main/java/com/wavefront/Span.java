@@ -37,19 +37,20 @@ public class Span {
     spanUUID = UUID.randomUUID();
   }
 
-  public Span(String _name, long _startMillis, long _durationMillis, @Nullable String _source,
-              UUID _traceUUID, UUID _spanUUID, @Nullable List<UUID> _parents, @Nullable List<UUID> _followsFrom,
-              @Nullable List<Pair<String, String>> _tags, @Nullable List<SpanLog> _spanLogs) {
-    name = _name;
-    startMillis = _startMillis;
-    durationMillis = _durationMillis;
-    source = _source;
-    traceUUID = _traceUUID;
-    spanUUID = _spanUUID;
-    parents = _parents;
-    followsFrom = _followsFrom;
-    tags = _tags;
-    spanLogs = _spanLogs;
+  public Span(String name, long startMillis, long durationMillis, @Nullable String source,
+              UUID traceUUID, UUID spanUUID, @Nullable List<UUID> parents,
+              @Nullable List<UUID> followsFrom, @Nullable List<Pair<String, String>> tags,
+              @Nullable List<SpanLog> spanLogs) {
+    this.name = name;
+    this.startMillis = startMillis;
+    this.durationMillis = durationMillis;
+    this.source = source;
+    this.traceUUID = traceUUID;
+    this.spanUUID = spanUUID;
+    this.parents = parents;
+    this.followsFrom = followsFrom;
+    this.tags = tags;
+    this.spanLogs = spanLogs;
   }
 
   public UUID getSpanUUID() {

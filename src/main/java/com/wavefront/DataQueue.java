@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
- * A thread-safe span queue where Generators add traces and from which Senders pick them up.
+ * A thread-safe data queue where Generators add traces/spans and from which Senders pick them up.
  *
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
