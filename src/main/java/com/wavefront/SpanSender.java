@@ -59,6 +59,7 @@ public class SpanSender implements Runnable {
       while ((tempSpan = dataQueue.pollFirstSpan()) != null) {
         fileWriter.write(tempSpan.toString());
       }
+      fileWriter.close();
       LOGGER.info(dataQueue.getEnteredSpanCount() + " spans saved to file  " +
           file.getAbsolutePath());
     }
@@ -66,10 +67,15 @@ public class SpanSender implements Runnable {
     if (!Strings.isNullOrEmpty(traceOutputFile) && dataQueue.getEnteredTraceCount() > 0) {
       final File file = new File(traceOutputFile);
       final FileWriter fileWriter = new FileWriter(file);
-      Trace tempTrace;
-      while ((tempTrace = dataQueue.pollFirstTrace()) != null) {
-        fileWriter.write(tempTrace.toJSONString());
+      Trace tempTrace = dataQueue.pollFirstTrace();
+      if( tempTrace != null){
+        fileWriter.write("[" + tempTrace.toJSONString());
       }
+      while ((tempTrace = dataQueue.pollFirstTrace()) != null) {
+        fileWriter.write("," + tempTrace.toJSONString());
+      }
+      fileWriter.write("]");
+      fileWriter.close();
       LOGGER.info(dataQueue.getEnteredTraceCount() + " trace saved to file  " +
           file.getAbsolutePath());
     }
