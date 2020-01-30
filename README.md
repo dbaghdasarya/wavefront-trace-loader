@@ -66,6 +66,7 @@ The `json` file has the following structure:
   "traceTypePatterns": [
     {
       "traceTypeName": "TType_1",
+      "spanNameSuffixes": "abcdef",
       "traceTypesCount": 20,
       "errorRate": 15,
       "nestingLevel": 5,
@@ -126,6 +127,7 @@ The `json` file has the following structure:
       "optionalTagsPercentage": -1,
       "errorConditions": [
         {
+          "spanNames": ["name_a", "name_b"],
           "tagName": "loyalty",
           "tagValue": "platinum",
           "errorRate": 80
@@ -142,7 +144,9 @@ The `json` file has the following structure:
 - `"errorRate"` - is applicable only if `"traceTypesCount" > 0`.
 - `"debugRate"` - is applicable only if `"traceTypesCount" > 0`.
 - `"traceTypePatterns"` - is a list of traces type patterns. This option is disabled if `"traceTypesCount" > 0`.
-    - `"traceTypeName"` - This name will be set to the root span of a trace.
+    - `"traceTypeName"` - this name will be set to the root span of a trace.
+    - `"spanNameSuffixes"` - a list of possible suffixes of span names. Span names generated as
+     `name_`+`suffix character` (this field is optional).
     - `"nestingLevel"` - number of levels in the trace tree.
     - `"tracePercentage"` - percentage of traces of the given trace type among all generated traces.
     - `"errorRate"` - if `"traceTypePatterns"` exists, every trace type pattern should provide `"errorRate"` value for producing erroneous traces. 
@@ -161,6 +165,7 @@ The `json` file has the following structure:
         - `"tagValues"` - list of possible values. The Generator will randomly select values from the list.
     - `"optionalTagsPercentage"` - defines a percentage of optional tags wich should be added to span. For instance, if a user provides 5 optional tags and sets `"optionalTagsPercentage": 40` every span will have randomly selected 2 optional tags.
     - `"errorConditions"` - conditions on which errors will be generated. `"errorConditions"` disables all previously defined `"errorRates"`.
+        - `"spanNames` - list of span names for which the condition is applicable (optional)
         - `"tagName"` - route cause tag of the error condition 
         - `"tagValues"` - route cause value of the tag of the error condition
         - `"errorRate"` - the percentage of the produced errors that meet the given condition. If multiple conditions could be applied the result rate will be P(AB)=P(A)+P(B)-P(A)*P(B), P(ABC) = P(AB)+P(C)-P(AB)*P(C) ...

@@ -30,4 +30,6 @@ public class Defaults {
   public static final int DEFAULT_NESTING_LEVEL = RANDOM.nextInt(6) + 4;
 
   public static final String DEFAULT_TYPE_NAME_PREFIX = "traceType_";
+
+  public static final String DEFAULT_SPAN_NAME_SUFFIX = "abcdefghijklmnopqrstuvxyz";
 }

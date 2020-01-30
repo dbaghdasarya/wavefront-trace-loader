@@ -1,7 +1,10 @@
 package com.wavefront;
 
+import com.google.common.base.Strings;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.wavefront.helpers.Defaults;
 import com.wavefront.helpers.TraceTypePatternSanitizer;
 
 import java.util.ArrayList;
@@ -15,6 +18,7 @@ import javax.annotation.Nonnull;
 @SuppressWarnings("unused")
 public class TraceTypePattern {
   public String traceTypeName;
+  public String spanNameSuffixes;
   public int nestingLevel;
   public int tracePercentage;
   public int errorRate;
@@ -27,10 +31,16 @@ public class TraceTypePattern {
   public int optionalTagsPercentage = 100;
   public List<ErrorCondition> errorConditions;
 
-  public TraceTypePattern(String traceTypeName, int nestingLevel, int tracePercentage,
+  public TraceTypePattern(String traceTypeName, String spanNameSuffixes,
+                          int nestingLevel, int tracePercentage,
                           List<Distribution> spansDistributions, List<Distribution> traceDurations,
                           List<TagVariation> mandatoryTags, int errorRate, int debugRate) {
     this.traceTypeName = traceTypeName;
+    if (Strings.isNullOrEmpty(spanNameSuffixes)) {
+      this.spanNameSuffixes = Defaults.DEFAULT_SPAN_NAME_SUFFIX;
+    } else {
+      this.spanNameSuffixes = spanNameSuffixes;
+    }
     this.nestingLevel = nestingLevel;
     this.tracePercentage = tracePercentage;
     this.spansDistributions = spansDistributions;
@@ -120,6 +130,11 @@ public class TraceTypePattern {
    */
   public static class ErrorCondition {
     /**
+     * Span Names to which the error conditions should be applied. If null, will not be taken into
+     * account.
+     */
+    public List<String> spanNames;
+    /**
      * Name of a tag which is route cause of the error
      */
     public String tagName;
@@ -137,13 +152,14 @@ public class TraceTypePattern {
     public ErrorCondition() {
     }
 
-    public ErrorCondition(@Nonnull String tagName,
+    public ErrorCondition(List<String> spanNames,
+                          @Nonnull String tagName,
                           @Nonnull String tagValue,
                           int errorRate) {
+      this.spanNames = spanNames;
       this.tagName = tagName;
       this.tagValue = tagValue;
       this.errorRate = errorRate;
     }
   }
 }
-
