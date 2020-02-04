@@ -111,7 +111,7 @@ public class SpanGenerator implements Runnable {
     }
 
     long currentTime = System.currentTimeMillis();
-    String suffixes = "abcdefghijklmnopqrstuvxyz";
+    String suffixes = traceType.spanNameSuffixes;
     int sufLen = suffixes.length();
 
     Trace trace = new Trace(levels);
@@ -127,7 +127,7 @@ public class SpanGenerator implements Runnable {
         UUID.randomUUID(),
         null,
         null,
-        getTags(traceType, traceType.errorRate),
+        getTags(traceType, traceType.traceTypeName, traceType.errorRate),
         null));
 
 
@@ -144,8 +144,9 @@ public class SpanGenerator implements Runnable {
             // last span
             spanDuration = lastSpanDuration;
           }
+          String spanName = "name_" + suffixes.charAt(RANDOM.nextInt(sufLen));
           trace.add(m, new Span(
-              "name_" + suffixes.charAt(RANDOM.nextInt(sufLen)),
+              spanName,
               currentTime,
               spanDuration,
               "localhost", // + suffixes.charAt(rand.nextInt(sufLen)),
@@ -154,7 +155,7 @@ public class SpanGenerator implements Runnable {
               null,
               null,
               // Not root spans will have error tag if ErrorConditions defined
-              getTags(traceType, 0),
+              getTags(traceType, spanName, 0),
               null));
           spanNumbers--;
         }
@@ -167,7 +168,8 @@ public class SpanGenerator implements Runnable {
     return trace;
   }
 
-  private List<Pair<String, String>> getTags(TraceTypePattern pattern, int errorRate) {
+  private List<Pair<String, String>> getTags(@Nonnull TraceTypePattern pattern,
+                                             @Nonnull String spanName, int errorRate) {
     List<Pair<String, String>> tags = new LinkedList<>();
 
     // add all mandatory tags
@@ -189,6 +191,12 @@ public class SpanGenerator implements Runnable {
     if (pattern.errorConditions != null) {
       errorRate = 0;
       for (TraceTypePattern.ErrorCondition condition : pattern.errorConditions) {
+        // If list of spanNames exists for this errorCondition,
+        // check that the current span name is in the list
+        if (condition.spanNames != null && !condition.spanNames.contains(spanName)) {
+          continue;
+        }
+
         if (tags.stream().
             anyMatch(tag -> tag._1.equals(condition.tagName) && tag._2.equals(condition.tagValue))) {
           // the effective Error Rate will be treated as a summary of probability of independent

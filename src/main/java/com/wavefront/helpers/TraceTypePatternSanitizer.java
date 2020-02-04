@@ -1,5 +1,7 @@
 package com.wavefront.helpers;
 
+import com.google.common.base.Strings;
+
 import com.fasterxml.jackson.databind.util.StdConverter;
 import com.wavefront.SpanSender;
 import com.wavefront.TraceTypePattern;
@@ -11,6 +13,7 @@ import java.util.logging.Logger;
 import static com.wavefront.helpers.Defaults.DEFAULT_MANDATORY_TAGS;
 import static com.wavefront.helpers.Defaults.DEFAULT_NESTING_LEVEL;
 import static com.wavefront.helpers.Defaults.DEFAULT_SPANS_DISTRIBUTIONS;
+import static com.wavefront.helpers.Defaults.DEFAULT_SPAN_NAME_SUFFIX;
 import static com.wavefront.helpers.Defaults.DEFAULT_TRACE_DURATIONS;
 import static com.wavefront.helpers.Defaults.DEFAULT_TYPE_NAME_PREFIX;
 
@@ -26,9 +29,15 @@ public class TraceTypePatternSanitizer extends StdConverter<TraceTypePattern, Tr
   @Override
   public TraceTypePattern convert(TraceTypePattern value) {
     // check trace type name
-    if (value.traceTypeName == null || value.traceTypeName.isEmpty()) {
+    if (Strings.isNullOrEmpty(value.traceTypeName)) {
       value.traceTypeName = DEFAULT_TYPE_NAME_PREFIX + currentTypeIndex++;
       LOGGER.warning("Incorrect value of traceTypeName was replaced by " + value.traceTypeName);
+    }
+    // check trace type name
+    if (Strings.isNullOrEmpty(value.spanNameSuffixes)) {
+      value.spanNameSuffixes = DEFAULT_SPAN_NAME_SUFFIX;
+      LOGGER.warning(value.traceTypeName +
+          ": Empty value of span name suffixes was replaced by " + value.spanNameSuffixes);
     }
     // check nesting level
     if (value.nestingLevel <= 0) {

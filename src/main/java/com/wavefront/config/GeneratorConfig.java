@@ -95,8 +95,8 @@ public class GeneratorConfig {
   }
 
   /**
-   * Constructs traceTypePatterns list based on traceTypesCount input parameter.
-   * If it's not set or smaller than 0, this function does nothing.
+   * Constructs traceTypePatterns list based on traceTypesCount input parameter. If it's not set or
+   * smaller than 0, this function does nothing.
    */
   public void initMissingPropertiesWithDefaults() {
     if (traceTypesCount <= 0) {
@@ -107,6 +107,7 @@ public class GeneratorConfig {
     Random rand = new Random(System.currentTimeMillis());
     for (int n = 0; n < traceTypesCount; n++) {
       traceTypePatterns.add(new TraceTypePattern(Defaults.DEFAULT_TYPE_NAME_PREFIX + (n + 1),
+          Defaults.DEFAULT_SPAN_NAME_SUFFIX,
           Defaults.DEFAULT_NESTING_LEVEL,
           100 / traceTypesCount,
           Defaults.DEFAULT_SPANS_DISTRIBUTIONS,

@@ -8,6 +8,7 @@
   "traceTypePatterns": [
     {
       "traceTypeName": "TType_1",
+      "spanNameSuffixes": "abcdefghi",
       "nestingLevel": 5,
       "tracePercentage": 50,
       "errorRate": 30,
@@ -134,6 +135,7 @@
       "optionalTagsPercentage": 10,
       "errorConditions": [
         {
+          "spanNames": ["name_a"],
           "tagName": "loyalty",
           "tagValue": "platinum",
           "errorRate": 80
