@@ -1,4 +1,4 @@
-package com.wavefront;
+package com.wavefront.datastructures;
 
 import com.wavefront.sdk.common.Pair;
 import com.wavefront.sdk.common.Utils;
@@ -6,6 +6,7 @@ import com.wavefront.sdk.entities.tracing.SpanLog;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -88,6 +89,7 @@ public class Span {
     return followsFrom;
   }
 
+  @Nullable
   public List<Pair<String, String>> getTags() {
     return tags;
   }
@@ -117,5 +119,24 @@ public class Span {
     return Utils.tracingSpanToLineData(getName(), getStartMillis(), getDuration(),
         getSource(), getTraceUUID(), getSpanUUID(), getParents(), getFollowsFrom(),
         getTags(), getSpanLogs(), getSource());
+  }
+
+  /**
+   * Convert to traces compatible with format of traces dumped from Wavefront.
+   * @return Trace in format of Wavefront trace.
+   */
+  public SpanFromWF toWFSpan() {
+    SpanFromWF wfSpan = new SpanFromWF();
+    wfSpan.name = this.name;
+    wfSpan.host = this.source;
+    wfSpan.startMs = this.startMillis;
+    wfSpan.durationMs = this.durationMillis;
+    wfSpan.spanId = this.spanUUID.toString();
+    wfSpan.traceId = this.traceUUID.toString();
+    wfSpan.annotations = new LinkedList<>();
+    if (tags != null) {
+      tags.forEach(t -> wfSpan.annotations.add(Map.of(t._1, t._2)));
+    }
+    return wfSpan;
   }
 }

@@ -3,6 +3,8 @@ package com.wavefront;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 
+import com.wavefront.datastructures.Span;
+import com.wavefront.datastructures.Trace;
 import com.wavefront.sdk.common.WavefrontSender;
 
 import java.io.File;
@@ -67,14 +69,10 @@ public class SpanSender implements Runnable {
     if (!Strings.isNullOrEmpty(traceOutputFile) && dataQueue.getEnteredTraceCount() > 0) {
       final File file = new File(traceOutputFile);
       final FileWriter fileWriter = new FileWriter(file);
-      Trace tempTrace = dataQueue.pollFirstTrace();
-      if( tempTrace != null){
-        fileWriter.write("[" + tempTrace.toJSONString());
-      }
+      Trace tempTrace;
       while ((tempTrace = dataQueue.pollFirstTrace()) != null) {
-        fileWriter.write("," + tempTrace.toJSONString());
+        fileWriter.write("data: " + tempTrace.toWFTrace().toJSONString() + "\n");
       }
-      fileWriter.write("]");
       fileWriter.close();
       LOGGER.info(dataQueue.getEnteredTraceCount() + " trace saved to file  " +
           file.getAbsolutePath());

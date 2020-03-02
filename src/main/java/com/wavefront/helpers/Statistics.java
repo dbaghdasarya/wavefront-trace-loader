@@ -2,7 +2,7 @@ package com.wavefront.helpers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.wavefront.Trace;
+import com.wavefront.datastructures.Trace;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +19,7 @@ public class Statistics {
   private int errorsSum = 0;
   private int debugSpansSum = 0;
 
-  public void offer(String traceTypeName, Trace trace, int traceDuration) {
+  public void offer(String traceTypeName, Trace trace, long traceDuration) {
     tracesSum++;
 
     if (trace.isError()) {
@@ -95,10 +95,10 @@ public class Statistics {
     int spansMin = Integer.MAX_VALUE;
     int spansMax = Integer.MIN_VALUE;
     int traceDuration = 0;
-    int traceDurationMin = Integer.MAX_VALUE;
-    int traceDurationMax = Integer.MIN_VALUE;
+    long traceDurationMin = Long.MAX_VALUE;
+    long traceDurationMax = Long.MIN_VALUE;
 
-    void update(int spansCount, int duration, boolean error, int debugSpansCount) {
+    void update(int spansCount, long duration, boolean error, int debugSpansCount) {
       if (error) {
         errorCount++;
       }

@@ -2,6 +2,9 @@ package com.wavefront;
 
 import com.google.common.base.Strings;
 
+import com.wavefront.generators.FromPatternGenerator;
+import com.wavefront.generators.ReIngestGenerator;
+import com.wavefront.generators.SpanGenerator;
 import com.wavefront.sdk.common.WavefrontSender;
 import com.wavefront.sdk.direct.ingestion.WavefrontDirectIngestionClient;
 import com.wavefront.sdk.proxy.WavefrontProxyClient;
@@ -70,7 +73,11 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
 
   @Override
   void setupGenerators() {
-    this.spanGenerator = new SpanGenerator(generatorConfig, dataQueue);
+    if (applicationConfig != null && !Strings.isNullOrEmpty(applicationConfig.getWfTracesFile())) {
+      this.spanGenerator = new ReIngestGenerator(applicationConfig.getWfTracesFile(), dataQueue);
+    } else {
+      this.spanGenerator = new FromPatternGenerator(generatorConfig, dataQueue);
+    }
   }
 
   @Override

@@ -1,7 +1,11 @@
+## Parse Wavefront traces from file and re-ingest them.
+## Uncomment if necessary.
+#wfTracesFile: "wftraces.txt"
+
 ## Uncomment for generating traces to file.
 ## This option has the highest priority and will block trace ingestion to Wavefront.
-spanOutputFile: "spans.txt"
-traceOutputFile: "traces.txt"
+#spanOutputFile: "spans.txt"
+traceOutputFile: "wftraces.txt"
 
 ## Uncomment for ingesting traces through proxy.
 ## This option priority is the next after generation to file option.
