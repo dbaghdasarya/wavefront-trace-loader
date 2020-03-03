@@ -43,20 +43,7 @@ public class ReIngestGenerator extends SpanGenerator {
 
   @Override
   public void run() {
-    long endMillis = reGenerateTraces(false, null, 0);
-//    try {
-//      long shift = System.currentTimeMillis();
-//      if (endMillis > shift) {
-//        shift = endMillis - shift;
-//      } else {
-//        shift = 0;
-//      }
-//      Thread.sleep(shift + 7_200_000);
-//    } catch (InterruptedException e) {
-//      LOGGER.severe(e.toString());
-//    }
-//    reGenerateTraces(false,
-//        new Pair<String, String>("service", "preference_service"), 80);
+    reGenerateTraces(false, null, 0);
   }
 
   private long reGenerateTraces(boolean isToFile, Pair<String, String> tagAndValue,
@@ -128,7 +115,6 @@ public class ReIngestGenerator extends SpanGenerator {
       });
 
       SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
-      String endTime = simpleDateFormat.format(new Date(endMoment.get()));
       LOGGER.info("The number of reIngested traces is " + counter.get() +
           "\nIngestion started at " + simpleDateFormat.format(new Date(startMoment.get())) +
           " and will complete at " + simpleDateFormat.format(new Date(endMoment.get())) +
