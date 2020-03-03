@@ -1,5 +1,8 @@
 package com.wavefront;
 
+import com.wavefront.datastructures.Span;
+import com.wavefront.datastructures.Trace;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -14,18 +17,18 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public class DataQueue {
   private final LinkedList<Span> spanQueue = new LinkedList<>();
-  private final LinkedList<Trace> traceQueue;
+  private final LinkedList<Trace> traceQueue = new LinkedList<>();
   private final AtomicInteger traceCount = new AtomicInteger(0);
   private final AtomicInteger spanCount = new AtomicInteger(0);
   private boolean keepTraces = false;
 
+  /**
+   * DataQueue constructor.
+   *
+   * @param keepTraces If true, traces will be stored for saving to file.
+   */
   DataQueue(boolean keepTraces) {
     this.keepTraces = keepTraces;
-    if (this.keepTraces) {
-      traceQueue = new LinkedList<>();
-    } else {
-      traceQueue = null;
-    }
   }
 
   public void addTrace(Trace trace) {
@@ -63,7 +66,7 @@ public class DataQueue {
     if (!keepTraces) {
       return null;
     }
-    // Trace dump perfromed only in case saving to file and no need in synchronization.
+    // Trace dump performed only in case saving to file and no need in synchronization.
     return traceQueue.pollFirst();
   }
 

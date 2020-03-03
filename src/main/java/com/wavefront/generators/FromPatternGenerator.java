@@ -1,18 +1,22 @@
-package com.wavefront;
+package com.wavefront.generators;
 
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
+import com.wavefront.DataQueue;
+import com.wavefront.SpanSender;
+import com.wavefront.TraceTypePattern;
 import com.wavefront.TraceTypePattern.Distribution;
 import com.wavefront.config.GeneratorConfig;
+import com.wavefront.datastructures.Span;
+import com.wavefront.datastructures.Trace;
 import com.wavefront.helpers.Statistics;
 import com.wavefront.sdk.common.Pair;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -26,10 +30,8 @@ import javax.annotation.Nonnull;
  *
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
-public class SpanGenerator implements Runnable {
+public class FromPatternGenerator extends SpanGenerator {
   private static final Logger LOGGER = Logger.getLogger(SpanSender.class.getCanonicalName());
-  private static final Random RANDOM = new Random(System.currentTimeMillis());
-  private static final int HUNDRED_PERCENT = 100;
   private final Statistics statistics = new Statistics();
   private final GeneratorConfig generatorConfig;
   private final DataQueue dataQueue;
@@ -63,11 +65,12 @@ public class SpanGenerator implements Runnable {
           });
   private List<Integer> tracePercentages;
 
-  public SpanGenerator(GeneratorConfig config, DataQueue dataQueue) {
+  public FromPatternGenerator(GeneratorConfig config, DataQueue dataQueue) {
     this.generatorConfig = config;
     this.dataQueue = dataQueue;
   }
 
+  @Override
   public void generateForFile() {
     Function<DataQueue, Boolean> whileCheck = getWhileCheck();
     while (whileCheck.apply(dataQueue)) {
@@ -79,9 +82,7 @@ public class SpanGenerator implements Runnable {
     LOGGER.info("Generation complete!");
   }
 
-  /**
-   * Returns statistics about the generated traces.
-   */
+  @Override
   public Statistics getStatistics() {
     return statistics;
   }

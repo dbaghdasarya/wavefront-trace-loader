@@ -28,3 +28,4 @@ hs_err_pid*
 /src/main/java/com/.DS_Store
 /traces.txt
 /spans.txt
+/wftraces.txt

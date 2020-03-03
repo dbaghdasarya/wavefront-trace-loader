@@ -18,6 +18,13 @@ $ mvn clean install
 
 ### Configuration
 Application configuration should be set via a `yaml` file. The default version is provided with the sources - `applicationConfig.yaml`.
+#### - Loading traces from file
+If the following option is set in the `config` file the Loader will read traces from the
+ specified file and re-ingest them.
+```
+wfTracesFile: "<traces_source_file_path>"
+```
+For more details see section `Re-Ingestion`
 #### - Saving traces to file
 For just generation of traces and saving them to file add the following line to the `applicationConfig.yaml` file:
 ```
@@ -175,4 +182,14 @@ The `json` file has the following structure:
 ```
 // Execution from the "wavefront-trace-loader" directory
 $ java -jar target/wavefront-trace-loader-1.0-SNAPSHOT-jar-with-dependencies.jar -f pattern.json
+ --configFile anyConfig.yaml
+```
+
+### Re-Ingestion
+It is possible to generate some set of traces, save it to file and then send the same set from
+ the file to Wavefront. The Loader will automatically update UUIDs and timestamps.
+User can specify start of trace loading by adding the following line at the beginning of the
+ source file:
+```
+start_ms: <timestamp_in_ms> 
 ```

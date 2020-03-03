@@ -92,7 +92,7 @@ public class TraceTypePattern {
     }
 
     /**
-     * Get random number from the distribution range [startValue, endValue]
+     * Get random number from the distribution range [startValue, endValue].
      */
     public int getValue() {
       return startValue + RANDOM.nextInt(endValue - startValue + 1);
@@ -100,16 +100,16 @@ public class TraceTypePattern {
   }
 
   /**
-   * Class represents a tag name and variation of its values
+   * Class represents a tag name and variation of its values.
    */
   public static class TagVariation {
     /**
-     * Name of the tag
+     * Name of the tag.
      */
     public String tagName;
 
     /**
-     * Possible values of the tag
+     * Possible values of the tag.
      */
     @Nonnull
     public List<String> tagValues;
@@ -126,26 +126,26 @@ public class TraceTypePattern {
   }
 
   /**
-   * Class represents condition on which error tag should be set for a span
+   * Class represents condition on which error tag should be set for a span.
    */
   public static class ErrorCondition {
     /**
-     * Span Names to which the error conditions should be applied. If null, will not be taken into
+     * Span Names to which the error conditions should be applied. If null, will not be taken into.
      * account.
      */
     public List<String> spanNames;
     /**
-     * Name of a tag which is route cause of the error
+     * Name of a tag which is route cause of the error.
      */
     public String tagName;
 
     /**
-     * Value of a tag which is a route cause of the error
+     * Value of a tag which is a route cause of the error.
      */
     public String tagValue;
 
     /**
-     * Errors rate for the given tag-value pair
+     * Errors rate for the given tag-value pair (percent).
      */
     public int errorRate;
 

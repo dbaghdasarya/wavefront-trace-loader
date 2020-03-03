@@ -9,6 +9,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class ApplicationConfig {
   /**
+   * Input file name for parse Wavefront traces from file and re-ingest them.
+   */
+  @JsonProperty
+  private String wfTracesFile;
+  /**
    * Output file name for exporting the plain list of spans. Saving to file has the highest
    * priority.
    */
@@ -51,6 +56,10 @@ public class ApplicationConfig {
   @JsonProperty
   private String token = null;
 
+
+  public String getWfTracesFile() {
+    return wfTracesFile;
+  }
 
   public String getSpanOutputFile() {
     return spanOutputFile;
