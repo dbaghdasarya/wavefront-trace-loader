@@ -6,7 +6,6 @@ import com.wavefront.sdk.entities.tracing.SpanLog;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -99,20 +98,17 @@ public class Span {
     return spanLogs;
   }
 
+  /**
+   * Add parent span to the current span.
+   *
+   * @param parent Parent span.
+   */
   public void addParent(Span parent) {
     // here we don't touch traceUUID of the span, because what to do when parent removed after?
     if (parents == null) {
       parents = new LinkedList<>();
     }
     parents.add(parent.getSpanUUID());
-  }
-
-  public boolean removeParent(Span parent) {
-    if (parents == null) {
-      return false;
-    }
-    parents.remove(parent.getSpanUUID());
-    return true;
   }
 
   public String toString() {
@@ -123,20 +119,11 @@ public class Span {
 
   /**
    * Convert to traces compatible with format of traces dumped from Wavefront.
+   *
    * @return Trace in format of Wavefront trace.
    */
   public SpanFromWF toWFSpan() {
-    SpanFromWF wfSpan = new SpanFromWF();
-    wfSpan.name = this.name;
-    wfSpan.host = this.source;
-    wfSpan.startMs = this.startMillis;
-    wfSpan.durationMs = this.durationMillis;
-    wfSpan.spanId = this.spanUUID.toString();
-    wfSpan.traceId = this.traceUUID.toString();
-    wfSpan.annotations = new LinkedList<>();
-    if (tags != null) {
-      tags.forEach(t -> wfSpan.annotations.add(Map.of(t._1, t._2)));
-    }
-    return wfSpan;
+    return new SpanFromWF(name, source, startMillis, durationMillis, spanUUID.toString(),
+        traceUUID.toString(), tags);
   }
 }

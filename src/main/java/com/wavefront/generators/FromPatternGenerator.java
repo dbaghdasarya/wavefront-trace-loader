@@ -35,6 +35,7 @@ public class FromPatternGenerator extends SpanGenerator {
   private static final Logger LOGGER = Logger.getLogger(SpanSender.class.getCanonicalName());
   private static final Random random = new Random();
   private static final int SLEEP_DELAY_SECONDS = 5;
+  private static final int SLEEP_DELAY_MILLIS = SLEEP_DELAY_SECONDS * 1000;
   private final Statistics statistics = new Statistics();
   private final GeneratorConfig generatorConfig;
   private final DataQueue dataQueue;
@@ -75,25 +76,48 @@ public class FromPatternGenerator extends SpanGenerator {
 
   @Override
   public void generateForFile() {
+    startGeneration(false);
+  }
+
+  @Override
+  public void run() {
+    startGeneration(true);
+  }
+
+  private void startGeneration(boolean isRealTime) {
+    LOGGER.info("Generating spans ...");
+
     Function<DataQueue, Boolean> whileCheck = getWhileCheck();
-    long startSeconds = System.currentTimeMillis() / 1000;
-    long currentSeconds = startSeconds;
+    long start = System.currentTimeMillis();
+    long current = start;
     long mustBeGeneratedSpans;
-    int generatedSpans = 0;
-    int rate = generatorConfig.getSpansRate();
+    long generatedSpans = 0;
+    long rate = generatorConfig.getSpansRate();
     while (whileCheck.apply(dataQueue)) {
-      // Spread traces across the whole period.
-      // Simulate the delay.
-      currentSeconds += SLEEP_DELAY_SECONDS;
-      mustBeGeneratedSpans = rate * (currentSeconds - startSeconds);
+      if (isRealTime) {
+        current = System.currentTimeMillis();
+      } else {
+        // Spread traces across the whole period.
+        // Simulate the delay.
+        current += SLEEP_DELAY_MILLIS;
+      }
+      mustBeGeneratedSpans = (long) (rate * (current - start) / 1000);
 
       while (generatedSpans < mustBeGeneratedSpans) {
         // get next trace type to be generated
         TraceTypePattern traceTypePattern = getNextTraceType(generatorConfig.getTraceTypePatterns());
         Trace trace = generateTrace(traceTypePattern,
-            (currentSeconds - random.nextInt(SLEEP_DELAY_SECONDS)) * 1000);
+            current - random.nextInt(SLEEP_DELAY_MILLIS));
         dataQueue.addTrace(trace);
         generatedSpans += trace.getSpansCount();
+      }
+
+      if (isRealTime) {
+        try {
+          Thread.sleep(SLEEP_DELAY_SECONDS);
+        } catch (InterruptedException e) {
+          LOGGER.severe(Throwables.getStackTraceAsString(e));
+        }
       }
     }
     LOGGER.info("Generation complete!");
@@ -340,37 +364,6 @@ public class FromPatternGenerator extends SpanGenerator {
     }
     LOGGER.warning("Next item index doesn't matched. Return first item index.");
     return 0;
-  }
-
-  @Override
-  public void run() {
-    LOGGER.info("Generating spans ...");
-
-    Function<DataQueue, Boolean> whileCheck = getWhileCheck();
-    long start = System.currentTimeMillis();
-    long current;
-    int mustBeGeneratedSpans;
-    int generatedSpans = 0;
-    int rate = generatorConfig.getSpansRate();
-    while (whileCheck.apply(dataQueue)) {
-      current = System.currentTimeMillis();
-      mustBeGeneratedSpans = (int) (rate * (current - start) / 1000);
-
-      while (generatedSpans < mustBeGeneratedSpans) {
-        // get next trace type to be generated
-        TraceTypePattern traceTypePattern = getNextTraceType(generatorConfig.getTraceTypePatterns());
-        Trace trace = generateTrace(traceTypePattern, System.currentTimeMillis());
-        dataQueue.addTrace(trace);
-        generatedSpans += trace.getSpansCount();
-      }
-
-      try {
-        Thread.sleep(SLEEP_DELAY_SECONDS);
-      } catch (InterruptedException e) {
-        LOGGER.severe(Throwables.getStackTraceAsString(e));
-      }
-    }
-    LOGGER.info("Generation complete!");
   }
 
   private Function<DataQueue, Boolean> getWhileCheck() {
