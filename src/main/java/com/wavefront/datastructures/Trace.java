@@ -128,12 +128,8 @@ public class Trace {
 
   public TraceFromWF toWFTrace() {
     TraceFromWF wfTrace = new TraceFromWF();
-    wfTrace.traceId = getTraceId();
-    wfTrace.start_ms = getStart_ms();
-    wfTrace.end_ms = getEnd_ms();
-    wfTrace.total_duration_ms = getTotal_duration_ms();
-    wfTrace.spans = getSpans().stream().flatMap(List::stream).map(Span::toWFSpan).
-        collect(Collectors.toList());
+    wfTrace.setSpans(getSpans().stream().flatMap(List::stream).map(Span::toWFSpan).
+        collect(Collectors.toList()));
 
     return wfTrace;
   }

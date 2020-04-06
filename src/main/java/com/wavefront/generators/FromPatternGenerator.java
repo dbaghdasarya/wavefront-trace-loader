@@ -17,6 +17,7 @@ import com.wavefront.sdk.common.Pair;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -32,6 +33,8 @@ import javax.annotation.Nonnull;
  */
 public class FromPatternGenerator extends SpanGenerator {
   private static final Logger LOGGER = Logger.getLogger(SpanSender.class.getCanonicalName());
+  private static final Random random = new Random();
+  private static final int SLEEP_DELAY_SECONDS = 5;
   private final Statistics statistics = new Statistics();
   private final GeneratorConfig generatorConfig;
   private final DataQueue dataQueue;
@@ -73,11 +76,25 @@ public class FromPatternGenerator extends SpanGenerator {
   @Override
   public void generateForFile() {
     Function<DataQueue, Boolean> whileCheck = getWhileCheck();
+    long startSeconds = System.currentTimeMillis() / 1000;
+    long currentSeconds = startSeconds;
+    long mustBeGeneratedSpans;
+    int generatedSpans = 0;
+    int rate = generatorConfig.getSpansRate();
     while (whileCheck.apply(dataQueue)) {
-      // get next trace type to be generated
-      TraceTypePattern traceTypePattern = getNextTraceType(generatorConfig.getTraceTypePatterns());
+      // Spread traces across the whole period.
+      // Simulate the delay.
+      currentSeconds += SLEEP_DELAY_SECONDS;
+      mustBeGeneratedSpans = rate * (currentSeconds - startSeconds);
 
-      dataQueue.addTrace(generateTrace(traceTypePattern));
+      while (generatedSpans < mustBeGeneratedSpans) {
+        // get next trace type to be generated
+        TraceTypePattern traceTypePattern = getNextTraceType(generatorConfig.getTraceTypePatterns());
+        Trace trace = generateTrace(traceTypePattern,
+            (currentSeconds - random.nextInt(SLEEP_DELAY_SECONDS)) * 1000);
+        dataQueue.addTrace(trace);
+        generatedSpans += trace.getSpansCount();
+      }
     }
     LOGGER.info("Generation complete!");
   }
@@ -89,8 +106,12 @@ public class FromPatternGenerator extends SpanGenerator {
 
   /**
    * Generate trace for a given trace type.
+   *
+   * @param traceType   Type of the trace.
+   * @param startMillis Start time of the trace (millis).
+   * @return Generated trace.
    */
-  private Trace generateTrace(@Nonnull TraceTypePattern traceType) {
+  private Trace generateTrace(@Nonnull TraceTypePattern traceType, long startMillis) {
     int levels = traceType.nestingLevel;
     int spanNumbers = getNextSpanDistribution(traceType).getValue() - 1;
     int spanDuration;
@@ -111,7 +132,6 @@ public class FromPatternGenerator extends SpanGenerator {
       traceDuration += spanDuration;
     }
 
-    long currentTime = System.currentTimeMillis();
     String suffixes = traceType.spanNameSuffixes;
     int sufLen = suffixes.length();
 
@@ -121,7 +141,7 @@ public class FromPatternGenerator extends SpanGenerator {
     UUID traceUUID = UUID.randomUUID();
     trace.add(0, new Span(
         traceType.traceTypeName,
-        currentTime,
+        startMillis,
         spanDuration,
         "localhost", // + suffixes.charAt(rand.nextInt(sufLen)),
         traceUUID,
@@ -135,7 +155,7 @@ public class FromPatternGenerator extends SpanGenerator {
     while (spanNumbers > 0) {
       for (int n = 1; n < levels && spanNumbers > 0; n++) {
         for (int m = n; m < levels && spanNumbers > 0; m++) {
-          currentTime += spanDuration;
+          startMillis += spanDuration;
 
           if (useSpansDistribution) {
             spanDuration = getNextSpanDuration(traceType).getValue();
@@ -148,7 +168,7 @@ public class FromPatternGenerator extends SpanGenerator {
           String spanName = "name_" + suffixes.charAt(RANDOM.nextInt(sufLen));
           trace.add(m, new Span(
               spanName,
-              currentTime,
+              startMillis,
               spanDuration,
               "localhost", // + suffixes.charAt(rand.nextInt(sufLen)),
               traceUUID,
@@ -339,13 +359,13 @@ public class FromPatternGenerator extends SpanGenerator {
       while (generatedSpans < mustBeGeneratedSpans) {
         // get next trace type to be generated
         TraceTypePattern traceTypePattern = getNextTraceType(generatorConfig.getTraceTypePatterns());
-        Trace trace = generateTrace(traceTypePattern);
+        Trace trace = generateTrace(traceTypePattern, System.currentTimeMillis());
         dataQueue.addTrace(trace);
         generatedSpans += trace.getSpansCount();
       }
 
       try {
-        Thread.sleep(5);
+        Thread.sleep(SLEEP_DELAY_SECONDS);
       } catch (InterruptedException e) {
         LOGGER.severe(Throwables.getStackTraceAsString(e));
       }

@@ -72,7 +72,7 @@ public class ReIngestGenerator extends SpanGenerator {
                   });
               // Add conditional errors
               if (tagAndValue != null && percentage > 0) {
-                traceFromWF.spans.forEach(span -> {
+                traceFromWF.getSpans().forEach(span -> {
                   span.annotations.forEach(map -> {
                     if (RANDOM.nextInt(HUNDRED_PERCENT) + 1 <= percentage &&
                         map.entrySet().stream().
@@ -86,22 +86,22 @@ public class ReIngestGenerator extends SpanGenerator {
 
               // Shift trace to the predefined time (can't be older than 15 min)
               long delta = atomicDelta.updateAndGet(value -> value == 0 ?
-                  start_ms.get() - traceFromWF.start_ms : value);
+                  start_ms.get() - traceFromWF.getStart_ms() : value);
               traceFromWF.shiftTrace(delta);
               traceFromWF.updateUUIDs();
 
               // Convert WFtrace to trace convenient for DataQueue
               Trace trace = new Trace(1);
-              traceFromWF.spans.forEach(wfspan -> {
+              traceFromWF.getSpans().forEach(wfspan -> {
                 trace.add(0, wfspan.toSpan());
               });
               dataQueue.addTrace(trace);
               statistics.offer(trace.getSpans().get(0).get(0).getName(),
-                  trace, traceFromWF.total_duration_ms);
+                  trace, traceFromWF.getTotal_duration_ms());
 
-              long tempStart = traceFromWF.start_ms + delta;
+              long tempStart = traceFromWF.getStart_ms();
               startMoment.updateAndGet(value -> Math.min(tempStart, value));
-              long tempEnd = traceFromWF.end_ms + delta;
+              long tempEnd = traceFromWF.getEnd_ms();
               endMoment.updateAndGet(value -> Math.max(tempEnd, value));
               counter.incrementAndGet();
               if (!isToFile) {
