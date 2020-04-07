@@ -22,6 +22,7 @@ import java.util.UUID;
 public class TraceFromWF {
   private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
+  @SuppressWarnings("unused")
   private String traceId;
   @JsonProperty("start_ms")
   private long startMs = Long.MAX_VALUE;
