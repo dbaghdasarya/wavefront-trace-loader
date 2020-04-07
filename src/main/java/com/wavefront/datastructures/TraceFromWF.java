@@ -3,6 +3,7 @@ package com.wavefront.datastructures;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
@@ -22,9 +23,12 @@ public class TraceFromWF {
   private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
   private String traceId;
-  private long start_ms = Long.MAX_VALUE;
-  private long end_ms = Long.MIN_VALUE;
-  private long total_duration_ms;
+  @JsonProperty("start_ms")
+  private long startMs = Long.MAX_VALUE;
+  @JsonProperty("end_ms")
+  private long endMs = Long.MIN_VALUE;
+  @JsonProperty("total_duration_ms")
+  private long totalDurationMs;
   private List<SpanFromWF> spans;
 
   public List<SpanFromWF> getSpans() {
@@ -46,31 +50,31 @@ public class TraceFromWF {
 
   @JsonIgnore
   public long getStartMs() {
-    return start_ms;
+    return startMs;
   }
 
   @JsonIgnore
   public long getEndMs() {
-    return end_ms;
+    return endMs;
   }
 
   @JsonIgnore
   public long getTotalDurationMs() {
-    return end_ms - start_ms;
+    return totalDurationMs;
   }
 
   private void setStartAndEnd() {
     // Reset start, end and duration.
-    start_ms = Long.MAX_VALUE;
-    end_ms = Long.MIN_VALUE;
-    total_duration_ms = 0;
+    startMs = Long.MAX_VALUE;
+    endMs = Long.MIN_VALUE;
+    totalDurationMs = 0;
 
     if (spans != null && !spans.isEmpty()) {
       spans.forEach(span -> {
-        start_ms = Math.min(start_ms, span.getStartMs());
-        end_ms = Math.max(end_ms, span.getStartMs() + span.getDurationMs());
+        startMs = Math.min(startMs, span.getStartMs());
+        endMs = Math.max(endMs, span.getStartMs() + span.getDurationMs());
       });
-      total_duration_ms = end_ms - start_ms;
+      totalDurationMs = endMs - startMs;
     }
   }
 
@@ -81,17 +85,17 @@ public class TraceFromWF {
    */
   public void shiftTrace(long deltaMillis) {
     // Reset start, end and duration.
-    start_ms = Long.MAX_VALUE;
-    end_ms = Long.MIN_VALUE;
-    total_duration_ms = 0;
+    startMs = Long.MAX_VALUE;
+    endMs = Long.MIN_VALUE;
+    totalDurationMs = 0;
 
     if (spans != null && !spans.isEmpty()) {
       spans.forEach(span -> {
         span.shiftStartMs(deltaMillis);
-        start_ms = Math.min(start_ms, span.getStartMs());
-        end_ms = Math.max(end_ms, span.getStartMs() + span.getDurationMs());
+        startMs = Math.min(startMs, span.getStartMs());
+        endMs = Math.max(endMs, span.getStartMs() + span.getDurationMs());
       });
-      total_duration_ms = end_ms - start_ms;
+      totalDurationMs = endMs - startMs;
     }
   }
 
