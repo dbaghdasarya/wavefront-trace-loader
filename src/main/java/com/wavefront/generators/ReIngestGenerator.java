@@ -17,18 +17,29 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import javax.annotation.Nonnull;
 
+import static com.wavefront.datastructures.Distribution.HUNDRED_PERCENT;
+import static com.wavefront.helpers.Defaults.ERROR;
+
+/**
+ * Class re-ingests already generated traces from file.
+ *
+ * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
+ */
 public class ReIngestGenerator extends SpanGenerator {
+  private static final Logger LOGGER = Logger.getLogger(ReIngestGenerator.class.getCanonicalName());
+
   private final Statistics statistics = new Statistics();
   private final String sourceFile;
-  private final DataQueue dataQueue;
 
 
-  public ReIngestGenerator(String sourceFile, DataQueue dataQueue) {
+  public ReIngestGenerator(String sourceFile, @Nonnull DataQueue dataQueue) {
+    super(dataQueue);
     this.sourceFile = sourceFile;
-    this.dataQueue = dataQueue;
   }
 
   @Override
@@ -46,7 +57,7 @@ public class ReIngestGenerator extends SpanGenerator {
     reGenerateTraces(false, null, 0);
   }
 
-  private long reGenerateTraces(boolean isToFile, Pair<String, String> tagAndValue,
+  private void reGenerateTraces(boolean isToFile, Pair<String, String> tagAndValue,
                                 int percentage) {
     AtomicInteger counter = new AtomicInteger(0);
     AtomicLong startMoment = new AtomicLong(System.currentTimeMillis());
@@ -57,41 +68,39 @@ public class ReIngestGenerator extends SpanGenerator {
     try (Stream<String> stream = Files.lines(Paths.get(sourceFile))) {
       stream.forEach(line -> {
         if (isStart(line)) {
-          int startPos = line.indexOf(' ');
+          final int startPos = line.indexOf(' ');
           if (startPos >= 0) {
             start_ms.set(Long.parseLong(line.substring(startPos + 1)));
             atomicDelta.set(0);
           }
         } else if (isTrace(line)) {
-          int startPos = line.indexOf('{');
+          final int startPos = line.indexOf('{');
           if (startPos >= 0) {
             line = line.substring(startPos);
             try {
-              TraceFromWF traceFromWF =
+              final TraceFromWF traceFromWF =
                   objectMapper.readValue(line, new TypeReference<TraceFromWF>() {
                   });
               // Add conditional errors
               if (tagAndValue != null && percentage > 0) {
-                traceFromWF.getSpans().forEach(span -> {
-                  span.getAnnotations().forEach(map -> {
-                    if (RANDOM.nextInt(HUNDRED_PERCENT) + 1 <= percentage &&
-                        map.entrySet().stream().
-                            anyMatch(entry -> entry.getKey().equals(tagAndValue._1) &&
-                                entry.getValue().equals(tagAndValue._2))) {
-                      map.put("error", "true");
-                    }
-                  });
-                });
+                traceFromWF.getSpans().forEach(span -> span.getAnnotations().forEach(map -> {
+                  if (RANDOM.nextInt(HUNDRED_PERCENT) + 1 <= percentage &&
+                      map.entrySet().stream().
+                          anyMatch(entry -> entry.getKey().equals(tagAndValue._1) &&
+                              entry.getValue().equals(tagAndValue._2))) {
+                    map.put(ERROR, "true");
+                  }
+                }));
               }
 
               // Shift trace to the predefined time (can't be older than 15 min)
-              long delta = atomicDelta.updateAndGet(value -> value == 0 ?
+              final long delta = atomicDelta.updateAndGet(value -> value == 0 ?
                   start_ms.get() - traceFromWF.getStartMs() : value);
               traceFromWF.shiftTrace(delta);
               traceFromWF.updateUUIDs();
 
               // Convert WFtrace to trace convenient for DataQueue
-              Trace trace = new Trace(1);
+              final Trace trace = new Trace(1, null);
               traceFromWF.getSpans().forEach(wfspan -> {
                 trace.add(0, wfspan.toSpan());
               });
@@ -99,9 +108,9 @@ public class ReIngestGenerator extends SpanGenerator {
               statistics.offer(trace.getSpans().get(0).get(0).getName(),
                   trace, traceFromWF.getTotalDurationMs());
 
-              long tempStart = traceFromWF.getStartMs();
+              final long tempStart = traceFromWF.getStartMs();
               startMoment.updateAndGet(value -> Math.min(tempStart, value));
-              long tempEnd = traceFromWF.getEndMs();
+              final long tempEnd = traceFromWF.getEndMs();
               endMoment.updateAndGet(value -> Math.max(tempEnd, value));
               counter.incrementAndGet();
               if (!isToFile) {
@@ -114,7 +123,7 @@ public class ReIngestGenerator extends SpanGenerator {
         }
       });
 
-      SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
+      final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
       LOGGER.info("The number of reIngested traces is " + counter.get() +
           "\nIngestion started at " + simpleDateFormat.format(new Date(startMoment.get())) +
           " and will complete at " + simpleDateFormat.format(new Date(endMoment.get())) +
@@ -122,8 +131,6 @@ public class ReIngestGenerator extends SpanGenerator {
     } catch (IOException e) {
       LOGGER.severe(e.toString());
     }
-
-    return endMoment.get();
   }
 
   private boolean isTrace(String anyString) {

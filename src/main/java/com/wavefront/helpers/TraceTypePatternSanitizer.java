@@ -3,9 +3,8 @@ package com.wavefront.helpers;
 import com.google.common.base.Strings;
 
 import com.fasterxml.jackson.databind.util.StdConverter;
-import com.wavefront.SpanSender;
-import com.wavefront.TraceTypePattern;
-import com.wavefront.TraceTypePattern.TagVariation;
+import com.wavefront.datastructures.TagVariation;
+import com.wavefront.datastructures.TraceTypePattern;
 
 import java.util.ArrayList;
 import java.util.logging.Logger;
@@ -23,7 +22,7 @@ import static com.wavefront.helpers.Defaults.DEFAULT_TYPE_NAME_PREFIX;
  * @author Davit Baghdasaryan (dbaghdasarya@vmware.com)
  */
 public class TraceTypePatternSanitizer extends StdConverter<TraceTypePattern, TraceTypePattern> {
-  private static final Logger LOGGER = Logger.getLogger(SpanSender.class.getCanonicalName());
+  private static final Logger LOGGER = Logger.getLogger(TraceTypePatternSanitizer.class.getCanonicalName());
   private static int currentTypeIndex = 1;
 
   @Override
