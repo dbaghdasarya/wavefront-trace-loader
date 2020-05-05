@@ -14,7 +14,7 @@ import java.util.Random;
 public class TraceType {
   private static final Random RANDOM = new Random(System.currentTimeMillis());
 
-  public int tracePercentage;
+  public double tracePercentage;
   public int spansCount;
   public int errorRate = -1;
   public int debugRate = -1;

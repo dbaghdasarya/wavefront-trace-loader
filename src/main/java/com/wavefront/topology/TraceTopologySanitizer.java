@@ -44,7 +44,7 @@ public class TraceTopologySanitizer extends StdConverter<TraceTopology, TraceTop
       return false;
     }
 
-    int sumOfTraceTypePercentages = 0;
+    double sumOfTraceTypePercentages = 0;
     for (TraceType tt : value.traceTypes) {
       // Primitives.
       if (tt.debugRate < 0 || tt.debugRate > 100 ||
@@ -85,10 +85,9 @@ public class TraceTopologySanitizer extends StdConverter<TraceTopology, TraceTop
     }
 
     // Normalize TraceTypes probabilities.
-    if (sumOfTraceTypePercentages != Distribution.HUNDRED_PERCENT) {
+    if (Double.compare(sumOfTraceTypePercentages, Distribution.HUNDRED_PERCENT) != 0) {
       final double ratio = 1.0 * Distribution.HUNDRED_PERCENT / sumOfTraceTypePercentages;
-      value.traceTypes.forEach(
-          tt -> tt.tracePercentage = (int) Math.round(tt.tracePercentage * ratio));
+      value.traceTypes.forEach(tt -> tt.tracePercentage = tt.tracePercentage * ratio);
     }
     return true;
   }

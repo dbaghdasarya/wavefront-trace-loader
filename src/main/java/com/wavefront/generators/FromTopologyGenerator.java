@@ -83,6 +83,7 @@ public class FromTopologyGenerator extends SpanGenerator {
   private void generateTraceTemplates() {
     traceTemplates = new HashMap<>();
     int current = 0;
+    TraceType lastTraceType = null;
     for (TraceType tt : traceTopology.traceTypes) {
       // Calculate nesting levels number. Spans distributed across levels in geometrical sequence.
       int temp = tt.spansCount;
@@ -146,18 +147,25 @@ public class FromTopologyGenerator extends SpanGenerator {
       }
 
       traceTemplates.put(tt, trace);
-      final int max = Math.min(HUNDRED_PERCENT, current + tt.tracePercentage);
+      lastTraceType = tt;
+      final int max = (int) Math.min(HUNDRED_PERCENT, current + tt.tracePercentage);
       for (int n = current; n < max; n++) {
         traceTypes[n] = tt;
       }
       current = max;
     }
+    if (lastTraceType != null && current < 99) {
+      for (int n = current; n < 100; n++) {
+        traceTypes[n] = lastTraceType;
+      }
+    }
   }
 
   private List<Pair<String, String>> getTags(@Nonnull Trace trace, @Nonnull TraceType traceType,
-                                            int level, String service, String spanName,
-                                            UUID parentUUID) {
+                                             int level, String service, String spanName,
+                                             UUID parentUUID) {
     final List<Pair<String, String>> tags = traceTopology.getServiceTags(service);
+    assert tags != null;
 
     if (isEffectivePercentage(traceType.debugRate)) {
       tags.add(DEBUG_TAG);
