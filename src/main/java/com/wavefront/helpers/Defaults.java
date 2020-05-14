@@ -18,6 +18,9 @@ public class Defaults {
   public static final String SERVICE = "service";
   public static final String ERROR = "error";
   public static final String DEBUG = "debug";
+  public static final String APPLICATION= "application";
+  public static final String CLUSTER= "cluster";
+  public static final String SHARD= "shard";
   public static final String DEFAULT_TYPE_NAME_PREFIX = "traceType_";
   public static final String DEFAULT_SPAN_NAME_SUFFIX = "abcdefghijklmnopqrstuvxyz";
   public static final int DEFAULT_NESTING_LEVEL = RANDOM.nextInt(6) + 4;
@@ -25,9 +28,9 @@ public class Defaults {
   public static final Pair<String, String> DEBUG_TAG = new Pair<>(DEBUG, "true");
 
   public static final List<TagVariation> DEFAULT_MANDATORY_TAGS = List.of(
-      new TagVariation("application", Set.of("Application_1")),
-      new TagVariation("cluster", Set.of("us-west")),
-      new TagVariation("shard", Set.of("primary")),
+      new TagVariation(APPLICATION, Set.of("Application_1")),
+      new TagVariation(CLUSTER, Set.of("us-west")),
+      new TagVariation(SHARD, Set.of("primary")),
       new TagVariation(SERVICE, Set.of("Service_1", "Service_2")));
 
   public static final List<Distribution> DEFAULT_TRACE_DURATIONS = List.of(

@@ -3,6 +3,7 @@ package com.wavefront.topology;
 import com.fasterxml.jackson.databind.util.StdConverter;
 import com.wavefront.datastructures.Distribution;
 import com.wavefront.datastructures.TagVariation;
+import com.wavefront.datastructures.TraceType;
 
 import java.util.HashSet;
 import java.util.Set;

@@ -13,7 +13,7 @@ import com.wavefront.datastructures.Trace;
 import com.wavefront.helpers.Statistics;
 import com.wavefront.sdk.common.Pair;
 import com.wavefront.topology.TraceTopology;
-import com.wavefront.topology.TraceType;
+import com.wavefront.datastructures.TraceType;
 
 import java.util.HashMap;
 import java.util.HashSet;

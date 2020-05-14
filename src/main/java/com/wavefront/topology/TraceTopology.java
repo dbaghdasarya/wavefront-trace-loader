@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.wavefront.datastructures.TagVariation;
+import com.wavefront.datastructures.TraceType;
 import com.wavefront.sdk.common.Pair;
 
 import java.util.HashMap;
@@ -31,7 +32,9 @@ import static com.wavefront.helpers.WftlUtils.getRandomFromSet;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class TraceTopology {
   private static final Random RANDOM = new Random(System.currentTimeMillis());
-
+  /**
+   * Trace types definitions read from the topology.json.
+   */
   public List<TraceType> traceTypes;
   List<ServiceTags> serviceTags;
   List<ServiceSpansNumber> serviceSpansNumbers;
@@ -130,7 +133,7 @@ public class TraceTopology {
     serviceInfo.tags.forEach((k, v) -> {
       // Values in range [0..100] inclusive are possible.
       if (RANDOM.nextInt(HUNDRED_PERCENT) + 1 <= v.percentage) {
-        tags.add(new Pair(k, v.getRandomValue()));
+        tags.add(new Pair<>(k, v.getRandomValue()));
       }
     });
 
