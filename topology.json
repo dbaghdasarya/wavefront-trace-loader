@@ -1,0 +1,313 @@
+{
+  "spansRate": 50,
+  "duration": "2m",
+  "totalTraceCount": 100,
+  "traceTopology": {
+    "traceTypes": [
+      {
+        "tracePercentage": 80,
+        "spansCount": 15,
+        "errorRate": 20,
+        "debugRate": 30,
+        "traceDurations": [
+          {
+            "startValue": 50,
+            "endValue": 100,
+            "percentage": 20
+          },
+          {
+            "startValue": 200,
+            "endValue": 500,
+            "percentage": 80
+          }
+        ],
+        "errorConditions": [
+          {
+            "spanNames": ["taxi_001"],
+            "tagName": "application",
+            "tagValue": "TestApp2",
+            "errorRate": 80
+          },
+          {
+            "tagName": "source",
+            "tagValue": "ip-12.3.4.5",
+            "errorRate": 90
+          }
+        ]
+      },
+      {
+        "tracePercentage": 20,
+        "spansCount": 25,
+        "errorRate": 0,
+        "debugRate": 30,
+        "traceDurations": [
+          {
+            "startValue": 300,
+            "endValue": 400,
+            "percentage": 20
+          }
+        ]
+      },
+      {
+        "tracePercentage": 20,
+        "spansCount": 30,
+        "errorRate": 40,
+        "debugRate": 30,
+        "traceDurations": [
+          {
+            "startValue": 500,
+            "endValue": 600,
+            "percentage": 20
+          }
+        ]
+      }
+    ],
+    "serviceConnections": [
+      {
+        "root": true,
+        "services": [
+          "order",
+          "request"
+        ],
+        "children": [
+          "overnight",
+          "event",
+          "other"
+        ]
+      },
+      {
+        "services": [
+          "overnight"
+        ],
+        "children": [
+          "front-desk",
+          "room-service",
+          "taxi"
+        ]
+      },
+      {
+        "services": [
+          "event"
+        ],
+        "children": [
+          "front-desk",
+          "tech",
+          "taxi"
+        ]
+      },
+      {
+        "services": [
+          "other"
+        ],
+        "children": [
+          "front-desk",
+          "gym",
+          "taxi",
+          "pool",
+          "restaurant"
+        ]
+      },
+      {
+        "services": [
+          "front-desk"
+        ],
+        "children": [
+          "check-in",
+          "call",
+          "booking",
+          "payment"
+        ]
+      },
+      {
+        "services": [
+          "room-service"
+        ],
+        "children": [
+          "clean"
+        ]
+      },
+      {
+        "services": [
+          "taxi"
+        ],
+        "children": [
+          "payment",
+          "ranking"
+        ]
+      },
+      {
+        "services": [
+          "tech"
+        ],
+        "children": [
+          "microphone",
+          "stereo",
+          "display",
+          "call"
+        ]
+      },
+      {
+        "services": [
+          "gym"
+        ],
+        "children": [
+          "training"
+        ]
+      },
+      {
+        "services": [
+          "pool"
+        ],
+        "children": [
+          "swimming",
+          "sauna",
+          "training"
+        ]
+      },
+      {
+        "services": [
+          "restaurant"
+        ],
+        "children": [
+          "dinner",
+          "lunch",
+          "breakfast"
+        ]
+      },
+      {
+        "services": [
+          "dinner",
+          "lunch",
+          "breakfast"
+        ],
+        "children": [
+          "payment",
+          "ranking"
+        ]
+      },
+      {
+        "services": [
+          "booking"
+        ],
+        "children": [
+          "check-in",
+          "payment"
+        ]
+      },
+      {
+        "services": [
+          "check-in"
+        ],
+        "children": [
+          "payment"
+        ]
+      },
+      {
+        "services": [
+          "payment"
+        ],
+        "children": [
+          "cash",
+          "card",
+          "bonus",
+          "barter"
+        ]
+      },
+      {
+        "services": [
+          "cash",
+          "card",
+          "bonus",
+          "barter"
+        ],
+        "children": [
+          "ranking"
+        ]
+      }
+    ],
+    "serviceTags": [
+      {
+        "services": [
+          "*"
+        ],
+        "mandatoryTags": [
+          {
+            "tagName": "application",
+            "tagValues": [
+              "TestApp2"
+            ]
+          },
+          {
+            "tagName": "source",
+            "tagValues": [
+              "ip-10.1.2.3",
+              "ip-11.2.3.4",
+              "ip-12.3.4.5",
+              "ip-13.4.5.6",
+              "ip-14.5.6.7",
+              "ip-15.6.7.8"
+            ]
+          },
+          {
+            "tagName": "shard",
+            "tagValues": [
+              "primary"
+            ]
+          },
+          {
+            "tagName": "cluster",
+            "tagValues": [
+              "us-west"
+            ]
+          }
+        ],
+        "optionalTags": [
+          {
+            "tagName": "days",
+            "tagValues": [
+              5,
+              2,
+              1,
+              7
+            ]
+          },
+          {
+            "tagName": "amount",
+            "tagValues": [
+              10,
+              20,
+              30,
+              40,
+              50,
+              55
+            ]
+          },
+          {
+            "tagName": "quantity",
+            "tagValues": [
+              10,
+              20,
+              30
+            ]
+          }
+        ],
+        "optionalTagsPercentage": 90
+      }
+    ],
+    "serviceSpansNumbers": [
+      {
+        "services": [
+          "*"
+        ],
+        "spansNumber": 2
+      },
+      {
+        "services": [
+          "order",
+          "request"
+        ],
+        "spansNumber": 1
+      }
+    ]
+  }
+}

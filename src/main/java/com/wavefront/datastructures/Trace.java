@@ -1,6 +1,5 @@
 package com.wavefront.datastructures;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
 import com.wavefront.sdk.common.Pair;
@@ -8,10 +7,15 @@ import com.wavefront.sdk.common.Pair;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nonnull;
+
+import static com.wavefront.helpers.Defaults.DEBUG;
+
 /**
- * Data structure representing a trace.
+ * Data structure representing a trace as a collection of spans.
  *
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
@@ -23,12 +27,13 @@ public class Trace {
   private int spansCount = 0;
   private int debugSpansCount = 0;
   private boolean error = false;
-  private String traceId;
   private long startMs = Long.MAX_VALUE;
   private long endMs = Long.MIN_VALUE;
+  private UUID traceUUID;
 
-  public Trace(int levels) {
+  public Trace(int levels, UUID traceUUID) {
     this.levels = levels;
+    this.traceUUID = traceUUID;
     spans = Lists.newArrayListWithExpectedSize(levels);
     for (int n = 0; n < levels; n++) {
       spans.add(new LinkedList<>());
@@ -41,10 +46,10 @@ public class Trace {
    * @param level Level number for adding (root is 0).
    * @param span  Span to be added.
    */
-  public void add(int level, Span span) {
+  public void add(int level, @Nonnull Span span) {
     spans.get(level).add(span);
-    if (Strings.isNullOrEmpty(this.traceId)) {
-      this.traceId = span.getTraceUUID().toString();
+    if (this.traceUUID == null) {
+      this.traceUUID = span.getTraceUUID();
     }
     setStartMs(span.getStartMillis());
     setEndMs(span.getDuration() + span.getStartMillis());
@@ -53,7 +58,7 @@ public class Trace {
       if (!error && span.getTags().contains(new Pair<>("error", "true"))) {
         error = true;
       }
-      if (span.getTags().contains(new Pair<>("debug", "true"))) {
+      if (span.getTags().contains(new Pair<>(DEBUG, "true"))) {
         debugSpansCount++;
       }
     }
@@ -72,6 +77,10 @@ public class Trace {
     }
   }
 
+  public int getLevels() {
+    return levels;
+  }
+
   public int getSpansCount() {
     return spansCount;
   }
@@ -84,24 +93,20 @@ public class Trace {
     return debugSpansCount;
   }
 
-  public final List<List<Span>> getSpans() {
+  public List<List<Span>> getSpans() {
     return spans;
   }
 
-  public boolean setStartMs(long startMs) {
+  public void setStartMs(long startMs) {
     if (this.startMs > startMs) {
       this.startMs = startMs;
-      return true;
     }
-    return false;
   }
 
-  public boolean setEndMs(long endMs) {
+  public void setEndMs(long endMs) {
     if (this.endMs < endMs) {
       this.endMs = endMs;
-      return true;
     }
-    return false;
   }
 
   /**
@@ -110,7 +115,7 @@ public class Trace {
    * @return Converted trace.
    */
   public TraceFromWF toWFTrace() {
-    TraceFromWF wfTrace = new TraceFromWF();
+    final TraceFromWF wfTrace = new TraceFromWF();
     wfTrace.setSpans(getSpans().stream().flatMap(List::stream).map(Span::toWFSpan).
         collect(Collectors.toList()));
 

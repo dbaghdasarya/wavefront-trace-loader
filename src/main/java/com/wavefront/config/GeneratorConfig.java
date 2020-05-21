@@ -4,9 +4,14 @@ import com.beust.jcommander.Parameter;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wavefront.TraceTypePattern;
+import com.wavefront.DataQueue;
+import com.wavefront.datastructures.TraceTypePattern;
+import com.wavefront.generators.FromPatternGenerator;
+import com.wavefront.generators.FromTopologyGenerator;
+import com.wavefront.generators.SpanGenerator;
 import com.wavefront.helpers.Defaults;
 import com.wavefront.helpers.DurationStringConverter;
+import com.wavefront.topology.TraceTopology;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -66,17 +71,18 @@ public class GeneratorConfig {
   private List<String> unparsedParams;
 
   private LinkedList<TraceTypePattern> traceTypePatterns;
+  private TraceTopology traceTopology;
 
   public GeneratorConfig() {
   }
 
   public void initPropertiesFromFile() throws IOException {
-    //read json file data to String
+    // read json file data to String
     byte[] jsonData = Files.readAllBytes(Paths.get(getGeneratorConfigFile()));
-    //create ObjectMapper instance
+    // create ObjectMapper instance
     ObjectMapper objectMapper = new ObjectMapper();
 
-    //read JSON like DOM Parser
+    // read JSON like DOM Parser
     JsonNode rootNode = objectMapper.readTree(jsonData);
     spansRate = rootNode.path("spansRate").asInt();
     duration = (new DurationStringConverter()).convert(rootNode.path("duration").asText());
@@ -88,9 +94,19 @@ public class GeneratorConfig {
     totalTraceCount = rootNode.path("totalTraceCount").asInt(0);
 
     if (traceTypesCount <= 0) {
-      traceTypePatterns = objectMapper.readValue(rootNode.path("traceTypePatterns").toString(),
-          new TypeReference<LinkedList<TraceTypePattern>>() {
-          });
+      if (rootNode.findValue("traceTypePatterns") != null) {
+        traceTypePatterns =
+            objectMapper.readValue(
+                rootNode.path("traceTypePatterns").toString(),
+                new TypeReference<LinkedList<TraceTypePattern>>() {
+                });
+      }
+      if (rootNode.findValue("traceTopology") != null) {
+        traceTopology =
+            objectMapper.readValue(
+                rootNode.path("traceTopology").toString(), new TypeReference<TraceTopology>() {
+                });
+      }
     }
   }
 
@@ -106,15 +122,17 @@ public class GeneratorConfig {
     traceTypePatterns = new LinkedList<>();
     Random rand = new Random(System.currentTimeMillis());
     for (int n = 0; n < traceTypesCount; n++) {
-      traceTypePatterns.add(new TraceTypePattern(Defaults.DEFAULT_TYPE_NAME_PREFIX + (n + 1),
-          Defaults.DEFAULT_SPAN_NAME_SUFFIX,
-          Defaults.DEFAULT_NESTING_LEVEL,
-          100 / traceTypesCount,
-          Defaults.DEFAULT_SPANS_DISTRIBUTIONS,
-          Defaults.DEFAULT_TRACE_DURATIONS,
-          Defaults.DEFAULT_MANDATORY_TAGS,
-          errorRate,
-          debugRate));
+      traceTypePatterns.add(
+          new TraceTypePattern(
+              Defaults.DEFAULT_TYPE_NAME_PREFIX + (n + 1),
+              Defaults.DEFAULT_SPAN_NAME_SUFFIX,
+              Defaults.DEFAULT_NESTING_LEVEL,
+              100 / traceTypesCount,
+              Defaults.DEFAULT_SPANS_DISTRIBUTIONS,
+              Defaults.DEFAULT_TRACE_DURATIONS,
+              Defaults.DEFAULT_MANDATORY_TAGS,
+              errorRate,
+              debugRate));
     }
   }
 
@@ -146,11 +164,25 @@ public class GeneratorConfig {
     return traceTypePatterns;
   }
 
+  public TraceTopology getTraceTopology() {
+    return traceTopology;
+  }
+
   public Integer getTotalTraceCount() {
     return totalTraceCount;
   }
 
   public String getStatisticsFile() {
     return statisticsFile;
+  }
+
+  public SpanGenerator getGenerator(DataQueue dataQueue) {
+    if (traceTypePatterns != null) {
+      return new FromPatternGenerator(this, dataQueue);
+    } else if (traceTopology != null) {
+      return new FromTopologyGenerator(this, dataQueue);
+    }
+
+    return null;
   }
 }

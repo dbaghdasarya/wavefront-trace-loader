@@ -2,7 +2,6 @@ package com.wavefront;
 
 import com.google.common.base.Strings;
 
-import com.wavefront.generators.FromPatternGenerator;
 import com.wavefront.generators.ReIngestGenerator;
 import com.wavefront.generators.SpanGenerator;
 import com.wavefront.sdk.common.WavefrontSender;
@@ -76,7 +75,7 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
     if (applicationConfig != null && !Strings.isNullOrEmpty(applicationConfig.getWfTracesFile())) {
       this.spanGenerator = new ReIngestGenerator(applicationConfig.getWfTracesFile(), dataQueue);
     } else {
-      this.spanGenerator = new FromPatternGenerator(generatorConfig, dataQueue);
+      this.spanGenerator = generatorConfig.getGenerator(dataQueue);
     }
   }
 
