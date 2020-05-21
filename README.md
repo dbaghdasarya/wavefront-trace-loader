@@ -46,7 +46,7 @@ token: "Wavefront_token" "bdc66030-a1a8-493b-b416-5559fdcfa45d"
 IMPORTANT: disable or remove `spanOutputFile:` and `traceOutputFile:` options.
 Follow the [instruction](https://docs.wavefront.com/users_account_managing.html#generating-an-api-token) for getting your Wavefront token.
 ### The traces generation
-#### - Simple way
+#### Simple way
 The traces generation parameters could be simply provided via command line options:
 - `--duration=00h00m00s` - Duration of ingestion time.
 - `--errorRate=10` - Percentage of erroneous traces (0-100). Default: 0
@@ -57,7 +57,8 @@ The traces generation parameters could be simply provided via command line optio
  than 0, `duration` will be ignored. Default: 5 minute
 - `--stat output.json` - To dump statistics about generated traces to the given file in JSON format.
  By default the statistics will be shown in the console.
-#### - Advanced way
+#### Advanced way
+##### Pattern 
 The traces generation parameters could be set via Trace Types Pattern file (`json`):
 - `-f pattern.json` - Generator config file.
 
@@ -176,6 +177,168 @@ The `json` file has the following structure:
         - `"tagName"` - route cause tag of the error condition 
         - `"tagValues"` - route cause value of the tag of the error condition
         - `"errorRate"` - the percentage of the produced errors that meet the given condition. If multiple conditions could be applied the result rate will be P(AB)=P(A)+P(B)-P(A)*P(B), P(ABC) = P(AB)+P(C)-P(AB)*P(C) ...
+
+##### Topology 
+This method allows to define a strict topology of the generated traces via topology file (`json`):
+- `-f topology.json` - Generator config file.
+
+This option has lower priority than `traceTypePatterns` section and will be ignored in case both
+ are present in the same file.
+The `json` file has the following structure:
+```
+{
+  "spansRate": 50,
+  "duration": "2m",
+  "totalTraceCount": 100,
+  "traceTopology": {
+    "traceTypes": [
+      {
+        "tracePercentage": 80,
+        "spansCount": 15,
+        "errorRate": 20,
+        "debugRate": 30,
+        "traceDurations": [
+          {
+            "startValue": 50,
+            "endValue": 100,
+            "percentage": 20
+          },
+          ...
+        ],
+        "errorConditions": [
+          {
+            "spanNames": ["taxi_001"],
+            "tagName": "application",
+            "tagValue": "TestApp2",
+            "errorRate": 80
+          },
+          {
+            "tagName": "source",
+            "tagValue": "ip-12.3.4.5",
+            "errorRate": 90
+          }
+        ]
+      },
+      ...
+    ],
+    "serviceConnections": [
+      {
+        "root": true,
+        "services": [
+          "order",
+          "request"
+        ],
+        "children": [
+          "overnight",
+          "event",
+          "other"
+        ]
+      },
+      {
+        "services": [
+          "overnight"
+        ],
+        "children": [
+          "front-desk",
+          "room-service",
+          "taxi"
+        ]
+      },
+      ...
+    ],
+    "serviceTags": [
+      {
+        "services": [
+          "*"
+        ],
+        "mandatoryTags": [
+          {
+            "tagName": "application",
+            "tagValues": [
+              "TestApp2"
+            ]
+          },
+          {
+            "tagName": "source",
+            "tagValues": [
+              "ip-10.1.2.3",
+              "ip-11.2.3.4",
+              ...
+            ]
+          },
+          ...
+        ],
+        "optionalTags": [
+          {
+            "tagName": "days",
+            "tagValues": [
+              5,
+              ...
+            ]
+          },
+          ...
+        ],
+        "optionalTagsPercentage": 90
+      }
+    ],
+    "serviceSpansNumbers": [
+      {
+        "services": [
+          "*"
+        ],
+        "spansNumber": 2
+      },
+      {
+        "services": [
+          "order",
+          "request"
+        ],
+        "spansNumber": 1
+      }
+    ]
+  }
+}
+```
+
+`"spansRate"`, `"duration"` and `"totalTraceCount"` keys have the same meaning that the similar
+ command line options.
+- `"traceTopology"` - the main block that defines topology of the generated traces.
+    - `"traceTypes"` - a list of trace types generated according the defined topology.
+        - `"tracePercentage"` - a percentage of traces of the given trace type in
+         `"totalTraceCount"`.
+        - `"spansCount"` - number of spans in a trace of this type.
+        - `"errorRate"` - if this value set, traces will be generated with error tag in the root
+         span and all other error conditions will be ignored.
+        - `"debugRate"` - if this value set, traces will be generated with debug tag in the root
+         span.
+        - `"traceDurations"` - distribution of durations among traces of the given trace type.
+            - `"startValue"`, `"endValue"` - range of the duration in milliseconds.
+            - `"percentage"` - a percentage of the traces with duration in the given range.
+        - `"errorConditions"` - conditions on which errors will be generated. `"errorConditions"` disables all previously defined `"errorRates"`.
+            - `"spanNames` - list of span names for which the condition is applicable (optional)
+            - `"tagName"` - route cause tag of the error condition 
+            - `"tagValues"` - route cause value of the tag of the error condition
+            - `"errorRate"` - the percentage of the produced errors that meet the given condition. If multiple conditions could be applied the result rate will be P(AB)=P(A)+P(B)-P(A)*P(B), P(ABC) = P(AB)+P(C)-P(AB)*P(C) ...
+    - `"serviceConnections"` - defines hierarchy of services.
+        - `"root"` - if `true` then services can be used as a service of a root span. Default
+         value is `false.`
+        - `"services"` - a list of services that can be parent services. The wildcard is allowed.
+        - `"children"` - a list of services that can be children of the services from the
+         previous list.  
+    - `"serviceTags"` - defines tags applicable to services.
+        - `"services"` - a list of services. The wildcard is allowed.
+        - `"mandatoryTags"` - some of the span tags are mandatory, it means that every span will have the given set of tags. Some tags are defined as mandatory by Wavefront (`application`, `service`). Trace generator will add missing mandatory tags and will warn the user about it.
+            - `"tagName"` - name of the tag.
+            - `"tagValues"` - list of possible values. The Generator will randomly select values from the list.
+        - `"optionalTags"` - some tags are optional and may be missing in the tags list of a span.
+            - `"tagName"` - name of the tag.
+            - `"tagValues"` - list of possible values. The Generator will randomly select values from the list.
+        - `"optionalTagsPercentage"` - defines a percentage of optional tags wich should be added to span. For instance, if a user provides 5 optional tags and sets `"optionalTagsPercentage": 40` every span will have randomly selected 2 optional tags.
+    - `"serviceSpansNumbers"` - defines spans numbers of the listed traces. The default value is 1.
+        - `"services"` - a list of services. The wildcard is allowed.
+        - `"spansNumber"` - number of spans of the given service. For example if number = 2, can
+         be generated 2 types of spans for the given service with names `<service_name>_001
+         ` and `<service_name>_002`. 
 
 #### - Example
 
