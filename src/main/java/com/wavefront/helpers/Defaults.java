@@ -18,9 +18,11 @@ public class Defaults {
   public static final String SERVICE = "service";
   public static final String ERROR = "error";
   public static final String DEBUG = "debug";
-  public static final String APPLICATION= "application";
-  public static final String CLUSTER= "cluster";
-  public static final String SHARD= "shard";
+  public static final String APPLICATION = "application";
+  public static final String CLUSTER = "cluster";
+  public static final String SHARD = "shard";
+  public static final String PARENT = "parent";
+  public static final String FOLLOWS_FROM = "followsFrom";
   public static final String DEFAULT_TYPE_NAME_PREFIX = "traceType_";
   public static final String DEFAULT_SPAN_NAME_SUFFIX = "abcdefghijklmnopqrstuvxyz";
   public static final int DEFAULT_NESTING_LEVEL = RANDOM.nextInt(6) + 4;
