@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static com.wavefront.helpers.Defaults.FOLLOWS_FROM;
+import static com.wavefront.helpers.Defaults.PARENT;
+
 /**
  * An intermediate data structure for loading and parsing JSON spans exported from the Wavefront GUI
  * to spans used by the TraceLoader tool, and vice versa. Names of some fields don't match commonly
@@ -30,7 +33,8 @@ public class SpanFromWF {
   }
 
   public SpanFromWF(String name, String host, long startMs, long durationMs, String spanId,
-                    String traceId, List<Pair<String, String>> tags) {
+                    String traceId, List<UUID> parents, List<UUID> followsFrom,
+                    List<Pair<String, String>> tags) {
     this.name = name;
     this.host = host;
     this.startMs = startMs;
@@ -38,6 +42,12 @@ public class SpanFromWF {
     this.spanId = spanId;
     this.traceId = traceId;
     this.annotations = new LinkedList<>();
+    if (parents != null) {
+      parents.forEach(p -> this.annotations.add(Map.of(PARENT, p.toString())));
+    }
+    if (followsFrom != null) {
+      parents.forEach(ff -> this.annotations.add(Map.of(FOLLOWS_FROM, ff.toString())));
+    }
     if (tags != null) {
       tags.forEach(t -> this.annotations.add(Map.of(t._1, t._2)));
     }
@@ -84,10 +94,10 @@ public class SpanFromWF {
     List<Pair<String, String>> tags = new LinkedList<>();
     annotations.forEach(a -> a.forEach((k, v) -> tags.add(new Pair<>(k, v))));
 
-    List<UUID> parents = tags.stream().filter(pair -> pair._1.equals("parent")).
+    List<UUID> parents = tags.stream().filter(pair -> pair._1.equals(PARENT)).
         map(id -> UUID.fromString(id._2)).collect(Collectors.toList());
 
-    List<UUID> followsFrom = tags.stream().filter(pair -> pair._1.equals("followsFrom")).
+    List<UUID> followsFrom = tags.stream().filter(pair -> pair._1.equals(FOLLOWS_FROM)).
         map(id -> UUID.fromString(id._2)).collect(Collectors.toList());
 
     return new Span(name, startMs, durationMs, host, UUID.fromString(traceId),

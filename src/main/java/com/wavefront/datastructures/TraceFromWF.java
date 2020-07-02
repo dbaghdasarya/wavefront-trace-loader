@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.wavefront.helpers.Defaults.FOLLOWS_FROM;
+import static com.wavefront.helpers.Defaults.PARENT;
+
 /**
  * An intermediate data structure for loading and parsing JSON traces exported from the Wavefront
  * GUI to traces used by the TraceLoader tool, and vice versa. Names of some fields don't match
@@ -117,8 +120,8 @@ public class TraceFromWF {
       {
         for (Map.Entry<String, String> entry : a.entrySet()) {
           String key = entry.getKey();
-          if (key.equals("parent")
-              || key.equals("followsFrom")
+          if (key.equals(PARENT)
+              || key.equals(FOLLOWS_FROM)
               || key.equals("spanId")
               || key.equals("traceId")) {
             entry.setValue(uuids.computeIfAbsent(entry.getValue(),

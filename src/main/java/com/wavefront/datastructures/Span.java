@@ -124,6 +124,6 @@ public class Span {
    */
   public SpanFromWF toWFSpan() {
     return new SpanFromWF(name, source, startMillis, durationMillis, spanUUID.toString(),
-        traceUUID.toString(), tags);
+        traceUUID.toString(), parents, followsFrom, tags);
   }
 }
