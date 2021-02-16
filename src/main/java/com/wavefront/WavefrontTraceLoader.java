@@ -4,9 +4,10 @@ import com.google.common.base.Strings;
 
 import com.wavefront.generators.ReIngestGenerator;
 import com.wavefront.generators.SpanGenerator;
+import com.wavefront.internal.reporter.WavefrontInternalReporter;
+import com.wavefront.opentracing.reporting.WavefrontSpanReporter;
 import com.wavefront.sdk.common.WavefrontSender;
-import com.wavefront.sdk.direct.ingestion.WavefrontDirectIngestionClient;
-import com.wavefront.sdk.proxy.WavefrontProxyClient;
+import com.wavefront.sdk.common.clients.WavefrontClientFactory;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -37,18 +38,25 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
       spanSender = new SpanSender(applicationConfig.getSpanOutputFile(),
           applicationConfig.getTraceOutputFile(), dataQueue);
     } else {
-      WavefrontSender wavefrontSender;
+      WavefrontSender wfSender;
+      WavefrontClientFactory wfClientFactory = new WavefrontClientFactory();
       if (applicationConfig.getProxyServer() != null) {
-        wavefrontSender = new WavefrontProxyClient.Builder(applicationConfig.getProxyServer()).
-            metricsPort(applicationConfig.getMetricsPort()).
-            distributionPort(applicationConfig.getDistributionPort()).
-            tracingPort(applicationConfig.getTracingPort()).build();
+        wfClientFactory.addClient(applicationConfig.getProxyServer() + ":" +
+            applicationConfig.getMetricsPort() + "/");
+        wfClientFactory.addClient(applicationConfig.getProxyServer() + ":" +
+            applicationConfig.getDistributionPort() + "/");
+        wfClientFactory.addClient(applicationConfig.getProxyServer() + ":" +
+            applicationConfig.getTracingPort() + "/");
+        wfClientFactory.addClient(applicationConfig.getProxyServer() + ":" +
+            applicationConfig.getCustomTracingPorts() + "/");
       } else {
-        wavefrontSender = new WavefrontDirectIngestionClient.Builder(applicationConfig.getServer(),
-            applicationConfig.getToken()).build();
+        wfClientFactory.addClient("https://" + applicationConfig.getToken() +
+            "@" + applicationConfig.getServer());
       }
-
-      spanSender = new SpanSender(wavefrontSender, generatorConfig.getSpansRate(), dataQueue);
+      wfSender = wfClientFactory.getClient();
+      WavefrontSpanReporter wfSpanReporter = new WavefrontSpanReporter.Builder().build(wfSender);
+      wfSpanReporter.setMetricsReporter(new WavefrontInternalReporter.Builder().build(wfSender));
+      spanSender = new SpanSender(wfSender, generatorConfig.getSpansRate(), dataQueue);
     }
   }
 

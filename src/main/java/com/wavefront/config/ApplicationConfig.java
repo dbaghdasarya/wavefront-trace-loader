@@ -46,6 +46,11 @@ public class ApplicationConfig {
   @JsonProperty
   private Integer tracingPort = 30000;
   /**
+   * Port used for additional tracing data.
+   */
+  @JsonProperty
+  private Integer customTracingPorts = 30001;
+  /**
    * Server URL used for direct ingestion.
    */
   @JsonProperty
@@ -91,5 +96,9 @@ public class ApplicationConfig {
 
   public Integer getTracingPort() {
     return tracingPort;
+  }
+
+  public Integer getCustomTracingPorts() {
+    return customTracingPorts;
   }
 }
