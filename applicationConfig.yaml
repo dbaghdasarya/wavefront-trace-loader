@@ -9,8 +9,8 @@
 
 ## Uncomment for ingesting traces through proxy.
 ## This option priority is the next after generation to file option.
-#proxyServer: "localhost"
+proxyServer: "http://localhost"
 
 ## Uncomment and setup for direct ingestion.
-server: "http://localhost:8080"
-token: "bdc66030-a1a8-493b-b416-5559fdcfa45d"
+#server: "http://localhost:8080"
+#token: "bdc66030-a1a8-493b-b416-5559fdcfa45d"
