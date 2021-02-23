@@ -51,11 +51,11 @@ public class FromTopologyGenerator extends SpanGenerator {
   @Nonnull
   private final GeneratorConfig generatorConfig;
   private final TraceType[] traceTypes = new TraceType[100];
-  private final LoadingCache<TraceType, List<Integer>> traceDurationsPercentages =
+  private final LoadingCache<TraceType, List<Double>> traceDurationsPercentages =
       CacheBuilder.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).
           build(new CacheLoader<>() {
             @Override
-            public List<Integer> load(@Nonnull TraceType traceType) {
+            public List<Double> load(@Nonnull TraceType traceType) {
               return traceType.traceDurations.stream().map(distribution ->
                   distribution.percentage).collect(Collectors.toList());
             }
