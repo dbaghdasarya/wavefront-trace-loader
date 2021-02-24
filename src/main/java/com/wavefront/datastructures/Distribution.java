@@ -1,5 +1,6 @@
 package com.wavefront.datastructures;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
@@ -13,6 +14,7 @@ import javax.annotation.Nonnull;
 public class Distribution {
   private static final Random RANDOM = new Random(System.currentTimeMillis());
   public static final int HUNDRED_PERCENT = 100;
+  protected static double sumOfPercentages = 0;
   /**
    * Start value of the bin values.
    */
@@ -24,16 +26,58 @@ public class Distribution {
   /**
    * Occurrence of the values from the interval startValue, endValue in percents.
    */
-  public int percentage;
+  public double percentage;
 
   public Distribution() {
 
   }
 
-  public Distribution(int startValue, int endValue, int percentage) {
+  public Distribution(int startValue, int endValue, double percentage) {
     this.startValue = startValue;
     this.endValue = endValue;
     this.percentage = percentage;
+  }
+
+  /**
+   * By use percentages, generating percent ranges.
+   */
+  protected static List<Double> generatePercentRanges(@Nonnull List<Double> percentages) {
+    List<Double> percentRanges = new LinkedList<>();
+    sumOfPercentages = 0;
+    for (int i = 0; i < percentages.size(); i++) {
+      sumOfPercentages += percentages.get(i);
+      percentRanges.add(sumOfPercentages);
+    }
+    return percentRanges;
+  }
+
+  /**
+   * Sum of all percentages.
+   */
+  protected static double sumOfPercentRanges() {
+    return sumOfPercentages;
+  }
+
+  /**
+   * Used binary search algorithm to find index.
+   */
+  protected static int getIndex(@Nonnull List<Double> percentRanges, double randomPercent) {
+    int firstIndex = 0;
+    int lastIndex = percentRanges.size() - 1;
+    int middleIndex = 0;
+
+    while (firstIndex <= lastIndex) {
+      middleIndex = firstIndex + (lastIndex - firstIndex) / 2;
+      if (percentRanges.get(middleIndex) == randomPercent) {
+        return middleIndex;
+      }
+      if (percentRanges.get(middleIndex) < randomPercent) {
+        firstIndex = middleIndex + 1;
+      } else {
+        lastIndex = middleIndex - 1;
+      }
+    }
+    return middleIndex;
   }
 
   @Override
@@ -74,15 +118,9 @@ public class Distribution {
    * @param percentages List of distribution percentages.
    * @return Return an index of the next item.
    */
-  public static int getIndexOfNextItem(@Nonnull List<Integer> percentages) {
-    final int randomPercent = RANDOM.nextInt(HUNDRED_PERCENT) + 1;
-    int left = 0;
-    for (int i = 0; i < percentages.size(); i++) {
-      if (randomPercent > left && randomPercent <= percentages.get(i) + left) {
-        return i;
-      }
-      left += percentages.get(i);
-    }
-    return 0;
+  public static int getIndexOfNextItem(@Nonnull List<Double> percentages) {
+    final List<Double> percentRanges = generatePercentRanges(percentages);
+    final double randomPercent = sumOfPercentRanges() * RANDOM.nextDouble();
+    return getIndex(percentRanges, randomPercent);
   }
 }

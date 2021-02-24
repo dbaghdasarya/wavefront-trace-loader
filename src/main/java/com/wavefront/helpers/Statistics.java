@@ -45,7 +45,7 @@ public class Statistics {
       sb.append("\nType: ").append(k).append('\n');
       sb.append("Count ").append(v.count).append('\n');
       sb.append("Percentage ").
-          append(Math.round((double) v.count / tracesSum * 100)).append('\n');
+          append((double) v.count / tracesSum * 100).append('\n');
       sb.append("Spans mean ").append(Math.round((double) v.spansSum / v.count)).append('\n');
       sb.append("Spans min ").append(v.spansMin).append('\n');
       sb.append("Spans max ").append(v.spansMax).append('\n');

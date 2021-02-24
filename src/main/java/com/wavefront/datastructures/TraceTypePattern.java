@@ -26,7 +26,7 @@ public class TraceTypePattern {
   public String traceTypeName;
   public String spanNameSuffixes;
   public int nestingLevel;
-  public int tracePercentage;
+  public double tracePercentage;
   public int errorRate;
   public int debugRate;
   public List<Distribution> traceDurations;
@@ -39,7 +39,7 @@ public class TraceTypePattern {
   public Set<String> rootLevelServices;
 
   public TraceTypePattern(String traceTypeName, String spanNameSuffixes,
-                          int nestingLevel, int tracePercentage,
+                          int nestingLevel, double tracePercentage,
                           List<Distribution> spansDistributions, List<Distribution> traceDurations,
                           List<TagVariation> mandatoryTags, int errorRate, int debugRate) {
     this.traceTypeName = traceTypeName;

@@ -42,35 +42,35 @@ public class FromPatternGenerator extends SpanGenerator {
   @Nonnull
   private final GeneratorConfig generatorConfig;
 
-  private final LoadingCache<TraceTypePattern, List<Integer>> spansDistributionsPercentages =
+  private final LoadingCache<TraceTypePattern, List<Double>> spansDistributionsPercentages =
       CacheBuilder.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).
           build(new CacheLoader<>() {
             @Override
-            public List<Integer> load(@Nonnull TraceTypePattern traceTypePattern) {
+            public List<Double> load(@Nonnull TraceTypePattern traceTypePattern) {
               return traceTypePattern.spansDistributions.stream().map(distribution ->
                   distribution.percentage).collect(Collectors.toList());
             }
           });
-  private final LoadingCache<TraceTypePattern, List<Integer>> traceDurationsPercentages =
+  private final LoadingCache<TraceTypePattern, List<Double>>traceDurationsPercentages =
       CacheBuilder.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).
           build(new CacheLoader<>() {
             @Override
-            public List<Integer> load(@Nonnull TraceTypePattern traceTypePattern) {
+            public List<Double> load(@Nonnull TraceTypePattern traceTypePattern) {
               return traceTypePattern.traceDurations.stream().map(distribution ->
                   distribution.percentage).collect(Collectors.toList());
             }
           });
-  private final LoadingCache<TraceTypePattern, List<Integer>> spansDurationsPercentages =
+  private final LoadingCache<TraceTypePattern, List<Double>> spansDurationsPercentages =
       CacheBuilder.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).
           build(new CacheLoader<>() {
             @Override
-            public List<Integer> load(@Nonnull TraceTypePattern traceTypePattern) {
+            public List<Double> load(@Nonnull TraceTypePattern traceTypePattern) {
               return traceTypePattern.spansDurations.stream().map(distribution ->
                   distribution.percentage).collect(Collectors.toList());
             }
           });
 
-  private List<Integer> tracePercentages;
+  private List<Double> tracePercentages;
 
   public FromPatternGenerator(@Nonnull GeneratorConfig config, @Nonnull DataQueue dataQueue) {
     super(dataQueue);
@@ -224,7 +224,7 @@ public class FromPatternGenerator extends SpanGenerator {
         mapToDouble(t -> t.tracePercentage).sum());
 
     traceTypePatterns.forEach(traceType -> {
-      traceType.tracePercentage = (int) Math.round(traceType.tracePercentage * tracePercRatio);
+      traceType.tracePercentage = traceType.tracePercentage * tracePercRatio;
       normalizeCanonicalDistributions(traceType.spansDistributions);
       normalizeCanonicalDistributions(traceType.traceDurations);
       normalizeCanonicalDistributions(traceType.spansDurations);
