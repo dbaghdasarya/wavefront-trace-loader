@@ -45,7 +45,7 @@ public class WftlUtils {
    * @param percentage Probability percentage.
    * @return True if the method decides that the case is possible.
    */
-  public static boolean isEffectivePercentage(int percentage) {
-    return (percentage > 0 && RANDOM.nextInt(HUNDRED_PERCENT) + 1 <= percentage);
+  public static boolean isEffectivePercentage(double percentage) {
+    return (percentage > 0 && (RANDOM.nextDouble() <= (percentage / HUNDRED_PERCENT)));
   }
 }

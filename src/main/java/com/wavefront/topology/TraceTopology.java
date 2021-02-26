@@ -131,8 +131,7 @@ public class TraceTopology {
     }
 
     serviceInfo.tags.forEach((k, v) -> {
-      // Values in range [0..100] inclusive are possible.
-      if (RANDOM.nextInt(HUNDRED_PERCENT) + 1 <= v.percentage) {
+      if (RANDOM.nextDouble() <= (v.percentage / HUNDRED_PERCENT)) {
         tags.add(new Pair<>(k, v.getRandomValue()));
       }
     });
@@ -163,7 +162,7 @@ public class TraceTopology {
     Set<String> services;
     List<TagVariation> mandatoryTags;
     List<TagVariation> optionalTags;
-    int optionalTagsPercentage = 100;
+    double optionalTagsPercentage = 100;
   }
 
   /**

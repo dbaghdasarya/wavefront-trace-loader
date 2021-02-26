@@ -8,7 +8,7 @@ import com.wavefront.DataQueue;
 import com.wavefront.datastructures.TraceTypePattern;
 import com.wavefront.generators.FromPatternGenerator;
 import com.wavefront.generators.FromTopologyGenerator;
-import com.wavefront.generators.SpanGenerator;
+import com.wavefront.generators.TraceGenerator;
 import com.wavefront.helpers.Defaults;
 import com.wavefront.helpers.DurationStringConverter;
 import com.wavefront.topology.TraceTopology;
@@ -61,7 +61,7 @@ public class GeneratorConfig {
   private Duration duration = Duration.ofMinutes(5);
 
   @Parameter(names = {"-f", "--file"}, description = "Generator config file.", order = 0)
-  private String generatorConfigFile = null;
+  private String generatorConfigFile = "pattern_1.json";
 
   @Parameter(names = {"--stat"}, description = "Output file to dump statistics about generated " +
       "traces.")
@@ -176,7 +176,7 @@ public class GeneratorConfig {
     return statisticsFile;
   }
 
-  public SpanGenerator getGenerator(DataQueue dataQueue) {
+  public TraceGenerator getGenerator(DataQueue dataQueue) {
     if (traceTypePatterns != null) {
       return new FromPatternGenerator(this, dataQueue);
     } else if (traceTopology != null) {

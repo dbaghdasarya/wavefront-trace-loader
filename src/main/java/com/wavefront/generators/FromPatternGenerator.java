@@ -8,6 +8,7 @@ import com.wavefront.DataQueue;
 import com.wavefront.SpanSender;
 import com.wavefront.config.GeneratorConfig;
 import com.wavefront.datastructures.Distribution;
+import com.wavefront.datastructures.RandomTypeResolver;
 import com.wavefront.datastructures.Span;
 import com.wavefront.datastructures.Trace;
 import com.wavefront.datastructures.TraceTypePattern;
@@ -24,8 +25,6 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 import static com.wavefront.datastructures.Distribution.HUNDRED_PERCENT;
-import static com.wavefront.datastructures.Distribution.getIndexOfNextItem;
-import static com.wavefront.datastructures.Distribution.normalizeCanonicalDistributions;
 import static com.wavefront.datastructures.ErrorCondition.getErrorRate;
 import static com.wavefront.helpers.Defaults.DEBUG_TAG;
 import static com.wavefront.helpers.Defaults.ERROR_TAG;
@@ -36,41 +35,36 @@ import static com.wavefront.helpers.WftlUtils.isEffectivePercentage;
  *
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
-public class FromPatternGenerator extends SpanGenerator {
+public class FromPatternGenerator extends TraceGenerator {
   private static final Logger LOGGER = Logger.getLogger(SpanSender.class.getCanonicalName());
-  private final Statistics statistics = new Statistics();
-  @Nonnull
-  private final GeneratorConfig generatorConfig;
 
-  private final LoadingCache<TraceTypePattern, List<Double>> spansDistributionsPercentages =
+  private final LoadingCache<TraceTypePattern, List<Double>> spansDistributionsPortions =
       CacheBuilder.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).
           build(new CacheLoader<>() {
             @Override
             public List<Double> load(@Nonnull TraceTypePattern traceTypePattern) {
               return traceTypePattern.spansDistributions.stream().map(distribution ->
-                  distribution.percentage).collect(Collectors.toList());
+                  distribution.portion).collect(Collectors.toList());
             }
           });
-  private final LoadingCache<TraceTypePattern, List<Double>>traceDurationsPercentages =
+  private final LoadingCache<TraceTypePattern, List<Double>> traceDurationsPortions =
       CacheBuilder.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).
           build(new CacheLoader<>() {
             @Override
             public List<Double> load(@Nonnull TraceTypePattern traceTypePattern) {
               return traceTypePattern.traceDurations.stream().map(distribution ->
-                  distribution.percentage).collect(Collectors.toList());
+                  distribution.portion).collect(Collectors.toList());
             }
           });
-  private final LoadingCache<TraceTypePattern, List<Double>> spansDurationsPercentages =
+  private final LoadingCache<TraceTypePattern, List<Double>> spansDurationsPortions =
       CacheBuilder.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).
           build(new CacheLoader<>() {
             @Override
             public List<Double> load(@Nonnull TraceTypePattern traceTypePattern) {
               return traceTypePattern.spansDurations.stream().map(distribution ->
-                  distribution.percentage).collect(Collectors.toList());
+                  distribution.portion).collect(Collectors.toList());
             }
           });
-
-  private List<Double> tracePercentages;
 
   public FromPatternGenerator(@Nonnull GeneratorConfig config, @Nonnull DataQueue dataQueue) {
     super(dataQueue);
@@ -89,10 +83,12 @@ public class FromPatternGenerator extends SpanGenerator {
 
   @Override
   protected void initGeneration() {
-    // normalize percentages of distribution to fix wrong inputs
-    normalizeDistributions(generatorConfig.getTraceTypePatterns());
-    tracePercentages = generatorConfig.getTraceTypePatterns().stream().
-        map(traceTypePattern -> traceTypePattern.tracePercentage).collect(Collectors.toList());
+    if (generatorConfig.getTotalTraceCount() > 0) {
+      generateExactDistributions(generatorConfig.getTraceTypePatterns());
+    } else {
+      typeResolver = new RandomTypeResolver();
+      generateRandomDistributions(generatorConfig.getTraceTypePatterns());
+    }
   }
 
   @Override
@@ -182,7 +178,7 @@ public class FromPatternGenerator extends SpanGenerator {
   }
 
   private List<Pair<String, String>> getTags(@Nonnull TraceTypePattern pattern,
-                                             @Nonnull String spanName, int errorRate) {
+                                             @Nonnull String spanName, double errorRate) {
     final List<Pair<String, String>> tags = new LinkedList<>();
 
     // add all mandatory tags
@@ -191,7 +187,7 @@ public class FromPatternGenerator extends SpanGenerator {
     // add some of optional tags if exist
     if (pattern.optionalTagsPercentage > 0 && pattern.optionalTags != null) {
       pattern.optionalTags.forEach(tag -> {
-        if (RANDOM.nextInt(HUNDRED_PERCENT) + 1 <= pattern.optionalTagsPercentage) {
+        if (RANDOM.nextDouble() <= (pattern.optionalTagsPercentage / HUNDRED_PERCENT)) {
           tags.add(new Pair<>(tag.tagName, tag.getRandomValue()));
         }
       });
@@ -216,32 +212,50 @@ public class FromPatternGenerator extends SpanGenerator {
   }
 
   /**
-   * Normalize all distributions. ie trace type, spans counts and so on.
+   * Normalize all distributions in random mode. ie trace type, spans counts and so on.
    */
-  private void normalizeDistributions(@Nonnull List<TraceTypePattern> traceTypePatterns) {
-    // trace types and spans count distribution
-    final double tracePercRatio = getNormalizationRatio(traceTypePatterns.stream().
-        mapToDouble(t -> t.tracePercentage).sum());
+  private void generateRandomDistributions(@Nonnull List<TraceTypePattern> traceTypePatterns) {
+    traceTypePortions = traceTypePatterns.stream().map(traceTypePattern ->
+        traceTypePattern.tracePercentage).collect(Collectors.toList());
 
-    traceTypePatterns.forEach(traceType -> {
-      traceType.tracePercentage = traceType.tracePercentage * tracePercRatio;
-      normalizeCanonicalDistributions(traceType.spansDistributions);
-      normalizeCanonicalDistributions(traceType.traceDurations);
-      normalizeCanonicalDistributions(traceType.spansDurations);
+    calculateTraceTypesPortions(traceTypePortions);
+    traceTypePatterns.forEach(traceTypePattern -> {
+      calculateDistributionsPortions(traceTypePattern.spansDistributions);
+      calculateDistributionsPortions(traceTypePattern.traceDurations);
+      calculateDistributionsPortions(traceTypePattern.spansDurations);
     });
   }
 
   /**
-   * Get normalization ratio for given sum of percentages.
+   * Generate all distributions in exact mode. ie trace type, spans counts and so on.
    */
-  private double getNormalizationRatio(double percentsSum) {
-    double ratio = 1;
-    if (Double.compare(percentsSum, HUNDRED_PERCENT) != 0) {
-      LOGGER.warning("Distributions summary percentage must be 100. " +
-          "Normalizing in range 0-100");
-      ratio = (double) HUNDRED_PERCENT / percentsSum;
-    }
-    return ratio;
+  private void generateExactDistributions(@Nonnull List<TraceTypePattern> traceTypePatterns) {
+    int totalTracesCount = generatorConfig.getTotalTraceCount();
+    normalizeDistributions(traceTypePatterns);
+
+    traceTypePatterns.forEach(traceTypePattern -> {
+      traceTypePortions.add(traceTypePattern.tracePercentage * totalTracesCount / 100);
+      calculateDistributionsPortions(traceTypePattern.spansDistributions,
+          getTraceCount(traceTypePattern.tracePercentage, totalTracesCount));
+      calculateDistributionsPortions(traceTypePattern.traceDurations,
+          getTraceCount(traceTypePattern.tracePercentage, totalTracesCount));
+      calculateDistributionsPortions(traceTypePattern.spansDurations);
+    });
+  }
+
+  /**
+   * Normalize all distributions. ie trace type, spans counts and so on.
+   */
+  private void normalizeDistributions(@Nonnull List<TraceTypePattern> traceTypePatterns) {
+    final double tracePercRatio = getNormalizationRatio(traceTypePatterns.stream().
+        mapToDouble(t -> t.tracePercentage).sum());
+
+    traceTypePatterns.forEach(traceTypePattern -> {
+      traceTypePattern.tracePercentage = traceTypePattern.tracePercentage * tracePercRatio;
+      normalizeDistributionsPercentages(traceTypePattern.traceDurations);
+      normalizeDistributionsPercentages(traceTypePattern.spansDurations);
+      normalizeDistributionsPercentages(traceTypePattern.spansDistributions);
+    });
   }
 
   /**
@@ -249,15 +263,15 @@ public class FromPatternGenerator extends SpanGenerator {
    */
   private Distribution getNextSpanDistribution(@Nonnull TraceTypePattern traceTypePattern) {
     return traceTypePattern.spansDistributions.get(
-        getIndexOfNextItem(spansDistributionsPercentages.getUnchecked(traceTypePattern)));
+        typeResolver.getIndexOfNextItem(spansDistributionsPortions.getUnchecked(traceTypePattern)));
   }
 
   /**
    * Get next span duration for the given trace type.
    */
   private Distribution getNextSpanDuration(@Nonnull TraceTypePattern traceTypePattern) {
-    return traceTypePattern.spansDurations.get(
-        getIndexOfNextItem(spansDurationsPercentages.getUnchecked(traceTypePattern)));
+    return traceTypePattern.spansDurations.get(typeResolver.getIndex(spansDurationsPortions.
+        getUnchecked(traceTypePattern)));
   }
 
   /**
@@ -266,7 +280,7 @@ public class FromPatternGenerator extends SpanGenerator {
    * @param traceTypePatterns List of trace types to be generated.
    */
   private TraceTypePattern getNextTraceType(@Nonnull List<TraceTypePattern> traceTypePatterns) {
-    return traceTypePatterns.get(getIndexOfNextItem(tracePercentages));
+    return traceTypePatterns.get(typeResolver.getIndexOfNextItem(traceTypePortions));
   }
 
   /**
@@ -274,6 +288,6 @@ public class FromPatternGenerator extends SpanGenerator {
    */
   private Distribution getNextTraceDuration(@Nonnull TraceTypePattern traceTypePattern) {
     return traceTypePattern.traceDurations.get(
-        getIndexOfNextItem(traceDurationsPercentages.getUnchecked(traceTypePattern)));
+        typeResolver.getIndexOfNextItem(traceDurationsPortions.getUnchecked(traceTypePattern)));
   }
 }

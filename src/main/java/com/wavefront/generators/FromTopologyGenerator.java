@@ -8,6 +8,7 @@ import com.google.common.cache.LoadingCache;
 import com.wavefront.DataQueue;
 import com.wavefront.config.GeneratorConfig;
 import com.wavefront.datastructures.Distribution;
+import com.wavefront.datastructures.RandomTypeResolver;
 import com.wavefront.datastructures.Span;
 import com.wavefront.datastructures.Trace;
 import com.wavefront.helpers.Statistics;
@@ -28,8 +29,6 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
-import static com.wavefront.datastructures.Distribution.HUNDRED_PERCENT;
-import static com.wavefront.datastructures.Distribution.getIndexOfNextItem;
 import static com.wavefront.datastructures.ErrorCondition.getErrorRate;
 import static com.wavefront.helpers.Defaults.DEBUG_TAG;
 import static com.wavefront.helpers.Defaults.ERROR;
@@ -43,21 +42,17 @@ import static com.wavefront.helpers.WftlUtils.isEffectivePercentage;
  *
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
-public class FromTopologyGenerator extends SpanGenerator {
+public class FromTopologyGenerator extends TraceGenerator {
   private static final Logger LOGGER =
       Logger.getLogger(FromTopologyGenerator.class.getCanonicalName());
 
-  private final Statistics statistics = new Statistics();
-  @Nonnull
-  private final GeneratorConfig generatorConfig;
-  private final TraceType[] traceTypes = new TraceType[100];
-  private final LoadingCache<TraceType, List<Double>> traceDurationsPercentages =
+  public static final LoadingCache<TraceType, List<Double>> traceDurationsPercentages =
       CacheBuilder.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).
           build(new CacheLoader<>() {
             @Override
             public List<Double> load(@Nonnull TraceType traceType) {
               return traceType.traceDurations.stream().map(distribution ->
-                  distribution.percentage).collect(Collectors.toList());
+                  distribution.portion).collect(Collectors.toList());
             }
           });
 
@@ -82,8 +77,6 @@ public class FromTopologyGenerator extends SpanGenerator {
 
   private void generateTraceTemplates() {
     traceTemplates = new HashMap<>();
-    int current = 0;
-    TraceType lastTraceType = null;
     for (TraceType tt : traceTopology.traceTypes) {
       // Calculate nesting levels number. Spans distributed across levels in geometrical sequence.
       int temp = tt.spansCount;
@@ -147,17 +140,6 @@ public class FromTopologyGenerator extends SpanGenerator {
       }
 
       traceTemplates.put(tt, trace);
-      lastTraceType = tt;
-      final int max = (int) Math.min(HUNDRED_PERCENT, current + tt.tracePercentage);
-      for (int n = current; n < max; n++) {
-        traceTypes[n] = tt;
-      }
-      current = max;
-    }
-    if (lastTraceType != null && current < 99) {
-      for (int n = current; n < 100; n++) {
-        traceTypes[n] = lastTraceType;
-      }
     }
   }
 
@@ -234,13 +216,21 @@ public class FromTopologyGenerator extends SpanGenerator {
   protected void initGeneration() {
     traceTopology = generatorConfig.getTraceTopology();
     generateTraceTemplates();
+
+    if (generatorConfig.getTotalTraceCount() > 0) {
+      generateExactDistributions(traceTopology.traceTypes);
+    } else {
+      typeResolver = new RandomTypeResolver();
+      generateRandomDistributions(traceTopology.traceTypes);
+    }
   }
 
   @Override
   protected Trace generateTrace(long startMillis) {
-    final TraceType traceType = traceTypes[RANDOM.nextInt(HUNDRED_PERCENT)];
+    final TraceType traceType =
+        traceTopology.traceTypes.get(typeResolver.getIndexOfNextItem(traceTypePortions));
     final Distribution durationDistribution = traceType.traceDurations.get(
-        getIndexOfNextItem(traceDurationsPercentages.getUnchecked(traceType)));
+        typeResolver.getIndexOfNextItem(traceDurationsPercentages.getUnchecked(traceType)));
     final long traceDuration = durationDistribution.startValue +
         RANDOM.nextInt(durationDistribution.endValue - durationDistribution.startValue);
 
@@ -311,5 +301,43 @@ public class FromTopologyGenerator extends SpanGenerator {
 
     statistics.offer(root.getName(), trace, traceDuration);
     return trace;
+  }
+
+  /**
+   * Generate all distributions portions in exact mode. ie trace type, spans counts and so on.
+   */
+  private void generateRandomDistributions(@Nonnull List<TraceType> traceTypes) {
+    traceTypePortions = traceTypes.stream().map(traceTypePattern ->
+        traceTypePattern.tracePercentage).collect(Collectors.toList());
+
+    calculateTraceTypesPortions(traceTypePortions);
+    traceTypes.forEach(traceTypePattern -> {
+      calculateDistributionsPortions(traceTypePattern.traceDurations);
+    });
+  }
+
+  /**
+   * Generate all distributions portions in random mode. ie trace type, spans counts and so on.
+   */
+  private void generateExactDistributions(@Nonnull List<TraceType> traceTypes) {
+    normalizeDistributions(traceTypes);
+    traceTypes.forEach(traceType -> {
+      traceTypePortions.add(traceType.tracePercentage * generatorConfig.getTotalTraceCount() / 100);
+      calculateDistributionsPortions(traceType.traceDurations,
+          getTraceCount(traceType.tracePercentage, generatorConfig.getTotalTraceCount()));
+    });
+  }
+
+  /**
+   * Normalize all distributions.
+   */
+  private void normalizeDistributions(@Nonnull List<TraceType> traceTypes) {
+    final double tracePercRatio = getNormalizationRatio(traceTypes.stream().
+        mapToDouble(t -> t.tracePercentage).sum());
+
+    traceTypes.forEach(traceType -> {
+      traceType.tracePercentage = traceType.tracePercentage * tracePercRatio;
+      normalizeDistributionsPercentages(traceType.traceDurations);
+    });
   }
 }

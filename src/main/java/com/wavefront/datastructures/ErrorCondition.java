@@ -28,11 +28,11 @@ public class ErrorCondition {
   /**
    * Errors rate for the given tag-value pair (percent).
    */
-  public int errorRate;
+  public double errorRate;
 
-  public static int getErrorRate(String spanName, List<Pair<String, String>> tags,
+  public static double getErrorRate(String spanName, List<Pair<String, String>> tags,
                                  List<ErrorCondition> errorConditions) {
-    int errorRate = 0;
+    double errorRate = 0;
     for (ErrorCondition condition : errorConditions) {
       // If list of spanNames exists for this errorCondition,
       // check that the current span name is in the list

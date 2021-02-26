@@ -45,13 +45,12 @@ public class TraceTopologySanitizer extends StdConverter<TraceTopology, TraceTop
       return false;
     }
 
-    double sumOfTraceTypePercentages = 0;
     for (TraceType tt : value.traceTypes) {
       // Primitives.
       if (tt.debugRate < 0 || tt.debugRate > 100 ||
           tt.errorRate < 0 || tt.errorRate > 100 ||
           tt.spansCount < 1 || tt.spansCount > 10000 ||
-          tt.tracePercentage < 0 || tt.tracePercentage > 100) {
+          Double.compare(tt.tracePercentage, 0) < 0  || Double.compare(tt.tracePercentage, 100) > 0) {
         return false;
       }
 
@@ -61,7 +60,8 @@ public class TraceTopologySanitizer extends StdConverter<TraceTopology, TraceTop
         return false;
       }
       for (Distribution td : tt.traceDurations) {
-        if (td.startValue > td.endValue || td.percentage < 0 || td.percentage > 100) {
+        if (td.startValue > td.endValue || Double.compare(td.percentage,
+            0) < 0 || Double.compare(td.percentage, 100) > 0) {
           LOGGER.severe("Wrong format for traceDuration: startValue must be less or equal than " +
               "endValue, and percentage must be in range [0..100].");
           return false;
@@ -81,14 +81,6 @@ public class TraceTopologySanitizer extends StdConverter<TraceTopology, TraceTop
         }
       }
 
-      sumOfTraceTypePercentages += tt.tracePercentage;
-      Distribution.normalizeCanonicalDistributions(tt.traceDurations);
-    }
-
-    // Normalize TraceTypes probabilities.
-    if (Double.compare(sumOfTraceTypePercentages, Distribution.HUNDRED_PERCENT) != 0) {
-      final double ratio = 1.0 * Distribution.HUNDRED_PERCENT / sumOfTraceTypePercentages;
-      value.traceTypes.forEach(tt -> tt.tracePercentage = tt.tracePercentage * ratio);
     }
     return true;
   }
@@ -126,10 +118,10 @@ public class TraceTopologySanitizer extends StdConverter<TraceTopology, TraceTop
       value.serviceTags.forEach(st -> {
         boolean isMandatoryTags = st.mandatoryTags != null && !st.mandatoryTags.isEmpty();
         boolean isOptionalTags = st.optionalTags != null && !st.optionalTags.isEmpty()
-            && st.optionalTagsPercentage > 0;
+            && Double.compare(st.optionalTagsPercentage , 0) > 0;
         if ((isMandatoryTags || isOptionalTags) && st.services != null) {
           // Check and fix optionalTagsPercentage value
-          if (st.optionalTagsPercentage > 100) {
+          if (Double.compare(st.optionalTagsPercentage, 100) > 0) {
             LOGGER.warning("Meaningless value of the optionalTagsPercentage = " +
                 st.optionalTagsPercentage + " was replaced with 100%");
             st.optionalTagsPercentage = 100;

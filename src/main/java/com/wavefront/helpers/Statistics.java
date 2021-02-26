@@ -71,7 +71,7 @@ public class Statistics {
     tracesByType.forEach((k, v) -> {
       ObjectNode node = mapper.createObjectNode();
       node.put("Count", v.count);
-      node.put("Percentage", Math.round((double) v.count / tracesSum * 100));
+      node.put("Percentage", (double) v.count / tracesSum * 100);
       node.put("Spans mean", Math.round((double) v.spansSum / v.count));
       node.put("Spans min", v.spansMin);
       node.put("Spans max", v.spansMax);

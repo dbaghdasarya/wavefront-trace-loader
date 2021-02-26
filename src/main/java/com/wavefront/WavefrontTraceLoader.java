@@ -2,8 +2,8 @@ package com.wavefront;
 
 import com.google.common.base.Strings;
 
+import com.wavefront.generators.BasicGenerator;
 import com.wavefront.generators.ReIngestGenerator;
-import com.wavefront.generators.SpanGenerator;
 import com.wavefront.internal.reporter.WavefrontInternalReporter;
 import com.wavefront.opentracing.reporting.WavefrontSpanReporter;
 import com.wavefront.sdk.common.WavefrontSender;
@@ -20,7 +20,7 @@ import java.io.IOException;
  */
 public class WavefrontTraceLoader extends AbstractTraceLoader {
   private DataQueue dataQueue;
-  private SpanGenerator spanGenerator;
+  private BasicGenerator basicGenerator;
   private SpanSender spanSender;
 
   public static void main(String[] args) throws IOException {
@@ -73,7 +73,7 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
       realTimeSending();
     } else {
       // Saving generated spans to file.
-      spanGenerator.generateForFile();
+      basicGenerator.generateForFile();
       spanSender.saveToFile();
     }
   }
@@ -81,9 +81,9 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
   @Override
   void setupGenerators() {
     if (applicationConfig != null && !Strings.isNullOrEmpty(applicationConfig.getWfTracesFile())) {
-      this.spanGenerator = new ReIngestGenerator(applicationConfig.getWfTracesFile(), dataQueue);
+      this.basicGenerator = new ReIngestGenerator(applicationConfig.getWfTracesFile(), dataQueue);
     } else {
-      this.spanGenerator = generatorConfig.getGenerator(dataQueue);
+      this.basicGenerator = generatorConfig.getGenerator(dataQueue);
     }
   }
 
@@ -91,16 +91,16 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
   void dumpStatistics() throws Exception {
     if (!Strings.isNullOrEmpty(generatorConfig.getStatisticsFile())) {
       FileWriter fileWriter = new FileWriter(new File(generatorConfig.getStatisticsFile()));
-      fileWriter.write(spanGenerator.getStatistics().toJSONString());
+      fileWriter.write(basicGenerator.getStatistics().toJSONString());
       fileWriter.close();
     } else {
-      System.out.println(spanGenerator.getStatistics());
+      System.out.println(basicGenerator.getStatistics());
     }
   }
 
   void realTimeSending() throws InterruptedException {
     // Send spans to host.
-    Thread generator = new Thread(spanGenerator);
+    Thread generator = new Thread(basicGenerator);
     Thread sender = new Thread(spanSender);
     generator.start();
     sender.start();

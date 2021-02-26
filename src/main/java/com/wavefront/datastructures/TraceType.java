@@ -19,11 +19,11 @@ public class TraceType {
   /**
    * Erroneous traces percentage. If it is not -1 it will hide errorConditions.
    */
-  public int errorRate = -1;
+  public double errorRate = -1;
   /**
    * Debug traces percentage.
    */
-  public int debugRate = -1;
+  public double debugRate = -1;
   /**
    * Distribution of durations for the given trace type.
    */

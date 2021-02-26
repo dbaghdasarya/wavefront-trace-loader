@@ -27,21 +27,21 @@ public class TraceTypePattern {
   public String spanNameSuffixes;
   public int nestingLevel;
   public double tracePercentage;
-  public int errorRate;
-  public int debugRate;
+  public double errorRate;
+  public double debugRate;
   public List<Distribution> traceDurations;
   public List<Distribution> spansDistributions;
   public List<Distribution> spansDurations;
   public List<TagVariation> mandatoryTags;
   public List<TagVariation> optionalTags;
-  public int optionalTagsPercentage = 100;
+  public double optionalTagsPercentage = 100;
   public List<ErrorCondition> errorConditions;
   public Set<String> rootLevelServices;
 
   public TraceTypePattern(String traceTypeName, String spanNameSuffixes,
                           int nestingLevel, double tracePercentage,
                           List<Distribution> spansDistributions, List<Distribution> traceDurations,
-                          List<TagVariation> mandatoryTags, int errorRate, int debugRate) {
+                          List<TagVariation> mandatoryTags, double errorRate, double debugRate) {
     this.traceTypeName = traceTypeName;
     if (Strings.isNullOrEmpty(spanNameSuffixes)) {
       this.spanNameSuffixes = Defaults.DEFAULT_SPAN_NAME_SUFFIX;
