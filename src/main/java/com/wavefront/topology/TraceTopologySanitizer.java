@@ -1,9 +1,9 @@
 package com.wavefront.topology;
 
 import com.fasterxml.jackson.databind.util.StdConverter;
-import com.wavefront.datastructures.Distribution;
 import com.wavefront.datastructures.TagVariation;
 import com.wavefront.datastructures.TraceType;
+import com.wavefront.datastructures.ValueDistribution;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -45,7 +45,6 @@ public class TraceTopologySanitizer extends StdConverter<TraceTopology, TraceTop
       return false;
     }
 
-    double sumOfTraceTypePercentages = 0;
     for (TraceType tt : value.traceTypes) {
       // Primitives.
       if (tt.debugRate < 0 || tt.debugRate > 100 ||
@@ -60,7 +59,7 @@ public class TraceTopologySanitizer extends StdConverter<TraceTopology, TraceTop
         LOGGER.severe("At least one traceDuration must exist!");
         return false;
       }
-      for (Distribution td : tt.traceDurations) {
+      for (ValueDistribution td : tt.traceDurations) {
         if (td.startValue > td.endValue || td.percentage < 0 || td.percentage > 100) {
           LOGGER.severe("Wrong format for traceDuration: startValue must be less or equal than " +
               "endValue, and percentage must be in range [0..100].");
@@ -80,15 +79,6 @@ public class TraceTopologySanitizer extends StdConverter<TraceTopology, TraceTop
               "removed and the common errorRate will be applied!");
         }
       }
-
-      sumOfTraceTypePercentages += tt.tracePercentage;
-      Distribution.normalizeCanonicalDistributions(tt.traceDurations);
-    }
-
-    // Normalize TraceTypes probabilities.
-    if (Double.compare(sumOfTraceTypePercentages, Distribution.HUNDRED_PERCENT) != 0) {
-      final double ratio = 1.0 * Distribution.HUNDRED_PERCENT / sumOfTraceTypePercentages;
-      value.traceTypes.forEach(tt -> tt.tracePercentage = tt.tracePercentage * ratio);
     }
     return true;
   }

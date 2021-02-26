@@ -45,7 +45,7 @@ public class Statistics {
       sb.append("\nType: ").append(k).append('\n');
       sb.append("Count ").append(v.count).append('\n');
       sb.append("Percentage ").
-          append((double) v.count / tracesSum * 100).append('\n');
+          append(100.0 * v.count / tracesSum).append('\n');
       sb.append("Spans mean ").append(Math.round((double) v.spansSum / v.count)).append('\n');
       sb.append("Spans min ").append(v.spansMin).append('\n');
       sb.append("Spans max ").append(v.spansMax).append('\n');
@@ -71,7 +71,7 @@ public class Statistics {
     tracesByType.forEach((k, v) -> {
       ObjectNode node = mapper.createObjectNode();
       node.put("Count", v.count);
-      node.put("Percentage", Math.round((double) v.count / tracesSum * 100));
+      node.put("Percentage",  100.0 * v.count / tracesSum);
       node.put("Spans mean", Math.round((double) v.spansSum / v.count));
       node.put("Spans min", v.spansMin);
       node.put("Spans max", v.spansMax);

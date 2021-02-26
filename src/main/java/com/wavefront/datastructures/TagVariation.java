@@ -24,7 +24,7 @@ public class TagVariation {
   /**
    * Tag probability. 100 for mandatory tags and [1..100) for optional tags.
    */
-  public int percentage = 100;
+  public double percentage = 100;
 
   public TagVariation(@Nonnull String tagName,
                       @Nonnull Set<String> tagValues) {
@@ -34,7 +34,7 @@ public class TagVariation {
 
   public TagVariation(@Nonnull String tagName,
                       @Nonnull Set<String> tagValues,
-                      int percentage) {
+                      double percentage) {
     this.tagName = tagName;
     this.tagValues = tagValues;
     this.percentage = percentage;

@@ -8,7 +8,7 @@ import com.wavefront.DataQueue;
 import com.wavefront.datastructures.TraceTypePattern;
 import com.wavefront.generators.FromPatternGenerator;
 import com.wavefront.generators.FromTopologyGenerator;
-import com.wavefront.generators.SpanGenerator;
+import com.wavefront.generators.TraceGenerator;
 import com.wavefront.helpers.Defaults;
 import com.wavefront.helpers.DurationStringConverter;
 import com.wavefront.topology.TraceTopology;
@@ -176,7 +176,7 @@ public class GeneratorConfig {
     return statisticsFile;
   }
 
-  public SpanGenerator getGenerator(DataQueue dataQueue) {
+  public TraceGenerator getGenerator(DataQueue dataQueue) {
     if (traceTypePatterns != null) {
       return new FromPatternGenerator(this, dataQueue);
     } else if (traceTopology != null) {
