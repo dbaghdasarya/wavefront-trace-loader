@@ -14,7 +14,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Data structure representing trace type loaded from the pattern.json file.
+ * Data structure representing trace type loaded from the pattern.json file. Fields names should
+ * match appropriate names in pattern.json file.
  *
  * @author Sirak Ghazaryan (sghazaryan@vmware.com), Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
@@ -27,21 +28,25 @@ public class TraceTypePattern {
   public String spanNameSuffixes;
   public int nestingLevel;
   public double tracePercentage;
-  public int errorRate;
-  public int debugRate;
-  public List<Distribution> traceDurations;
-  public List<Distribution> spansDistributions;
-  public List<Distribution> spansDurations;
+  public double errorRate;
+  public double debugRate;
+  public List<ValueDistribution> traceDurations;
+  public List<ValueDistribution> spansDistributions;
+  public List<ValueDistribution> spansDurations;
+  private DistributionIterator<ValueDistribution> traceDurationsIterator;
+  private DistributionIterator<ValueDistribution> spansDistributionsIterator;
+  private DistributionIterator<ValueDistribution> spansDurationsIterator;
   public List<TagVariation> mandatoryTags;
   public List<TagVariation> optionalTags;
-  public int optionalTagsPercentage = 100;
+  public double optionalTagsPercentage = 100;
   public List<ErrorCondition> errorConditions;
   public Set<String> rootLevelServices;
 
   public TraceTypePattern(String traceTypeName, String spanNameSuffixes,
                           int nestingLevel, double tracePercentage,
-                          List<Distribution> spansDistributions, List<Distribution> traceDurations,
-                          List<TagVariation> mandatoryTags, int errorRate, int debugRate) {
+                          List<ValueDistribution> spansDistributions,
+                          List<ValueDistribution> traceDurations,
+                          List<TagVariation> mandatoryTags, double errorRate, double debugRate) {
     this.traceTypeName = traceTypeName;
     if (Strings.isNullOrEmpty(spanNameSuffixes)) {
       this.spanNameSuffixes = Defaults.DEFAULT_SPAN_NAME_SUFFIX;
@@ -59,5 +64,38 @@ public class TraceTypePattern {
   }
 
   public TraceTypePattern() {
+  }
+
+  /**
+   * Initialize distributions iterators(random or exact mode).
+   */
+  public void init(int totalTracesCount) {
+    // Iterator for span durations should always be in random mode.
+    this.spansDurationsIterator = new RandomDistributionIterator<>(this.spansDurations);
+
+    // If the total number of traces is specified, then this is the exact mode,
+    // otherwise it is the random mode.
+    if (totalTracesCount > 0) {
+      int traceCount = (int) (tracePercentage * totalTracesCount / 100);
+      this.spansDistributionsIterator = new ExactDistributionIterator<>(this.spansDistributions,
+          traceCount);
+      this.traceDurationsIterator = new ExactDistributionIterator<>(this.traceDurations,
+          traceCount);
+    } else {
+      this.spansDistributionsIterator = new RandomDistributionIterator<>(this.spansDistributions);
+      this.traceDurationsIterator = new RandomDistributionIterator<>(this.traceDurations);
+    }
+  }
+
+  public ValueDistribution getNextSpanDuration() {
+    return spansDurationsIterator.getNextDistribution();
+  }
+
+  public ValueDistribution getNextSpanDistribution() {
+    return spansDistributionsIterator.getNextDistribution();
+  }
+
+  public ValueDistribution getNextTraceDuration() {
+    return traceDurationsIterator.getNextDistribution();
   }
 }

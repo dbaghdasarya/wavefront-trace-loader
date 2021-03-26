@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
 
-import static com.wavefront.datastructures.Distribution.HUNDRED_PERCENT;
+import static com.wavefront.helpers.Defaults.HUNDRED_PERCENT;
 import static com.wavefront.helpers.Defaults.ERROR;
 
 /**
@@ -30,10 +30,8 @@ import static com.wavefront.helpers.Defaults.ERROR;
  *
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
-public class ReIngestGenerator extends SpanGenerator {
+public class ReIngestGenerator extends BasicGenerator {
   private static final Logger LOGGER = Logger.getLogger(ReIngestGenerator.class.getCanonicalName());
-
-  private final Statistics statistics = new Statistics();
   private final String sourceFile;
 
 
@@ -58,7 +56,7 @@ public class ReIngestGenerator extends SpanGenerator {
   }
 
   private void reGenerateTraces(boolean isToFile, Pair<String, String> tagAndValue,
-                                int percentage) {
+                                double percentage) {
     AtomicInteger counter = new AtomicInteger(0);
     AtomicLong startMoment = new AtomicLong(System.currentTimeMillis());
     AtomicLong endMoment = new AtomicLong(startMoment.get());
@@ -84,7 +82,7 @@ public class ReIngestGenerator extends SpanGenerator {
               // Add conditional errors
               if (tagAndValue != null && percentage > 0) {
                 traceFromWF.getSpans().forEach(span -> span.getAnnotations().forEach(map -> {
-                  if (RANDOM.nextInt(HUNDRED_PERCENT) + 1 <= percentage &&
+                  if ((RANDOM.nextDouble() <= percentage / HUNDRED_PERCENT) &&
                       map.entrySet().stream().
                           anyMatch(entry -> entry.getKey().equals(tagAndValue._1) &&
                               entry.getValue().equals(tagAndValue._2))) {

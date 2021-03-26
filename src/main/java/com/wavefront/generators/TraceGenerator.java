@@ -5,57 +5,30 @@ import com.google.common.base.Throwables;
 import com.wavefront.DataQueue;
 import com.wavefront.config.GeneratorConfig;
 import com.wavefront.datastructures.Trace;
-import com.wavefront.helpers.Statistics;
 
 import org.apache.commons.lang3.NotImplementedException;
 
-import java.util.Random;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
 import javax.annotation.Nonnull;
 
 /**
- * Common interface for various span generators.
+ * Common interface for various trace generators.
  *
  * @author Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
-public abstract class SpanGenerator implements Runnable {
-  protected static final Random RANDOM = new Random(System.currentTimeMillis());
-  protected static final int SLEEP_DELAY_SECONDS = 5;
-  protected static final int SLEEP_DELAY_MILLIS = SLEEP_DELAY_SECONDS * 1000;
-  @Nonnull
-  protected final DataQueue dataQueue;
+public abstract class TraceGenerator extends BasicGenerator {
+  protected GeneratorConfig generatorConfig;
 
-  protected SpanGenerator(@Nonnull DataQueue dataQueue) {
-    this.dataQueue = dataQueue;
+  protected TraceGenerator(@Nonnull DataQueue dataQueue) {
+    super(dataQueue);
   }
-
-  /**
-   * Generates spans for saving to file (without ingestion specific time delays).
-   */
-  public abstract void generateForFile();
-
-  /**
-   * Returns statistics about the generated traces.
-   */
-  public abstract Statistics getStatistics();
 
   /**
    * Initialize the generation process.
    */
   protected void initGeneration() {
-    throw new NotImplementedException("Subclass must implement this " +
-        "functionality");
-  }
-
-  /**
-   * Generate trace for a given trace type.
-   *
-   * @param startMillis Start time of the trace (millis).
-   * @return Generated trace.
-   */
-  protected Trace generateTrace(long startMillis) {
     throw new NotImplementedException("Subclass must implement this " +
         "functionality");
   }
@@ -79,7 +52,7 @@ public abstract class SpanGenerator implements Runnable {
 
   protected void startGeneration(boolean isRealTime, @Nonnull GeneratorConfig generatorConfig,
                                  @Nonnull Logger logger) {
-    logger.info("Generating spans ...");
+    logger.info("Generating traces ...");
 
     initGeneration();
 
@@ -116,5 +89,16 @@ public abstract class SpanGenerator implements Runnable {
       }
     }
     logger.info("Generation complete!");
+  }
+
+  /**
+   * Generate trace for a given trace type.
+   *
+   * @param startMillis Start time of the trace (millis).
+   * @return Generated trace.
+   */
+  protected Trace generateTrace(long startMillis) {
+    throw new NotImplementedException("Subclass must implement this " +
+        "functionality");
   }
 }

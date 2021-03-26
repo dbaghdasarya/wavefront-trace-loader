@@ -19,17 +19,38 @@ public class TraceType {
   /**
    * Erroneous traces percentage. If it is not -1 it will hide errorConditions.
    */
-  public int errorRate = -1;
+  public double errorRate = -1;
   /**
    * Debug traces percentage.
    */
-  public int debugRate = -1;
+  public double debugRate = -1;
   /**
    * Distribution of durations for the given trace type.
    */
-  public List<Distribution> traceDurations;
+  public List<ValueDistribution> traceDurations;
+  /**
+   * An iterator for working with trace durations.
+   */
+  public DistributionIterator<ValueDistribution> traceDurationsIterator;
   /**
    * Conditions for marking trace and span as erroneous.
    */
   public List<ErrorCondition> errorConditions;
+
+  /**
+   * Initialize distribution iterator(random or exact mode).
+   */
+  public void init(int totalTracesCount) {
+    // If the total number of traces is specified, then this is the exact mode,
+    // otherwise it is the random mode.
+    if (totalTracesCount > 0) {
+      this.traceDurationsIterator = new ExactDistributionIterator<>(this.traceDurations, totalTracesCount);
+    } else {
+      this.traceDurationsIterator = new RandomDistributionIterator<>(this.traceDurations);
+    }
+  }
+
+  public ValueDistribution getNextTraceDuration() {
+    return traceDurationsIterator.getNextDistribution();
+  }
 }

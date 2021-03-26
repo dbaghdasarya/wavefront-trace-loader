@@ -4,7 +4,7 @@ import com.wavefront.sdk.common.Pair;
 
 import java.util.List;
 
-import static com.wavefront.datastructures.Distribution.HUNDRED_PERCENT;
+import static com.wavefront.helpers.Defaults.HUNDRED_PERCENT;
 
 /**
  * Class represents condition on which error tag should be set for a span.
@@ -28,11 +28,11 @@ public class ErrorCondition {
   /**
    * Errors rate for the given tag-value pair (percent).
    */
-  public int errorRate;
+  public double errorRate;
 
-  public static int getErrorRate(String spanName, List<Pair<String, String>> tags,
+  public static double getErrorRate(String spanName, List<Pair<String, String>> tags,
                                  List<ErrorCondition> errorConditions) {
-    int errorRate = 0;
+    double errorRate = 0;
     for (ErrorCondition condition : errorConditions) {
       // If list of spanNames exists for this errorCondition,
       // check that the current span name is in the list
