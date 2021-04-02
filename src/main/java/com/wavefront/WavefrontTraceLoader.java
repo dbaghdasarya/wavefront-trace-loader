@@ -12,6 +12,7 @@ import com.wavefront.sdk.common.clients.WavefrontClientFactory;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.InvalidPropertiesFormatException;
 
 /**
  * Input point of application to generate and send traces to wavefront.
@@ -50,8 +51,17 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
         wfClientFactory.addClient(applicationConfig.getProxyServer() + ":" +
             applicationConfig.getCustomTracingPorts() + "/");
       } else {
-        wfClientFactory.addClient("https://" + applicationConfig.getToken() +
-            "@" + applicationConfig.getServer());
+        int nPos = applicationConfig.getServer().indexOf("://");
+        if(nPos <= 3){
+          throw new InvalidPropertiesFormatException("Server name for Direct Ingestion should be " +
+              "in format http://<server_name> or https://<server_name>");
+        }
+        nPos += 3;
+        StringBuilder url = new StringBuilder();
+        url.append(applicationConfig.getServer(), 0, nPos);
+        url.append(applicationConfig.getToken()).append("@");
+        url.append(applicationConfig.getServer().substring(nPos));
+        wfClientFactory.addClient(url.toString());
       }
       wfSender = wfClientFactory.getClient();
       WavefrontSpanReporter wfSpanReporter = new WavefrontSpanReporter.Builder().build(wfSender);
