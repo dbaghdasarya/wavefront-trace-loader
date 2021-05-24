@@ -22,8 +22,8 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
 
-import static com.wavefront.helpers.Defaults.HUNDRED_PERCENT;
 import static com.wavefront.helpers.Defaults.ERROR;
+import static com.wavefront.helpers.Defaults.HUNDRED_PERCENT;
 
 /**
  * Class re-ingests already generated traces from file.
@@ -71,52 +71,48 @@ public class ReIngestGenerator extends BasicGenerator {
             start_ms.set(Long.parseLong(line.substring(startPos + 1)));
             atomicDelta.set(0);
           }
-        } else if (isTrace(line)) {
-          final int startPos = line.indexOf('{');
-          if (startPos >= 0) {
-            line = line.substring(startPos);
-            try {
-              final TraceFromWF traceFromWF =
-                  objectMapper.readValue(line, new TypeReference<TraceFromWF>() {
-                  });
-              // Add conditional errors
-              if (tagAndValue != null && percentage > 0) {
-                traceFromWF.getSpans().forEach(span -> span.getAnnotations().forEach(map -> {
-                  if ((RANDOM.nextDouble() <= percentage / HUNDRED_PERCENT) &&
-                      map.entrySet().stream().
-                          anyMatch(entry -> entry.getKey().equals(tagAndValue._1) &&
-                              entry.getValue().equals(tagAndValue._2))) {
-                    map.put(ERROR, "true");
-                  }
-                }));
-              }
-
-              // Shift trace to the predefined time (can't be older than 15 min)
-              final long delta = atomicDelta.updateAndGet(value -> value == 0 ?
-                  start_ms.get() - traceFromWF.getStartMs() : value);
-              traceFromWF.shiftTrace(delta);
-              traceFromWF.updateUUIDs();
-
-              // Convert WFtrace to trace convenient for DataQueue
-              final Trace trace = new Trace(1, null);
-              traceFromWF.getSpans().forEach(wfspan -> {
-                trace.add(0, wfspan.toSpan());
-              });
-              dataQueue.addTrace(trace);
-              statistics.offer(trace.getSpans().get(0).get(0).getName(),
-                  trace, traceFromWF.getTotalDurationMs());
-
-              final long tempStart = traceFromWF.getStartMs();
-              startMoment.updateAndGet(value -> Math.min(tempStart, value));
-              final long tempEnd = traceFromWF.getEndMs();
-              endMoment.updateAndGet(value -> Math.max(tempEnd, value));
-              counter.incrementAndGet();
-              if (!isToFile) {
-                Thread.sleep(0);
-              }
-            } catch (IOException | InterruptedException e) {
-              LOGGER.severe(e.toString());
+        } else if ((line = extractTrace(line)) != null) {
+          try {
+            final TraceFromWF traceFromWF =
+                objectMapper.readValue(line, new TypeReference<TraceFromWF>() {
+                });
+            // Add conditional errors
+            if (tagAndValue != null && percentage > 0) {
+              traceFromWF.getSpans().forEach(span -> span.getAnnotations().forEach(map -> {
+                if ((RANDOM.nextDouble() <= percentage / HUNDRED_PERCENT) &&
+                    map.entrySet().stream().
+                        anyMatch(entry -> entry.getKey().equals(tagAndValue._1) &&
+                            entry.getValue().equals(tagAndValue._2))) {
+                  map.put(ERROR, "true");
+                }
+              }));
             }
+
+            // Shift trace to the predefined time (can't be older than 15 min)
+            final long delta = atomicDelta.updateAndGet(value -> value == 0 ?
+                start_ms.get() - traceFromWF.getStartMs() : value);
+            traceFromWF.shiftTrace(delta);
+
+            final Trace trace = new Trace(1, null);
+            trace.setRoot(traceFromWF.updateUUIDs());
+            // Convert WFtrace to trace convenient for DataQueue
+            traceFromWF.getSpans().forEach(wfspan -> {
+              trace.add(0, wfspan.toSpan());
+            });
+            dataQueue.addTrace(trace);
+            statistics.offer(trace.getSpans().get(0).get(0).getName(),
+                trace, traceFromWF.getTotalDurationMs());
+
+            final long tempStart = traceFromWF.getStartMs();
+            startMoment.updateAndGet(value -> Math.min(tempStart, value));
+            final long tempEnd = traceFromWF.getEndMs();
+            endMoment.updateAndGet(value -> Math.max(tempEnd, value));
+            counter.incrementAndGet();
+            if (!isToFile) {
+              Thread.sleep(0);
+            }
+          } catch (IOException | InterruptedException e) {
+            LOGGER.severe(e.toString());
           }
         }
       });
@@ -131,8 +127,24 @@ public class ReIngestGenerator extends BasicGenerator {
     }
   }
 
-  private boolean isTrace(String anyString) {
-    return !Strings.isNullOrEmpty(anyString) && anyString.startsWith("data: {\"traceId\":\"");
+  private String extractTrace(String anyString) {
+    String trace = null;
+    if (!Strings.isNullOrEmpty(anyString)) {
+      if (anyString.startsWith("data: {\"traceId\":\"")) {
+        final int startPos = anyString.indexOf('{');
+        if (startPos >= 0) {
+          trace = anyString.substring(startPos);
+        }
+      } else if (anyString.startsWith("[{\"root\":\"")) {
+        final int startPos = anyString.indexOf("{\"traceId\":\"");
+        final int endPos = anyString.lastIndexOf(']');
+        if (startPos >= 0 && endPos >= 0) {
+          trace = anyString.substring(startPos, endPos);
+        }
+      }
+    }
+
+    return trace;
   }
 
   private boolean isStart(String anyString) {

@@ -46,11 +46,15 @@ public class SpanFromWF {
       parents.forEach(p -> this.annotations.add(Map.of(PARENT, p.toString())));
     }
     if (followsFrom != null) {
-      parents.forEach(ff -> this.annotations.add(Map.of(FOLLOWS_FROM, ff.toString())));
+      followsFrom.forEach(ff -> this.annotations.add(Map.of(FOLLOWS_FROM, ff.toString())));
     }
     if (tags != null) {
       tags.forEach(t -> this.annotations.add(Map.of(t._1, t._2)));
     }
+  }
+
+  public String getName() {
+    return name;
   }
 
   public long getStartMs() {

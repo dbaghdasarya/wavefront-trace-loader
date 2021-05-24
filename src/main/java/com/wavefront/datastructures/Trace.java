@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
@@ -30,6 +31,7 @@ public class Trace {
   private long startMs = Long.MAX_VALUE;
   private long endMs = Long.MIN_VALUE;
   private UUID traceUUID;
+  private AtomicReference<String> root = new AtomicReference<>(null);
 
   public Trace(int levels, UUID traceUUID) {
     this.levels = levels;
@@ -95,6 +97,17 @@ public class Trace {
 
   public List<List<Span>> getSpans() {
     return spans;
+  }
+
+  public String getRoot() {
+    if (root == null && spans.size() > 0 && spans.get(0).size() > 0) {
+      root.set(spans.get(0).get(0).getName());
+    }
+    return root.get();
+  }
+
+  public void setRoot(String root) {
+    this.root.compareAndSet(null, root);
   }
 
   public void setStartMs(long startMs) {

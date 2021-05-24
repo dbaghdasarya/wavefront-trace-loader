@@ -22,10 +22,10 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
-import static com.wavefront.helpers.Defaults.HUNDRED_PERCENT;
 import static com.wavefront.datastructures.ErrorCondition.getErrorRate;
 import static com.wavefront.helpers.Defaults.DEBUG_TAG;
 import static com.wavefront.helpers.Defaults.ERROR_TAG;
+import static com.wavefront.helpers.Defaults.HUNDRED_PERCENT;
 import static com.wavefront.helpers.WftlUtils.isEffectivePercentage;
 
 /**
@@ -97,7 +97,7 @@ public class FromPatternGenerator extends TraceGenerator {
     // traceDurations has priority,so if it is set spansDurations is skipped
     if (!traceTypePattern.traceDurations.isEmpty()) {
       ValueDistribution traceDurationDistribution = traceTypePattern.getNextTraceDuration();
-      if (traceDurationDistribution== null) {
+      if (traceDurationDistribution == null) {
         return null;
       }
       traceDuration = traceDurationDistribution.getValue();
@@ -106,7 +106,7 @@ public class FromPatternGenerator extends TraceGenerator {
       lastSpanDuration = spanNumbers == 0 ? 0 : traceDuration % spanNumbers;
     } else {
       ValueDistribution spanDurationDistribution = traceTypePattern.getNextSpanDuration();
-      if (spanDurationDistribution== null) {
+      if (spanDurationDistribution == null) {
         return null;
       }
       useSpansDistribution = true;
@@ -132,7 +132,7 @@ public class FromPatternGenerator extends TraceGenerator {
         null,
         getTags(traceTypePattern, traceTypePattern.traceTypeName, traceTypePattern.errorRate),
         null));
-
+    trace.setRoot(traceTypePattern.traceTypeName);
 
     while (spanNumbers > 0) {
       for (int n = 1; n < levels && spanNumbers > 0; n++) {
@@ -141,7 +141,7 @@ public class FromPatternGenerator extends TraceGenerator {
 
           if (useSpansDistribution) {
             ValueDistribution spanDurationDistribution = traceTypePattern.getNextSpanDuration();
-            if (spanDurationDistribution== null) {
+            if (spanDurationDistribution == null) {
               return null;
             }
             spanDuration = spanDurationDistribution.getValue();

@@ -10,11 +10,11 @@ import com.wavefront.datastructures.RandomDistributionIterator;
 import com.wavefront.datastructures.ReferenceDistribution;
 import com.wavefront.datastructures.Span;
 import com.wavefront.datastructures.Trace;
+import com.wavefront.datastructures.TraceType;
 import com.wavefront.datastructures.ValueDistribution;
 import com.wavefront.helpers.Statistics;
 import com.wavefront.sdk.common.Pair;
 import com.wavefront.topology.TraceTopology;
-import com.wavefront.datastructures.TraceType;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -92,6 +92,8 @@ public class FromTopologyGenerator extends TraceGenerator {
           null,
           List.of(new Pair<>(SERVICE, root)),
           null));
+      trace.setRoot(root);
+
       for (int n = 1; n < levels && alreadyGenerated < tt.spansCount; n++) {
         final int max = Math.min(1 << n, tt.spansCount - alreadyGenerated);
         alreadyGenerated += max;
@@ -258,6 +260,8 @@ public class FromTopologyGenerator extends TraceGenerator {
         getTags(trace, traceType, 0, root.getTags().get(0)._2, root.getName(), null),
         null
     ));
+    trace.setRoot(root.getName());
+
     for (int n = 1; n < traceTemplate.getSpans().size(); n++) {
       for (int m = 0; m < traceTemplate.getSpans().get(n).size(); m++) {
         final Span span = traceTemplate.getSpans().get(n).get(m);

@@ -3,6 +3,7 @@ package com.wavefront;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wavefront.datastructures.Span;
 import com.wavefront.datastructures.Trace;
 import com.wavefront.sdk.common.WavefrontSender;
@@ -10,9 +11,11 @@ import com.wavefront.sdk.common.WavefrontSender;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
@@ -70,9 +73,21 @@ public class SpanSender implements Runnable {
       final File file = new File(traceOutputFile);
       final FileWriter fileWriter = new FileWriter(file);
       Trace tempTrace;
+      Set<String> roots = new HashSet<>();
+      int errors = 0;
+      int total = 0;
       while ((tempTrace = dataQueue.pollFirstTrace()) != null) {
-        fileWriter.write("data: " + tempTrace.toWFTrace().toJSONString() + "\n");
+        total++;
+        if (tempTrace.isError()) {
+          errors++;
+        }
+        roots.add(tempTrace.getRoot());
+        fileWriter.write("[{\"root\":\"" + tempTrace.getRoot() +
+            "\"}," + tempTrace.toWFTrace().toJSONString() + "]\n");
       }
+      final ObjectMapper mapper = new ObjectMapper();
+      fileWriter.write("\n" + mapper.writeValueAsString(roots));
+      fileWriter.write("\n\nTotal traces - " + total + ": Erroneous - " + errors);
       fileWriter.close();
       LOGGER.info(dataQueue.getEnteredTraceCount() + " trace saved to file  " +
           file.getAbsolutePath());

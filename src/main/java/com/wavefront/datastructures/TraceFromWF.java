@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.wavefront.helpers.Defaults.FOLLOWS_FROM;
 import static com.wavefront.helpers.Defaults.PARENT;
@@ -107,15 +109,16 @@ public class TraceFromWF {
    * For the re-ingestion of traces, the UUIDs should be changed for don't mix them with already
    * ingested traces.
    */
-  public void updateUUIDs() {
+  public String updateUUIDs() {
     if (spans == null || spans.isEmpty()) {
-      return;
+      return null;
     }
     final Map<String, String> uuids = new HashMap<>();
+    AtomicReference<String> root = new AtomicReference<>(null);
     spans.forEach(span -> {
       span.setSpanId(uuids.computeIfAbsent(span.getSpanId(), k -> UUID.randomUUID().toString()));
       span.setTraceId(uuids.computeIfAbsent(span.getTraceId(), k -> UUID.randomUUID().toString()));
-
+      AtomicBoolean isRoot = new AtomicBoolean(true);
       span.getAnnotations().forEach(a ->
       {
         for (Map.Entry<String, String> entry : a.entrySet()) {
@@ -126,10 +129,17 @@ public class TraceFromWF {
               || key.equals("traceId")) {
             entry.setValue(uuids.computeIfAbsent(entry.getValue(),
                 k -> UUID.randomUUID().toString()));
+            if (isRoot.get() && key.equals(PARENT)) {
+              isRoot.set(false);
+            }
           }
         }
       });
+      if (isRoot.get()) {
+        root.compareAndSet(null, span.getName());
+      }
     });
+    return root.get();
   }
 
   public String toJSONString() throws Exception {

@@ -77,6 +77,8 @@ public abstract class TraceGenerator extends BasicGenerator {
         if (trace != null) {
           dataQueue.addTrace(trace);
           generatedSpans += trace.getSpansCount();
+        }else {
+          break;
         }
       }
 
