@@ -25,7 +25,7 @@
           {
             "spanNames": ["taxi_001"],
             "tagName": "application",
-            "tagValue": "TestApp2",
+            "tagValue": "Topo_TestApp",
             "errorRate": 20
           },
           {
@@ -413,7 +413,7 @@
           {
             "tagName": "application",
             "tagValues": [
-              "TestApp2"
+              "Topo_TestApp"
             ]
           },
           {

@@ -2,9 +2,11 @@ package com.wavefront.generators;
 
 import com.google.common.base.Strings;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wavefront.DataQueue;
+import com.wavefront.datastructures.SpanFromWF;
 import com.wavefront.datastructures.Trace;
 import com.wavefront.datastructures.TraceFromWF;
 import com.wavefront.helpers.Statistics;
@@ -15,15 +17,21 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
 
 import static com.wavefront.helpers.Defaults.ERROR;
+import static com.wavefront.helpers.Defaults.FOLLOWS_FROM;
 import static com.wavefront.helpers.Defaults.HUNDRED_PERCENT;
+import static com.wavefront.helpers.Defaults.PARENT;
 
 /**
  * Class re-ingests already generated traces from file.
@@ -32,8 +40,11 @@ import static com.wavefront.helpers.Defaults.HUNDRED_PERCENT;
  */
 public class ReIngestGenerator extends BasicGenerator {
   private static final Logger LOGGER = Logger.getLogger(ReIngestGenerator.class.getCanonicalName());
+  private static final String START = "start_ms: ";
+  private static final String LATENCY = "latency: ";
   private final String sourceFile;
-
+  private final LinkedList<LatencyCondition> latencies = new LinkedList<>();
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   public ReIngestGenerator(String sourceFile, @Nonnull DataQueue dataQueue) {
     super(dataQueue);
@@ -61,8 +72,8 @@ public class ReIngestGenerator extends BasicGenerator {
     AtomicLong startMoment = new AtomicLong(System.currentTimeMillis());
     AtomicLong endMoment = new AtomicLong(startMoment.get());
     AtomicLong atomicDelta = new AtomicLong();
-    ObjectMapper objectMapper = new ObjectMapper();
     AtomicLong start_ms = new AtomicLong(System.currentTimeMillis());
+    latencies.clear();
     try (Stream<String> stream = Files.lines(Paths.get(sourceFile))) {
       stream.forEach(line -> {
         if (isStart(line)) {
@@ -71,10 +82,22 @@ public class ReIngestGenerator extends BasicGenerator {
             start_ms.set(Long.parseLong(line.substring(startPos + 1)));
             atomicDelta.set(0);
           }
+        } else if (isLatency(line)) {
+          try {
+            final LatencyCondition latencyCondition =
+                objectMapper.readValue(line.substring(LATENCY.length()), new TypeReference<>() {
+                });
+            latencyCondition.delta /= 100.0;
+            latencyCondition.probability /= 100.0;
+
+            latencies.add(latencyCondition);
+          } catch (JsonProcessingException e) {
+            e.printStackTrace();
+          }
         } else if ((line = extractTrace(line)) != null) {
           try {
             final TraceFromWF traceFromWF =
-                objectMapper.readValue(line, new TypeReference<TraceFromWF>() {
+                objectMapper.readValue(line, new TypeReference<>() {
                 });
             // Add conditional errors
             if (tagAndValue != null && percentage > 0) {
@@ -86,6 +109,24 @@ public class ReIngestGenerator extends BasicGenerator {
                   map.put(ERROR, "true");
                 }
               }));
+            }
+
+            // Update latency
+            if (!latencies.isEmpty()) {
+              traceFromWF.getSpans().forEach(span -> {
+                if (span.getSpanId().equals("3c13b2e8-c99a-4fba-bde7-58f1d359fd18")) {
+                  int n = 10;
+                }
+                latencies.forEach(l -> {
+                  if (span.getName().equals(l.spanName)) {
+                    int index = span.getAnnotations().indexOf(Map.of(l.tagName, l.tagValue));
+                    if (index > -1 && RANDOM.nextDouble() < l.probability) {
+                      span.multiplyDurationMs(l.delta);
+                      fixTraceDuration(traceFromWF, span, l.delta);
+                    }
+                  }
+                });
+              });
             }
 
             // Shift trace to the predefined time (can't be older than 15 min)
@@ -127,6 +168,33 @@ public class ReIngestGenerator extends BasicGenerator {
     }
   }
 
+  private void fixTraceDuration(TraceFromWF trace, SpanFromWF span, double delta) {
+    String parentId = null;
+    List<String> parentIds = span.getAnnotations().stream().map(map -> map.get(PARENT))
+        .collect(Collectors.toList());
+    if (parentIds != null && parentIds.size() > 0) {
+      parentId = parentIds.get(0);
+    } else {
+      parentIds = span.getAnnotations().stream().map(map -> map.get(FOLLOWS_FROM))
+          .collect(Collectors.toList());
+      if (parentIds != null && parentIds.size() > 0) {
+        parentId = parentIds.get(0);
+      }
+    }
+
+    if (!Strings.isNullOrEmpty(parentId)) {
+      String finalParentId = parentId;
+      SpanFromWF nextSpan = trace.getSpans().stream().
+          filter(s -> s.getSpanId().equals(finalParentId)).findFirst().orElse(null);
+      if (nextSpan != null) {
+        nextSpan.multiplyDurationMs(delta);
+        fixTraceDuration(trace, nextSpan, delta);
+      }
+    } else {
+      trace.multiplyDurationMs(delta);
+    }
+  }
+
   private String extractTrace(String anyString) {
     String trace = null;
     if (!Strings.isNullOrEmpty(anyString)) {
@@ -148,6 +216,18 @@ public class ReIngestGenerator extends BasicGenerator {
   }
 
   private boolean isStart(String anyString) {
-    return !Strings.isNullOrEmpty(anyString) && anyString.startsWith("start_ms: ");
+    return !Strings.isNullOrEmpty(anyString) && anyString.startsWith(START);
+  }
+
+  private boolean isLatency(String anyString) {
+    return !Strings.isNullOrEmpty(anyString) && anyString.startsWith(LATENCY);
+  }
+
+  public static class LatencyCondition {
+    public String spanName;
+    public String tagName;
+    public String tagValue;
+    public double delta;
+    public double probability;
   }
 }

@@ -65,6 +65,14 @@ public class SpanFromWF {
     return durationMs;
   }
 
+  public void setDurationMs(long durationMs) {
+    this.durationMs = durationMs;
+  }
+
+  public void multiplyDurationMs(double deltaPercentage) {
+    this.durationMs = (long) ((1.0 + deltaPercentage) * this.durationMs);
+  }
+
   public String getSpanId() {
     return spanId;
   }

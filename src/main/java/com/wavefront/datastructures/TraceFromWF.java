@@ -64,9 +64,23 @@ public class TraceFromWF {
     return endMs;
   }
 
+  public void setEndMs(long endMs) {
+    this.endMs = endMs;
+    this.totalDurationMs = this.endMs - this.startMs;
+  }
+
   @JsonIgnore
   public long getTotalDurationMs() {
     return totalDurationMs;
+  }
+
+  public void setTotalDurationMs(long totalDurationMs) {
+    this.totalDurationMs = totalDurationMs;
+    this.endMs = this.startMs + this.totalDurationMs;
+  }
+
+  public void multiplyDurationMs(double deltaPercentage) {
+    setTotalDurationMs((long) ((1.0 + deltaPercentage) * this.totalDurationMs));
   }
 
   private void setStartAndEnd() {

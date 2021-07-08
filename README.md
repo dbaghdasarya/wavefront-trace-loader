@@ -351,8 +351,15 @@ $ java -jar target/wavefront-trace-loader-1.0-SNAPSHOT-jar-with-dependencies.jar
 ### Re-Ingestion
 It is possible to generate some set of traces, save it to file and then send the same set from
  the file to Wavefront. The Loader will automatically update UUIDs and timestamps.
-User can specify start of trace loading by adding the following line at the beginning of the
- source file:
+User can specify start of trace loading by adding the following line in any place of the
+ source file, and starting from this line traces will be shifted in time according to user's input:
 ```
 start_ms: <timestamp_in_ms> 
+```
+Also, user can add the following string to modify spans and traces duration according to given
+ condition - spanName, tagName, tagValue, delta (shift in percentages) and probability (in
+  percentage). The probability defines number of matching cases that should be updated. 
+```
+latency: {  "spanName":"<Name of a span>", "tagName":"Name of a tag", "tagValue":"Tag value", 
+            "delta":<percentage>, "probability":<percentage>}
 ```
