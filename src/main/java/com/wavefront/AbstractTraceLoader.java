@@ -9,8 +9,10 @@ import com.wavefront.config.ApplicationConfig;
 import com.wavefront.config.GeneratorConfig;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -49,16 +51,35 @@ public abstract class AbstractTraceLoader {
    *
    * @param args Command-line parameters passed on to JCommander to configure the daemon.
    */
-  public void start(String[] args) throws IOException {
-    try {
-      // Parse commandline arguments.
-      parseArguments(args);
+  public void start(String[] args) {
+    // Parse commandline arguments.
+    parseArguments(args);
 
-      // Keep config files loading sequence.
-      loadGeneratorConfigurationFile();
+    try {
       loadApplicationConfig();
+    } catch (Throwable t) {
+      handleProgramExit(t);
+    }
+    List<String> inputJsonFiles = applicationConfig.getInputJsonFiles();
+    if (inputJsonFiles == null || inputJsonFiles.isEmpty()) {
+      start();
+    } else {
+      LOGGER.log(Level.INFO, "Please, be aware that if provided Command Line Arguments will be " +
+          "ignored!");
+      inputJsonFiles.forEach(inputJsonFile -> {
+        generatorConfig.setGeneratorConfigFile(inputJsonFile);
+        start();
+      });
+    }
+  }
+
+
+  private void start() {
+    try {
+      loadGeneratorConfigurationFile();
 
       initialize();
+
       setupSenders();
       setupGenerators();
 
@@ -66,12 +87,16 @@ public abstract class AbstractTraceLoader {
 
       dumpStatistics();
     } catch (Throwable t) {
-      LOGGER.log(Level.SEVERE, "Aborting start-up", t);
-      System.exit(1);
+      handleProgramExit(t);
     }
   }
 
-  private void loadGeneratorConfigurationFile() throws IOException {
+  private void handleProgramExit(Throwable t) {
+    LOGGER.log(Level.SEVERE, "Aborting start-up", t);
+    System.exit(1);
+  }
+
+  private void loadGeneratorConfigurationFile() throws Exception {
     // If they've specified a configuration file, override the command line values
     try {
       if (generatorConfig.getGeneratorConfigFile() != null) {
@@ -92,8 +117,13 @@ public abstract class AbstractTraceLoader {
             "generator file!");
       }
       ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-      applicationConfig = objectMapper.readValue(new File(generatorConfig.getAppConfigFile()),
-          ApplicationConfig.class);
+      if (applicationConfig == null) {
+        applicationConfig = objectMapper.readValue(new File(generatorConfig.getAppConfigFile()),
+            ApplicationConfig.class);
+
+      }
+      new FileWriter(applicationConfig.getTraceOutputFile(), false).close();
+      //     applicationConfigValidator.convert(applicationConfig);
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "Could not load application config", e);
       throw e;

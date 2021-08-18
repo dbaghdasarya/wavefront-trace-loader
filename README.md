@@ -24,7 +24,8 @@ If the following option is set in the `config` file the Loader will read traces 
 ```
 wfTracesFile: "<traces_source_file_path>"
 ```
-For more details see section `Re-Ingestion`
+######For more details see section `Re-Ingestion`
+
 #### - Saving traces to file
 For just generation of traces and saving them to file add the following line to the `applicationConfig.yaml` file:
 ```
@@ -36,6 +37,12 @@ traceOutputFile: "<trace_output_file_path>"
   JSON format convenient for further analysis.
  Be aware that this option has the highest priority, and if it exists traces will be saved to
   file regardless of other options.
+
+
+#### - Providing Trace Types files
+ To provide Trace Types files through `yaml` configuration add `inputJsonFiles:` option to the
+`applicationConfig.yaml` file.
+###### For further details see section `Execution using yaml configuration file`
 
 #### - Direct Ingestion to Wavefront
 For direct ingestion of traces to Wavefront add the following lines to the `applicationConfig.yaml` file:
@@ -340,10 +347,24 @@ The `json` file has the following structure:
          be generated 2 types of spans for the given service with names `<service_name>_001
          ` and `<service_name>_002`. 
 
+
 #### - Example
+### Execution using `yaml` configuration file
+
+Set Trace Types topology/pattern (`json`) files in `yaml` configuration file like this:
+````
+inputJsonFiles:
+ - "topology.json"
+ - "pattern.json"
+ ````
+Run the program.
+No need to provide command line arguments, if provided command line arguments
+will be ignored. To execute the program using command line arguments simply disable
+or remove `inputJsonFiles:` option.
+
+### Execution from the "wavefront-trace-loader" directory
 
 ```
-// Execution from the "wavefront-trace-loader" directory
 $ java -jar target/wavefront-trace-loader-1.0-SNAPSHOT-jar-with-dependencies.jar -f pattern.json
  --configFile anyConfig.yaml
 ```

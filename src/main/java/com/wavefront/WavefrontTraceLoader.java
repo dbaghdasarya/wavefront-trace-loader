@@ -2,6 +2,7 @@ package com.wavefront;
 
 import com.google.common.base.Strings;
 
+import com.wavefront.config.ApplicationConfig;
 import com.wavefront.generators.BasicGenerator;
 import com.wavefront.generators.ReIngestGenerator;
 import com.wavefront.internal.reporter.WavefrontInternalReporter;
@@ -22,6 +23,12 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
   private DataQueue dataQueue;
   private BasicGenerator basicGenerator;
   private SpanSender spanSender;
+
+  WavefrontTraceLoader(ApplicationConfig applicationConfig) {
+    this.applicationConfig = applicationConfig;
+  }
+
+  WavefrontTraceLoader() {}
 
   public static void main(String[] args) throws IOException {
     new WavefrontTraceLoader().start(args);

@@ -20,7 +20,7 @@ public class DataQueue {
   private final LinkedList<Trace> traceQueue = new LinkedList<>();
   private final AtomicInteger traceCount = new AtomicInteger(0);
   private final AtomicInteger spanCount = new AtomicInteger(0);
-  private boolean keepTraces = false;
+  private boolean keepTraces;
 
   /**
    * DataQueue constructor.

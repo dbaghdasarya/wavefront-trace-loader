@@ -57,16 +57,18 @@ public class FromPatternGenerator extends TraceGenerator {
     List<ReferenceDistribution<TraceTypePattern>> referenceDistributions = generatorConfig.
         getTraceTypePatterns().stream().map(traceTypePattern -> new ReferenceDistribution<>(
         traceTypePattern, traceTypePattern.tracePercentage)).collect(Collectors.toList());
-
     if (generatorConfig.getTotalTraceCount() > 0) {
       traceTypePatternIterator = new ExactDistributionIterator<>(referenceDistributions,
           generatorConfig.getTotalTraceCount());
+      referenceDistributions.forEach(traceTypePattern -> {
+        traceTypePattern.reference.init((int) Math.round(traceTypePattern.portion));
+      });
     } else {
       traceTypePatternIterator = new RandomDistributionIterator<>(referenceDistributions);
+      referenceDistributions.forEach(traceTypePattern -> {
+        traceTypePattern.reference.init(0);
+      });
     }
-    generatorConfig.getTraceTypePatterns().forEach(traceTypePattern -> {
-      traceTypePattern.init(generatorConfig.getTotalTraceCount());
-    });
   }
 
   @Override

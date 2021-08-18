@@ -1,12 +1,18 @@
 package com.wavefront.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.wavefront.helpers.ApplicationConfigValidator;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Application configuration object for setting sender related information.
  *
  * @author Sirak Ghazaryan (sghazaryan@vmware.com)
  */
+@JsonDeserialize(converter = ApplicationConfigValidator.class)
 public class ApplicationConfig {
   /**
    * Input file name for parse Wavefront traces from file and re-ingest them.
@@ -24,6 +30,11 @@ public class ApplicationConfig {
    */
   @JsonProperty
   private String traceOutputFile = null;
+  /**
+   * Pattern/topology Trace Type files
+   */
+  @JsonProperty
+  private List<String> inputJsonFiles = new ArrayList<>();
   /**
    * Proxy server for routing traffic to wavefront. If it's set, the direct ingestion configs will
    * be ignored.
@@ -82,9 +93,9 @@ public class ApplicationConfig {
     return token;
   }
 
-  public String getProxyServer() {
-    return proxyServer;
-  }
+  public String getProxyServer() { return proxyServer; }
+
+  public List<String> getInputJsonFiles() { return inputJsonFiles; }
 
   public Integer getMetricsPort() {
     return metricsPort;

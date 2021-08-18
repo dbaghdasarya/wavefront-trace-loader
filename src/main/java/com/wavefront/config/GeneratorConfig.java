@@ -78,7 +78,7 @@ public class GeneratorConfig {
 
   public void initPropertiesFromFile() throws IOException {
     // read json file data to String
-    byte[] jsonData = Files.readAllBytes(Paths.get(getGeneratorConfigFile()));
+    byte[] jsonData = Files.readAllBytes(Paths.get(generatorConfigFile));
     // create ObjectMapper instance
     ObjectMapper objectMapper = new ObjectMapper();
 
@@ -154,6 +154,10 @@ public class GeneratorConfig {
 
   public String getGeneratorConfigFile() {
     return generatorConfigFile;
+  }
+
+  public void setGeneratorConfigFile(String generatorConfigFile) {
+    this.generatorConfigFile = generatorConfigFile;
   }
 
   public List<String> getUnparsedParams() {
