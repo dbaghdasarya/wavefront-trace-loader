@@ -44,12 +44,12 @@ public class FromPatternGenerator extends TraceGenerator {
 
   @Override
   public void generateForFile() {
-    startGeneration(false, generatorConfig, LOGGER);
+    startGeneration(false, generatorConfig, LOGGER, "PATTERN");
   }
 
   @Override
   public void run() {
-    startGeneration(true, generatorConfig, LOGGER);
+    startGeneration(true, generatorConfig, LOGGER, "PATTERN");
   }
 
   @Override

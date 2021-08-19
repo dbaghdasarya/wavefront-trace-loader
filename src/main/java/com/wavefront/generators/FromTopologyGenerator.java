@@ -56,12 +56,12 @@ public class FromTopologyGenerator extends TraceGenerator {
 
   @Override
   public void generateForFile() {
-    startGeneration(false, generatorConfig, LOGGER);
+    startGeneration(false, generatorConfig, LOGGER, "TOPOLOGY");
   }
 
   @Override
   public void run() {
-    startGeneration(true, generatorConfig, LOGGER);
+    startGeneration(true, generatorConfig, LOGGER, "TOPOLOGY");
   }
 
   private void generateTraceTemplates() {
