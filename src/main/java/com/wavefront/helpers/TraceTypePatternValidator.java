@@ -21,8 +21,8 @@ import static com.wavefront.helpers.Defaults.DEFAULT_TYPE_NAME_PREFIX;
  *
  * @author Davit Baghdasaryan (dbaghdasarya@vmware.com)
  */
-public class TraceTypePatternSanitizer extends StdConverter<TraceTypePattern, TraceTypePattern> {
-  private static final Logger LOGGER = Logger.getLogger(TraceTypePatternSanitizer.class.getCanonicalName());
+public class TraceTypePatternValidator extends StdConverter<TraceTypePattern, TraceTypePattern> {
+  private static final Logger LOGGER = Logger.getLogger(TraceTypePatternValidator.class.getCanonicalName());
   private static int currentTypeIndex = 1;
 
   @Override

@@ -1,0 +1,193 @@
+{
+  "spansRate": 50,
+  "duration": "2m",
+  "traceTypesCount": 0,
+  "errorRate": 20,
+  "debugRate": 30,
+  "totalTraceCount": 40,
+  "traceTypePatterns": [
+    {
+      "traceTypeName": "TType_1",
+      "spanNameSuffixes": "abcdefghi",
+      "nestingLevel": 5,
+      "tracePercentage": 50,
+      "errorRate": 30,
+      "spansDistributions": [
+        {
+          "startValue": 10,
+          "endValue": 15,
+          "percentage": 10
+        },
+        {
+          "startValue": 20,
+          "endValue": 40,
+          "percentage": 90
+        }
+      ],
+      "traceDurations": [
+        {
+          "startValue": 50,
+          "endValue": 100,
+          "percentage": 20
+        },
+        {
+          "startValue": 200,
+          "endValue": 500,
+          "percentage": 80
+        }
+      ],
+      "mandatoryTags": [
+        {
+          "tagName": "application",
+          "tagValues": [
+            "Pattern_TestApp"
+          ]
+        },
+        {
+          "tagName": "service",
+          "tagValues": [
+            "front-desk",
+            "room-service",
+            "gym"
+          ]
+        }
+      ],
+      "optionalTags": [
+        {
+          "tagName": "days",
+          "tagValues": [
+            5,
+            2,
+            1,
+            7
+          ]
+        },
+        {
+          "tagName": "amount",
+          "tagValues": [
+            10,
+            20,
+            30,
+            40,
+            50,
+            55
+          ]
+        },
+        {
+          "tagName": "quantity",
+          "tagValues": [
+            10,
+            20,
+            30,
+            40,
+            50,
+            55
+          ]
+        },
+        {
+          "tagName": "host",
+          "tagValues": [
+            "ip-10.1.2.3",
+            "ip-11.2.3.4",
+            "ip-12.3.4.5",
+            "ip-13.4.5.6",
+            "ip-14.5.6.7",
+            "ip-15.6.7.8"
+          ]
+        },
+        {
+          "tagName": "tour-agent",
+          "tagValues": [
+            "hyur-service",
+            "menua-travel",
+            "visa-concord",
+            "findarmenia"
+          ]
+        },
+        {
+          "tagName": "payment",
+          "tagValues": [
+            "visa",
+            "mastercard",
+            "amex",
+            "cash"
+          ]
+        },
+        {
+          "tagName": "partner",
+          "tagValues": [
+            "vmware",
+            "credence",
+            "synopsis",
+            "subaru"
+          ]
+        },
+        {
+          "tagName": "loyalty",
+          "tagValues": [
+            "dinners",
+            "platinum",
+            "gold",
+            "standard"
+          ]
+        }
+      ],
+      "optionalTagsPercentage": 10,
+      "errorConditions": [
+        {
+          "spanNames": ["name_a"],
+          "tagName": "loyalty",
+          "tagValue": "platinum",
+          "errorRate": 80
+        },
+        {
+          "tagName": "partner",
+          "tagValue": "vmware",
+          "errorRate": 0
+        }
+      ]
+    },
+    {
+      "traceTypeName": "TType_2",
+      "nestingLevel": 2,
+      "errorRate": 10,
+      "spansDistributions": [
+        {
+          "startValue": 1,
+          "endValue": 5,
+          "percentage": 100
+        }
+      ],
+      "tracePercentage": 50,
+      "spansDurations": [
+        {
+          "startValue": 10,
+          "endValue": 20,
+          "percentage": 10
+        },
+        {
+          "startValue": 20,
+          "endValue": 40,
+          "percentage": 90
+        }
+      ],
+      "mandatoryTags": [
+        {
+          "tagName": "application",
+          "tagValues": [
+            "Pattern_TestApp"
+          ]
+        },
+        {
+          "tagName": "service",
+          "tagValues": [
+            "front-desk",
+            "room-service",
+            "gym"
+          ]
+        }
+      ],
+      "errorConditions": []
+    }
+  ]
+}

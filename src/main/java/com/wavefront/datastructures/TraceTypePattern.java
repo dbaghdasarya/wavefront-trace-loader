@@ -5,7 +5,7 @@ import com.google.common.base.Strings;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.wavefront.helpers.Defaults;
-import com.wavefront.helpers.TraceTypePatternSanitizer;
+import com.wavefront.helpers.TraceTypePatternValidator;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -20,7 +20,7 @@ import java.util.Set;
  * @author Sirak Ghazaryan (sghazaryan@vmware.com), Davit Baghdasaryan (dbagdasarya@vmware.com)
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonDeserialize(converter = TraceTypePatternSanitizer.class)
+@JsonDeserialize(converter = TraceTypePatternValidator.class)
 @SuppressWarnings("unused")
 public class TraceTypePattern {
   public final Map<String, Set<String>> serviceMap = new LinkedHashMap<>();
@@ -69,14 +69,13 @@ public class TraceTypePattern {
   /**
    * Initialize distributions iterators(random or exact mode).
    */
-  public void init(int totalTracesCount) {
+  public void init(int traceCount) {
     // Iterator for span durations should always be in random mode.
     this.spansDurationsIterator = new RandomDistributionIterator<>(this.spansDurations);
 
     // If the total number of traces is specified, then this is the exact mode,
     // otherwise it is the random mode.
-    if (totalTracesCount > 0) {
-      int traceCount = (int) (tracePercentage * totalTracesCount / 100);
+    if (traceCount > 0) {
       this.spansDistributionsIterator = new ExactDistributionIterator<>(this.spansDistributions,
           traceCount);
       this.traceDurationsIterator = new ExactDistributionIterator<>(this.traceDurations,

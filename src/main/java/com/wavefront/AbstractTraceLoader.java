@@ -1,16 +1,20 @@
 package com.wavefront;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 
 import com.beust.jcommander.JCommander;
+import com.beust.jcommander.ParameterException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.wavefront.config.ApplicationConfig;
 import com.wavefront.config.GeneratorConfig;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -25,7 +29,8 @@ public abstract class AbstractTraceLoader {
   protected final GeneratorConfig generatorConfig = new GeneratorConfig();
   protected ApplicationConfig applicationConfig;
 
-  private void parseArguments(String[] args) {
+  @VisibleForTesting
+  protected void parseArguments(String[] args) {
     LOGGER.info("Arguments: " + Arrays.stream(args).
         collect(Collectors.joining(", ")));
     JCommander jCommander = JCommander.newBuilder().
@@ -49,16 +54,46 @@ public abstract class AbstractTraceLoader {
    *
    * @param args Command-line parameters passed on to JCommander to configure the daemon.
    */
-  public void start(String[] args) throws IOException {
+  public void start(String[] args) {
     try {
-      // Parse commandline arguments.
-      parseArguments(args);
-
-      // Keep config files loading sequence.
-      loadGeneratorConfigurationFile();
       loadApplicationConfig();
+    } catch (Throwable t) {
+      handleProgramExit(t);
+    }
+    List<String> inputJsonFiles = applicationConfig.getInputJsonFiles();
+    if (inputJsonFiles == null || inputJsonFiles.isEmpty()) {
+      try {
+        if (args.length == 0) {
+          LOGGER.info("Since neither Command Line Arguments, nor YAML config files are provided " +
+              "the default option will be executed.");
+        }
+        // Parse commandline arguments.
+        parseArguments(args);
+        start();
+      } catch (ParameterException e) {
+        LOGGER.log(Level.SEVERE, "Generation can't be started! Neither Command Line Arguments, " +
+            "nor YAML config files are provided.");
+        LOGGER.info("Arguments: " + Arrays.stream(args).collect(Collectors.joining(", ")) + " are " +
+            "not enough to start generating.");
+        System.exit(1);
+      }
+    } else {
+      LOGGER.log(Level.INFO, "Please, be aware that if provided Command Line Arguments will be " +
+          "ignored!");
+      inputJsonFiles.forEach(inputJsonFile -> {
+        generatorConfig.setGeneratorConfigFile(inputJsonFile);
+        start();
+      });
+    }
+  }
+
+
+  private void start() {
+    try {
+      loadGeneratorConfigurationFile();
 
       initialize();
+
       setupSenders();
       setupGenerators();
 
@@ -66,19 +101,22 @@ public abstract class AbstractTraceLoader {
 
       dumpStatistics();
     } catch (Throwable t) {
-      LOGGER.log(Level.SEVERE, "Aborting start-up", t);
-      System.exit(1);
+      handleProgramExit(t);
     }
   }
 
-  private void loadGeneratorConfigurationFile() throws IOException {
+  private void handleProgramExit(Throwable t) {
+    LOGGER.log(Level.SEVERE, "Aborting start-up", t);
+    System.exit(1);
+  }
+
+  private void loadGeneratorConfigurationFile() throws Exception {
     // If they've specified a configuration file, override the command line values
     try {
       if (generatorConfig.getGeneratorConfigFile() != null) {
         generatorConfig.initPropertiesFromFile();
       }
       generatorConfig.initMissingPropertiesWithDefaults();
-
     } catch (Throwable e) {
       LOGGER.severe("Could not load generator configuration file " + generatorConfig.getGeneratorConfigFile());
       throw e;
@@ -92,8 +130,11 @@ public abstract class AbstractTraceLoader {
             "generator file!");
       }
       ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-      applicationConfig = objectMapper.readValue(new File(generatorConfig.getAppConfigFile()),
-          ApplicationConfig.class);
+      if (applicationConfig == null) {
+        applicationConfig = objectMapper.readValue(new File(generatorConfig.getAppConfigFile()),
+            ApplicationConfig.class);
+      }
+      new FileWriter(applicationConfig.getTraceOutputFile(), false).close();
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "Could not load application config", e);
       throw e;

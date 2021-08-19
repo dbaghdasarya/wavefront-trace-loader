@@ -71,7 +71,7 @@ public class SpanSender implements Runnable {
 
     if (!Strings.isNullOrEmpty(traceOutputFile) && dataQueue.getEnteredTraceCount() > 0) {
       final File file = new File(traceOutputFile);
-      final FileWriter fileWriter = new FileWriter(file);
+      final FileWriter fileWriter = new FileWriter(file, true);
       Trace tempTrace;
       Set<String> roots = new HashSet<>();
       int errors = 0;
@@ -87,7 +87,7 @@ public class SpanSender implements Runnable {
       }
       final ObjectMapper mapper = new ObjectMapper();
       fileWriter.write("\n" + mapper.writeValueAsString(roots));
-      fileWriter.write("\n\nTotal traces - " + total + ": Erroneous - " + errors);
+      fileWriter.write("\n\nTotal traces - " + total + ": Erroneous - " + errors + "]\n\n");
       fileWriter.close();
       LOGGER.info(dataQueue.getEnteredTraceCount() + " trace saved to file  " +
           file.getAbsolutePath());

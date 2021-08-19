@@ -13,7 +13,10 @@
 
     <properties>
         <java.version>10</java.version>
-    </properties>
+        <!-- Testing library versions -->
+        <junit5.version>5.7.0</junit5.version>
+        <truth.version>0.42</truth.version>
+        </properties>
 
     <build>
         <plugins>
@@ -107,6 +110,23 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.9</version>
         </dependency>
+        <dependency>
+            <groupId>org.junit</groupId>
+            <artifactId>junit-bom</artifactId>
+            <version>${junit5.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.truth</groupId>
+            <artifactId>truth</artifactId>
+            <version>${truth.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.easymock</groupId>
+            <artifactId>easymock</artifactId>
+            <version>4.2</version>
+            <scope>test</scope>
+        </dependency>
      </dependencies>
-
 </project>
