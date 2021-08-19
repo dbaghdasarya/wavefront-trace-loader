@@ -103,7 +103,6 @@ public abstract class AbstractTraceLoader {
         generatorConfig.initPropertiesFromFile();
       }
       generatorConfig.initMissingPropertiesWithDefaults();
-
     } catch (Throwable e) {
       LOGGER.severe("Could not load generator configuration file " + generatorConfig.getGeneratorConfigFile());
       throw e;
@@ -120,10 +119,8 @@ public abstract class AbstractTraceLoader {
       if (applicationConfig == null) {
         applicationConfig = objectMapper.readValue(new File(generatorConfig.getAppConfigFile()),
             ApplicationConfig.class);
-
       }
       new FileWriter(applicationConfig.getTraceOutputFile(), false).close();
-      //     applicationConfigValidator.convert(applicationConfig);
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "Could not load application config", e);
       throw e;

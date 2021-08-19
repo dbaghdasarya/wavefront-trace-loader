@@ -24,7 +24,7 @@ If the following option is set in the `config` file the Loader will read traces 
 ```
 wfTracesFile: "<traces_source_file_path>"
 ```
-######For more details see section `Re-Ingestion`
+###### For more details see section `Re-Ingestion`
 
 #### - Saving traces to file
 For just generation of traces and saving them to file add the following line to the `applicationConfig.yaml` file:

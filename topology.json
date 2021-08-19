@@ -1,7 +1,7 @@
 {
   "spansRate": 50,
   "duration": "2m",
-  "totalTraceCount": 100,
+  "totalTraceCount": 10000,
   "traceTopology": {
     "traceTypes": [
       {
