@@ -1,8 +1,10 @@
 package com.wavefront;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 
 import com.beust.jcommander.JCommander;
+import com.beust.jcommander.ParameterException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.wavefront.config.ApplicationConfig;
@@ -27,7 +29,8 @@ public abstract class AbstractTraceLoader {
   protected final GeneratorConfig generatorConfig = new GeneratorConfig();
   protected ApplicationConfig applicationConfig;
 
-  private void parseArguments(String[] args) {
+  @VisibleForTesting
+  protected void parseArguments(String[] args) {
     LOGGER.info("Arguments: " + Arrays.stream(args).
         collect(Collectors.joining(", ")));
     JCommander jCommander = JCommander.newBuilder().
@@ -52,9 +55,6 @@ public abstract class AbstractTraceLoader {
    * @param args Command-line parameters passed on to JCommander to configure the daemon.
    */
   public void start(String[] args) {
-    // Parse commandline arguments.
-    parseArguments(args);
-
     try {
       loadApplicationConfig();
     } catch (Throwable t) {
@@ -62,7 +62,21 @@ public abstract class AbstractTraceLoader {
     }
     List<String> inputJsonFiles = applicationConfig.getInputJsonFiles();
     if (inputJsonFiles == null || inputJsonFiles.isEmpty()) {
-      start();
+      try {
+        if (args.length == 0) {
+          LOGGER.info("Since neither Command Line Arguments, nor YAML config files are provided " +
+              "the default option will be executed.");
+        }
+        // Parse commandline arguments.
+        parseArguments(args);
+        start();
+      } catch (ParameterException e) {
+        LOGGER.log(Level.SEVERE, "Generation can't be started! Neither Command Line Arguments, " +
+            "nor YAML config files are provided.");
+        LOGGER.info("Arguments: " + Arrays.stream(args).collect(Collectors.joining(", ")) + " are " +
+            "not enough to start generating.");
+        System.exit(1);
+      }
     } else {
       LOGGER.log(Level.INFO, "Please, be aware that if provided Command Line Arguments will be " +
           "ignored!");

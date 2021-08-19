@@ -1,5 +1,6 @@
 package com.wavefront;
 
+import com.beust.jcommander.ParameterException;
 import com.wavefront.config.ApplicationConfig;
 
 import org.junit.Before;
@@ -20,7 +21,7 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
-
+import static org.junit.Assert.assertTrue;
 
 public class AbstractTraceLoaderTest {
   private WavefrontTraceLoader wavefrontTraceLoader;
@@ -92,15 +93,32 @@ public class AbstractTraceLoaderTest {
   }
 
   @Test
-  public void testByLinesWithYamlConfigurationWhenCommandLineArgumentsAreSpecified() {
-    List<String> JsonFiles = Arrays.asList(loadFile(PATTERN_FOR_TEST), loadFile(PATTERN_FOR_TEST));
-    expect(applicationConfig.getInputJsonFiles()).andReturn(JsonFiles).anyTimes();
+  public void testByLinesWithYamlConfigurationOptionWhenCommandLineArgumentsAreSpecified() {
+    List<String> jsonFiles = Arrays.asList(loadFile(PATTERN_FOR_TEST), loadFile(PATTERN_FOR_TEST));
+    expect(applicationConfig.getInputJsonFiles()).andReturn(jsonFiles).anyTimes();
 
     replay(applicationConfig);
 
     wavefrontTraceLoader.start(new String[]{loadFile(TOPOLOGY_FOR_TEST)});
     int traceCount = wavefrontTraceLoader.generatorConfig.getTotalTraceCount();
     assertEquals(traceCount * 2, countTracesBufferedReader(applicationConfig.getTraceOutputFile()));
+
+    verify(applicationConfig);
+  }
+
+  @Test
+  public void testWhenNeitherCommandLineArgumentsNorYamlConfigurationFilesAreProvided() {
+    expect(applicationConfig.getInputJsonFiles()).andReturn(Collections.emptyList()).anyTimes();
+    boolean exception = false;
+
+    replay(applicationConfig);
+
+    try {
+      wavefrontTraceLoader.parseArguments(new String[]{"-f"});
+    } catch (ParameterException e) {
+      exception = true;
+    }
+    assertTrue(exception);
 
     verify(applicationConfig);
   }

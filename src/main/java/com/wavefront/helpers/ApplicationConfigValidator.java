@@ -19,10 +19,7 @@ public class ApplicationConfigValidator extends StdConverter<ApplicationConfig, 
 
   public boolean isValidFileName(final String fileName) {
     final File aFile = new File(fileName);
-    if (!aFile.exists()) {
-      return false;
-    }
-    return true;
+    return (aFile.exists() && !aFile.isDirectory());
   }
 
   public ApplicationConfig convert(ApplicationConfig applicationConfig) {
