@@ -147,7 +147,7 @@ public abstract class TraceGenerator extends BasicGenerator {
           parents_list,
           null, traceTypeTags,
           null);
-      statTrace.add(0, type_stat);
+      statTrace.add(1, type_stat);
     });
     dataQueue.addTrace(statTrace);
     logger.info("Generation complete!");
