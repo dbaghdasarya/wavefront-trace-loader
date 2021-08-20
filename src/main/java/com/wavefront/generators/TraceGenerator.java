@@ -98,23 +98,23 @@ public abstract class TraceGenerator extends BasicGenerator {
 
     Trace statTrace = new Trace(2, UUID.randomUUID());
 
-    List<Pair<String, String>> list = new LinkedList<>();
-    list.add(new Pair<>("application", "Statistics"));
-    list.add(new Pair<>("service", "Statistics"));
+    List<Pair<String, String>> rootTags = new LinkedList<>();
+    rootTags.add(new Pair<>("application", "Statistics"));
+    rootTags.add(new Pair<>("service", "Statistics"));
 
-    list.add(new Pair<>("Total traces", Integer.toString(statistics.getTracesSum())));
-    list.add(new Pair<>("Total errors", Integer.toString(statistics.getErrorsSum())));
-    list.add(new Pair<>("Total errors percentage", Long.toString(Math.round((double) statistics.getErrorsSum() / statistics.getTracesSum() * 100))));
-    list.add(new Pair<>("Total debug spans", Integer.toString(statistics.getDebugSpansSum())));
+    rootTags.add(new Pair<>("Total traces", Integer.toString(statistics.getTracesSum())));
+    rootTags.add(new Pair<>("Total errors", Integer.toString(statistics.getErrorsSum())));
+    rootTags.add(new Pair<>("Total errors percentage", Long.toString(Math.round((double) statistics.getErrorsSum() / statistics.getTracesSum() * 100))));
+    rootTags.add(new Pair<>("Total debug spans", Integer.toString(statistics.getDebugSpansSum())));
 
     Span stat = new Span(str + "_STAT",
         System.currentTimeMillis(),
         1,
-        "localhost",
+        "traceLoaderHost",
         statTrace.getTraceUUID(),
         UUID.randomUUID(),
         null,
-        null, list,
+        null, rootTags,
         null);
 
     statTrace.add(0, stat);
@@ -123,20 +123,20 @@ public abstract class TraceGenerator extends BasicGenerator {
       List<UUID> parents_list = new LinkedList();
       parents_list.add(stat.getSpanUUID());
 
-      List<Pair<String, String>> list1 = new LinkedList<>();
-      list1.add(new Pair<>("application", "Statistics"));
-      list1.add(new Pair<>("service", "TraceType"));
-      list1.add(new Pair<>("Count", Integer.toString(v.getCount())));
-      list1.add(new Pair<>("Percentage", Double.toString(100.0 * v.getCount() / getStatistics().getTracesSum())));
-      list1.add(new Pair<>("Spans mean", Long.toString(Math.round((double) v.getSpansSum() / v.getCount()))));
-      list1.add(new Pair<>("Spans min", Integer.toString(v.getSpansMin())));
-      list1.add(new Pair<>("Spans max", Integer.toString(v.getSpansMax())));
-      list1.add(new Pair<>("Trace duration mean", Long.toString(Math.round((double) v.getTraceDuration() / v.getCount()))));
-      list1.add(new Pair<>("Trace duration min", Long.toString(v.getTraceDurationMin())));
-      list1.add(new Pair<>("Trace duration max", Long.toString(v.getTraceDurationMax())));
-      list1.add(new Pair<>("Errors count", Integer.toString(v.getErrorCount())));
-      list1.add(new Pair<>("Errors percentage", Long.toString(Math.round((double) v.getErrorCount() / getStatistics().getErrorsSum() * 100))));
-      list1.add(new Pair<>("Debug spans count", Integer.toString(v.getDebugSpansCount())));
+      List<Pair<String, String>> traceTypeTags = new LinkedList<>();
+      traceTypeTags.add(new Pair<>("application", "Statistics"));
+      traceTypeTags.add(new Pair<>("service", "TraceType"));
+      traceTypeTags.add(new Pair<>("Count", Integer.toString(v.getCount())));
+      traceTypeTags.add(new Pair<>("Percentage", Double.toString(100.0 * v.getCount() / getStatistics().getTracesSum())));
+      traceTypeTags.add(new Pair<>("Spans mean", Long.toString(Math.round((double) v.getSpansSum() / v.getCount()))));
+      traceTypeTags.add(new Pair<>("Spans min", Integer.toString(v.getSpansMin())));
+      traceTypeTags.add(new Pair<>("Spans max", Integer.toString(v.getSpansMax())));
+      traceTypeTags.add(new Pair<>("Trace duration mean", Long.toString(Math.round((double) v.getTraceDuration() / v.getCount()))));
+      traceTypeTags.add(new Pair<>("Trace duration min", Long.toString(v.getTraceDurationMin())));
+      traceTypeTags.add(new Pair<>("Trace duration max", Long.toString(v.getTraceDurationMax())));
+      traceTypeTags.add(new Pair<>("Errors count", Integer.toString(v.getErrorCount())));
+      traceTypeTags.add(new Pair<>("Errors percentage", Long.toString(Math.round((double) v.getErrorCount() / getStatistics().getErrorsSum() * 100))));
+      traceTypeTags.add(new Pair<>("Debug spans count", Integer.toString(v.getDebugSpansCount())));
 
       Span type_stat = new Span(k,
           System.currentTimeMillis(),
@@ -145,7 +145,7 @@ public abstract class TraceGenerator extends BasicGenerator {
           statTrace.getTraceUUID(),
           UUID.randomUUID(),
           parents_list,
-          null, list1,
+          null, traceTypeTags,
           null);
       statTrace.add(0, type_stat);
     });

@@ -25,6 +25,8 @@ public class Defaults {
   public static final String FOLLOWS_FROM = "followsFrom";
   public static final String DEFAULT_TYPE_NAME_PREFIX = "traceType_";
   public static final String DEFAULT_SPAN_NAME_SUFFIX = "abcdefghijklmnopqrstuvxyz";
+  public static final String PATTERN = "PATTERN";
+  public static final String TOPOLOGY = "TOPOLOGY";
   public static final int DEFAULT_NESTING_LEVEL = RANDOM.nextInt(6) + 4;
   public static final Pair<String, String> ERROR_TAG = new Pair<>(ERROR, "true");
   public static final Pair<String, String> DEBUG_TAG = new Pair<>(DEBUG, "true");

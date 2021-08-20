@@ -33,6 +33,7 @@ import static com.wavefront.helpers.Defaults.DEBUG_TAG;
 import static com.wavefront.helpers.Defaults.ERROR;
 import static com.wavefront.helpers.Defaults.ERROR_TAG;
 import static com.wavefront.helpers.Defaults.SERVICE;
+import static com.wavefront.helpers.Defaults.TOPOLOGY;
 import static com.wavefront.helpers.WftlUtils.getRandomFromSet;
 import static com.wavefront.helpers.WftlUtils.isEffectivePercentage;
 
@@ -56,12 +57,12 @@ public class FromTopologyGenerator extends TraceGenerator {
 
   @Override
   public void generateForFile() {
-    startGeneration(false, generatorConfig, LOGGER, "TOPOLOGY");
+    startGeneration(false, generatorConfig, LOGGER, TOPOLOGY);
   }
 
   @Override
   public void run() {
-    startGeneration(true, generatorConfig, LOGGER, "TOPOLOGY");
+    startGeneration(true, generatorConfig, LOGGER, TOPOLOGY);
   }
 
   private void generateTraceTemplates() {

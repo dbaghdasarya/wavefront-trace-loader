@@ -26,6 +26,7 @@ import static com.wavefront.datastructures.ErrorCondition.getErrorRate;
 import static com.wavefront.helpers.Defaults.DEBUG_TAG;
 import static com.wavefront.helpers.Defaults.ERROR_TAG;
 import static com.wavefront.helpers.Defaults.HUNDRED_PERCENT;
+import static com.wavefront.helpers.Defaults.PATTERN;
 import static com.wavefront.helpers.WftlUtils.isEffectivePercentage;
 
 /**
@@ -44,12 +45,12 @@ public class FromPatternGenerator extends TraceGenerator {
 
   @Override
   public void generateForFile() {
-    startGeneration(false, generatorConfig, LOGGER, "PATTERN");
+    startGeneration(false, generatorConfig, LOGGER, PATTERN);
   }
 
   @Override
   public void run() {
-    startGeneration(true, generatorConfig, LOGGER, "PATTERN");
+    startGeneration(true, generatorConfig, LOGGER, PATTERN);
   }
 
   @Override

@@ -147,8 +147,6 @@ public class Statistics {
       traceDuration += duration;
       traceDurationMin = Math.min(traceDurationMin, duration);
       traceDurationMax = Math.max(traceDurationMax, duration);
-
-
     }
   }
 
