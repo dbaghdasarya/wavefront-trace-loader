@@ -142,6 +142,8 @@ public class SpanSender implements Runnable {
       LOGGER.severe(Throwables.getStackTraceAsString(e));
     }
     try {
+      System.out.println("Closing sender.");
+      spanSender.flush();
       spanSender.close();
     } catch (IOException e) {
       LOGGER.severe(Throwables.getStackTraceAsString(e));

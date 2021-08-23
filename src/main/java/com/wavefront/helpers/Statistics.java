@@ -87,7 +87,7 @@ public class Statistics {
   }
 
 
-  private static class TypeStatistic {
+  public static class TypeStatistic {
     int count = 0;
     int errorCount = 0;
     int debugSpansCount = 0;
@@ -97,6 +97,42 @@ public class Statistics {
     int traceDuration = 0;
     long traceDurationMin = Long.MAX_VALUE;
     long traceDurationMax = Long.MIN_VALUE;
+
+    public int getCount() {
+      return count;
+    }
+
+    public int getErrorCount() {
+      return errorCount;
+    }
+
+    public int getDebugSpansCount() {
+      return debugSpansCount;
+    }
+
+    public int getSpansSum() {
+      return spansSum;
+    }
+
+    public int getSpansMin() {
+      return spansMin;
+    }
+
+    public int getSpansMax() {
+      return spansMax;
+    }
+
+    public int getTraceDuration() {
+      return traceDuration;
+    }
+
+    public long getTraceDurationMin() {
+      return traceDurationMin;
+    }
+
+    public long getTraceDurationMax() {
+      return traceDurationMax;
+    }
 
     void update(int spansCount, long duration, boolean error, int debugSpansCount) {
       if (error) {
@@ -112,5 +148,21 @@ public class Statistics {
       traceDurationMin = Math.min(traceDurationMin, duration);
       traceDurationMax = Math.max(traceDurationMax, duration);
     }
+  }
+
+  public Map<String, TypeStatistic> getTracesByType() {
+    return tracesByType;
+  }
+
+  public int getTracesSum() {
+    return tracesSum;
+  }
+
+  public int getErrorsSum() {
+    return errorsSum;
+  }
+
+  public int getDebugSpansSum() {
+    return debugSpansSum;
   }
 }

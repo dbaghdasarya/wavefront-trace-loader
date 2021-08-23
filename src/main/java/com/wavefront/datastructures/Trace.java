@@ -99,6 +99,8 @@ public class Trace {
     return spans;
   }
 
+  public UUID getTraceUUID() { return traceUUID; }
+
   public String getRoot() {
     if (root == null && spans.size() > 0 && spans.get(0).size() > 0) {
       root.set(spans.get(0).get(0).getName());
