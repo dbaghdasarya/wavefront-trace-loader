@@ -4,13 +4,13 @@
   "traceTypesCount": 0,
   "errorRate": 20,
   "debugRate": 30,
-  "totalTraceCount": 100,
+  "totalTraceCount": 7,
   "traceTypePatterns": [
     {
       "traceTypeName": "TType_1",
       "spanNameSuffixes": "abcdefghi",
       "nestingLevel": 5,
-      "tracePercentage": 50,
+      "tracePercentage": 20,
       "errorRate": 30,
       "spansDistributions": [
         {
@@ -158,7 +158,133 @@
           "percentage": 100
         }
       ],
-      "tracePercentage": 50,
+      "tracePercentage": 20,
+      "spansDurations": [
+        {
+          "startValue": 10,
+          "endValue": 20,
+          "percentage": 10
+        },
+        {
+          "startValue": 20,
+          "endValue": 40,
+          "percentage": 90
+        }
+      ],
+      "mandatoryTags": [
+        {
+          "tagName": "application",
+          "tagValues": [
+            "Pattern_TestApp"
+          ]
+        },
+        {
+          "tagName": "service",
+          "tagValues": [
+            "front-desk",
+            "room-service",
+            "gym"
+          ]
+        }
+      ],
+      "errorConditions": []
+    },
+    {
+      "traceTypeName": "TType_3",
+      "nestingLevel": 2,
+      "errorRate": 10,
+      "spansDistributions": [
+        {
+          "startValue": 1,
+          "endValue": 5,
+          "percentage": 100
+        }
+      ],
+      "tracePercentage": 20,
+      "spansDurations": [
+        {
+          "startValue": 10,
+          "endValue": 20,
+          "percentage": 10
+        },
+        {
+          "startValue": 20,
+          "endValue": 40,
+          "percentage": 90
+        }
+      ],
+      "mandatoryTags": [
+        {
+          "tagName": "application",
+          "tagValues": [
+            "Pattern_TestApp"
+          ]
+        },
+        {
+          "tagName": "service",
+          "tagValues": [
+            "front-desk",
+            "room-service",
+            "gym"
+          ]
+        }
+      ],
+      "errorConditions": []
+    },
+    {
+      "traceTypeName": "TType_4",
+      "nestingLevel": 2,
+      "errorRate": 10,
+      "spansDistributions": [
+        {
+          "startValue": 1,
+          "endValue": 5,
+          "percentage": 100
+        }
+      ],
+      "tracePercentage": 20,
+      "spansDurations": [
+        {
+          "startValue": 10,
+          "endValue": 20,
+          "percentage": 10
+        },
+        {
+          "startValue": 20,
+          "endValue": 40,
+          "percentage": 90
+        }
+      ],
+      "mandatoryTags": [
+        {
+          "tagName": "application",
+          "tagValues": [
+            "Pattern_TestApp"
+          ]
+        },
+        {
+          "tagName": "service",
+          "tagValues": [
+            "front-desk",
+            "room-service",
+            "gym"
+          ]
+        }
+      ],
+      "errorConditions": []
+    },
+    {
+      "traceTypeName": "TType_5",
+      "nestingLevel": 2,
+      "errorRate": 10,
+      "spansDistributions": [
+        {
+          "startValue": 1,
+          "endValue": 5,
+          "percentage": 100
+        }
+      ],
+      "tracePercentage": 20,
       "spansDurations": [
         {
           "startValue": 10,

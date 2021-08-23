@@ -20,6 +20,11 @@ public class ApplicationConfig {
   @JsonProperty
   private String wfTracesFile;
   /**
+   * Number of times the program should execute.
+   */
+  @JsonProperty
+  private String cycle = "1";
+  /**
    * Output file name for exporting the plain list of spans. Saving to file has the highest
    * priority.
    */
@@ -75,6 +80,14 @@ public class ApplicationConfig {
 
   public String getWfTracesFile() {
     return wfTracesFile;
+  }
+
+  public String getCycle() {
+    return cycle;
+  }
+
+  public void setCycle(String cycle) {
+    this.cycle = cycle;
   }
 
   public String getSpanOutputFile() {

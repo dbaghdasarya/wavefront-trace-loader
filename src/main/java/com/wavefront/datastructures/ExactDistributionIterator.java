@@ -1,5 +1,6 @@
 package com.wavefront.datastructures;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -12,6 +13,7 @@ public class ExactDistributionIterator<T extends Distribution> extends Distribut
 
   public ExactDistributionIterator(List<T> distributions, int count) {
     super(distributions);
+    Collections.shuffle(distributions);
     calculateDistributionsPortions(count);
   }
 
@@ -20,25 +22,28 @@ public class ExactDistributionIterator<T extends Distribution> extends Distribut
    */
   protected void calculateDistributionsPortions(int count) {
     double alreadyGenerated = 0;
-    Double accumulate = 0.0;
+    double accumulate = 0;
     double sumOfPercentages = distributions.stream().
         mapToDouble(t -> t.percentage).sum();
     for (int i = 0; i < distributions.size(); i++) {
       Distribution d = distributions.get(i);
       d.portion = d.percentage * count / sumOfPercentages;
       int portion = (int) Math.round(d.portion);
-      if (accumulate >= 1) {
-        accumulate = accumulate - (d.portion - (int) d.portion);
-        d.portion = (int) d.portion;
-        alreadyGenerated += d.portion;
+      if (Math.abs(accumulate) >= 1) {
+        if (accumulate >= 0) {
+          accumulate = accumulate - (d.portion - (int) d.portion);
+          d.portion = (int) d.portion;
+        } else {
+          accumulate = accumulate + (d.portion - (int) d.portion);
+          d.portion = Math.ceil(d.portion);
+        }
       } else if (i == distributions.size() - 1) {
         d.portion = count - alreadyGenerated;
-        alreadyGenerated += d.portion;
       } else {
         accumulate += portion - d.portion;
         d.portion = portion;
-        alreadyGenerated += d.portion;
       }
+      alreadyGenerated += d.portion;
     }
   }
 
@@ -54,6 +59,7 @@ public class ExactDistributionIterator<T extends Distribution> extends Distribut
       index = RANDOM.nextInt(distributions.size());
     }
     distributions.get(index).portion--;
+
     if (distributions.get(index).portion < -0.1) {
       distributions.remove(index);
       return null;

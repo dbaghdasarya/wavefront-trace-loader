@@ -4,7 +4,7 @@
   "traceTypesCount": 0,
   "errorRate": 20,
   "debugRate": 30,
-  "totalTraceCount": 40,
+  "totalTraceCount": 6,
   "traceTypePatterns": [
     {
       "traceTypeName": "TType_1",

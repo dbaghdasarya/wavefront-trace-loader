@@ -68,7 +68,7 @@ public class AbstractTraceLoaderTest {
   @Test
   public void testByLinesWithCommandLineArgumentsOption() {
     expect(applicationConfig.getInputJsonFiles()).andReturn(Collections.emptyList()).anyTimes();
-
+    expect(applicationConfig.getCycle()).andReturn("1").times(1);
     replay(applicationConfig);
 
     wavefrontTraceLoader.start(new String[]{"-f", loadFile(PATTERN_FOR_TEST)});
