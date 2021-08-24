@@ -16,7 +16,7 @@
         <!-- Testing library versions -->
         <junit5.version>5.7.0</junit5.version>
         <truth.version>0.42</truth.version>
-        </properties>
+    </properties>
 
     <build>
         <plugins>

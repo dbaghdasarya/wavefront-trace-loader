@@ -24,6 +24,20 @@ If the following option is set in the `config` file the Loader will read traces 
 ```
 wfTracesFile: "<traces_source_file_path>"
 ```
+####- Number of program execution
+If cycle is equal Infinite:
+```
+cycle: Infinite
+```
+The program will execute infinitely.
+
+If cycle is equal positive number:
+```
+cycle: 3
+```
+The program will execute given times.
+Any other option will cause exception.
+For more details see section `Re-Ingestion`
 ###### For more details see section `Re-Ingestion`
 
 #### - Saving traces to file

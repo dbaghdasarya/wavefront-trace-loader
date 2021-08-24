@@ -28,7 +28,8 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
     this.applicationConfig = applicationConfig;
   }
 
-  WavefrontTraceLoader() {}
+  WavefrontTraceLoader() {
+  }
 
   public static void main(String[] args) throws IOException {
     new WavefrontTraceLoader().start(args);
@@ -101,7 +102,7 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
       fileWriter.write(basicGenerator.getStatistics().toJSONString());
       fileWriter.close();
     } else {
-      System.out.println(basicGenerator.getStatistics());
+      LOGGER.info(basicGenerator.getStatistics().toString());
     }
   }
 

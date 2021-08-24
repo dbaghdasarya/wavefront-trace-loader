@@ -57,9 +57,26 @@ public abstract class AbstractTraceLoader {
   public void start(String[] args) {
     try {
       loadApplicationConfig();
+      cycle(args);
     } catch (Throwable t) {
       handleProgramExit(t);
     }
+  }
+
+  private void cycle(String[] args) {
+    try {
+      int cycle = Integer.parseInt(applicationConfig.getCycle());
+      for (int i = 0; i < cycle; i++) {
+        executeOneIteration(args);
+      }
+    } catch (NumberFormatException e) {
+      while (true) {
+        executeOneIteration(args);
+      }
+    }
+  }
+
+  private void executeOneIteration(String[] args) {
     List<String> inputJsonFiles = applicationConfig.getInputJsonFiles();
     if (inputJsonFiles == null || inputJsonFiles.isEmpty()) {
       try {
@@ -86,7 +103,6 @@ public abstract class AbstractTraceLoader {
       });
     }
   }
-
 
   private void start() {
     try {
@@ -123,6 +139,7 @@ public abstract class AbstractTraceLoader {
     }
   }
 
+  @VisibleForTesting
   protected void loadApplicationConfig() throws Exception {
     try {
       if (generatorConfig.getAppConfigFile() == null) {
@@ -134,7 +151,9 @@ public abstract class AbstractTraceLoader {
         applicationConfig = objectMapper.readValue(new File(generatorConfig.getAppConfigFile()),
             ApplicationConfig.class);
       }
-      new FileWriter(applicationConfig.getTraceOutputFile(), false).close();
+      if (applicationConfig.getTraceOutputFile() != null) {
+        new FileWriter(applicationConfig.getTraceOutputFile(), false).close();
+      }
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "Could not load application config", e);
       throw e;
