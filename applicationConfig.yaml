@@ -17,5 +17,5 @@ inputJsonFiles:
 ## This option priority is the next after generation to file option.
 #proxyServer: "http://localhost"
 ## Uncomment and setup for direct ingestion. The direct ingestion is possible only over https.
-#server: "http://localhost:8080"
-#token: "1fe7b03a-bb11-4677-b772-07808a743f29"
+#server: "<cluster>.wavefront.com"
+#token: "bdc66030-a1a8-493b-b416-5559fdcfa45d"

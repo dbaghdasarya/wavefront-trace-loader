@@ -36,9 +36,7 @@ If cycle is equal positive number:
 cycle: 3
 ```
 The program will execute given times.
-
 Any other option will cause exception.
-
 For more details see section `Re-Ingestion`
 ###### For more details see section `Re-Ingestion`
 

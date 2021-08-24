@@ -151,7 +151,9 @@ public abstract class AbstractTraceLoader {
         applicationConfig = objectMapper.readValue(new File(generatorConfig.getAppConfigFile()),
             ApplicationConfig.class);
       }
-      new FileWriter(applicationConfig.getTraceOutputFile(), false).close();
+      if (applicationConfig.getTraceOutputFile() != null) {
+        new FileWriter(applicationConfig.getTraceOutputFile(), false).close();
+      }
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "Could not load application config", e);
       throw e;

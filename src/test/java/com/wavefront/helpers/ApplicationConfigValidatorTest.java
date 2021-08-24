@@ -1,9 +1,9 @@
 package com.wavefront.helpers;
 
 import com.wavefront.config.ApplicationConfig;
-
 import org.junit.Before;
 import org.junit.Test;
+import java.util.Collections;
 
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
@@ -24,20 +24,22 @@ public class ApplicationConfigValidatorTest {
   @Test
   public void testCycleForNegativeNumbers() {
     boolean t = false;
+    expect(applicationConfig.getInputJsonFiles()).andReturn(Collections.emptyList()).anyTimes();
     expect(applicationConfig.getCycle()).andReturn("-3");
     replay(applicationConfig);
     try {
       applicationConfigValidator.convert(applicationConfig);
-    } catch (Exception e) {
+    } catch (NumberFormatException e) {
       t = true;
     }
-    assertTrue(t);
     verify(applicationConfig);
+    assertTrue(t);
   }
 
   @Test
   public void testCycleValidateForInvalidString() {
     boolean t = false;
+    expect(applicationConfig.getInputJsonFiles()).andReturn(Collections.emptyList()).anyTimes();
     expect(applicationConfig.getCycle()).andReturn("String");
     replay(applicationConfig);
     try {
@@ -45,7 +47,22 @@ public class ApplicationConfigValidatorTest {
     } catch (Exception e) {
       t = true;
     }
-    assertTrue(t);
     verify(applicationConfig);
+    assertTrue(t);
+  }
+
+  @Test
+  public void testCycleValidateForPositiveNumber() {
+    boolean t = true;
+    expect(applicationConfig.getInputJsonFiles()).andReturn(Collections.emptyList()).anyTimes();
+    expect(applicationConfig.getCycle()).andReturn("3");
+    replay(applicationConfig);
+    try {
+      applicationConfigValidator.convert(applicationConfig);
+    } catch (Exception e) {
+      t = false;
+    }
+    verify(applicationConfig);
+    assertTrue(t);
   }
 }
