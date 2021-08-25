@@ -43,7 +43,7 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
     if (!Strings.isNullOrEmpty(applicationConfig.getSpanOutputFile())
         || !Strings.isNullOrEmpty(applicationConfig.getTraceOutputFile())) {
       spanSender = new SpanSender(applicationConfig.getSpanOutputFile(),
-          applicationConfig.getTraceOutputFile(), dataQueue);
+          applicationConfig.getTraceOutputFile(), dataQueue, applicationConfig.getReportStat());
     } else {
       WavefrontSender wfSender;
       WavefrontClientFactory wfClientFactory = new WavefrontClientFactory();
@@ -63,7 +63,22 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
       wfSender = wfClientFactory.getClient();
       WavefrontSpanReporter wfSpanReporter = new WavefrontSpanReporter.Builder().build(wfSender);
       wfSpanReporter.setMetricsReporter(new WavefrontInternalReporter.Builder().build(wfSender));
-      spanSender = new SpanSender(wfSender, generatorConfig.getSpansRate(), dataQueue);
+
+      WavefrontSender statSender;
+      WavefrontClientFactory statClientFactory = new WavefrontClientFactory();
+      if(applicationConfig.getStatServer() != null && applicationConfig.getStatToken() != null) {
+        statClientFactory.addClient("https://" + applicationConfig.getStatToken() +
+            "@" + applicationConfig.getStatServer());
+      }
+      else {
+        statClientFactory.addClient("https://" + applicationConfig.getToken() +
+            "@" + applicationConfig.getServer());
+      }
+      statSender = statClientFactory.getClient();
+      WavefrontSpanReporter statSpanReporter = new WavefrontSpanReporter.Builder().build(statSender);
+      statSpanReporter.setMetricsReporter(new WavefrontInternalReporter.Builder().build(statSender));
+      spanSender = new SpanSender(wfSender, statSender, generatorConfig.getSpansRate(), dataQueue
+          , applicationConfig.getReportStat());
     }
   }
 

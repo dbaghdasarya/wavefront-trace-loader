@@ -37,6 +37,7 @@ public class AbstractTraceLoaderTest {
     expect(applicationConfig.getTraceOutputFile()).andReturn(TRACES_OUTPUT_FILE).anyTimes();
     expect(applicationConfig.getSpanOutputFile()).andReturn("").anyTimes();
     expect(applicationConfig.getWfTracesFile()).andReturn("").anyTimes();
+    expect(applicationConfig.getReportStat()).andReturn(null).anyTimes();
   }
 
 

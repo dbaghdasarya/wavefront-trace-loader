@@ -43,5 +43,9 @@ public class Defaults {
 
   public static final List<ValueDistribution> DEFAULT_SPANS_DISTRIBUTIONS = List.of(
       new ValueDistribution(3, RANDOM.nextInt(10) + 5, 100));
+  public static final List<String> STAT_ROOT_NAME_LIST = List.of(
+      "PATTERN_STAT",
+      "TOPOLOGY_STAT"
+  );
 
 }

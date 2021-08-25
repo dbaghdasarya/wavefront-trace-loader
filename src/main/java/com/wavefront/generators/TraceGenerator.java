@@ -3,13 +3,21 @@ package com.wavefront.generators;
 import com.google.common.base.Throwables;
 
 import com.wavefront.DataQueue;
+import com.wavefront.config.ApplicationConfig;
 import com.wavefront.config.GeneratorConfig;
 import com.wavefront.datastructures.Span;
+import com.wavefront.datastructures.SpanKind;
+import com.wavefront.datastructures.StatSpan;
 import com.wavefront.datastructures.Trace;
+import com.wavefront.internal.reporter.WavefrontInternalReporter;
+import com.wavefront.opentracing.reporting.WavefrontSpanReporter;
 import com.wavefront.sdk.common.Pair;
+import com.wavefront.sdk.common.WavefrontSender;
+import com.wavefront.sdk.common.clients.WavefrontClientFactory;
 
 import org.apache.commons.lang3.NotImplementedException;
 
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -96,6 +104,25 @@ public abstract class TraceGenerator extends BasicGenerator {
       }
     }
 
+    sendStat(str);
+
+    logger.info("Generation complete!");
+
+
+  }
+
+  /**
+   * Generate trace for a given trace type.
+   *
+   * @param startMillis Start time of the trace (millis).
+   * @return Generated trace.
+   */
+  protected Trace generateTrace(long startMillis) {
+    throw new NotImplementedException("Subclass must implement this " +
+        "functionality");
+  }
+
+  private void sendStat(String str){
     Trace statTrace = new Trace(2, UUID.randomUUID());
 
     List<Pair<String, String>> rootTags = new LinkedList<>();
@@ -107,7 +134,9 @@ public abstract class TraceGenerator extends BasicGenerator {
     rootTags.add(new Pair<>("Total errors percentage", Long.toString(Math.round((double) statistics.getErrorsSum() / statistics.getTracesSum() * 100))));
     rootTags.add(new Pair<>("Total debug spans", Integer.toString(statistics.getDebugSpansSum())));
 
-    Span stat = new Span(str + "_STAT",
+    String rootName = str + "_STAT";
+
+    StatSpan stat = new StatSpan(rootName,
         System.currentTimeMillis(),
         1,
         "traceLoaderHost",
@@ -115,7 +144,8 @@ public abstract class TraceGenerator extends BasicGenerator {
         UUID.randomUUID(),
         null,
         null, rootTags,
-        null);
+        null,
+        SpanKind.STATISTICS);
 
     statTrace.add(0, stat);
 
@@ -138,7 +168,7 @@ public abstract class TraceGenerator extends BasicGenerator {
       traceTypeTags.add(new Pair<>("Errors percentage", Long.toString(Math.round((double) v.getErrorCount() / getStatistics().getErrorsSum() * 100))));
       traceTypeTags.add(new Pair<>("Debug spans count", Integer.toString(v.getDebugSpansCount())));
 
-      Span type_stat = new Span(k,
+      StatSpan type_stat = new StatSpan(k,
           System.currentTimeMillis(),
           1,
           "localhost",
@@ -146,21 +176,15 @@ public abstract class TraceGenerator extends BasicGenerator {
           UUID.randomUUID(),
           parents_list,
           null, traceTypeTags,
-          null);
+          null,
+          SpanKind.STATISTICS);
       statTrace.add(1, type_stat);
-    });
-    dataQueue.addTrace(statTrace);
-    logger.info("Generation complete!");
-  }
 
-  /**
-   * Generate trace for a given trace type.
-   *
-   * @param startMillis Start time of the trace (millis).
-   * @return Generated trace.
-   */
-  protected Trace generateTrace(long startMillis) {
-    throw new NotImplementedException("Subclass must implement this " +
-        "functionality");
+      statTrace.setRoot(rootName);
+
+      dataQueue.addTrace(statTrace);
+    });
+
+
   }
 }
