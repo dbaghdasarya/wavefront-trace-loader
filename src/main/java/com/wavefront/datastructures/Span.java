@@ -41,22 +41,6 @@ public class Span {
   public Span(String name, long startMillis, long durationMillis, @Nullable String source,
               UUID traceUUID, UUID spanUUID, @Nullable List<UUID> parents,
               @Nullable List<UUID> followsFrom, @Nullable List<Pair<String, String>> tags,
-              @Nullable List<SpanLog> spanLogs) {
-    this.name = name;
-    this.startMillis = startMillis;
-    this.durationMillis = durationMillis;
-    this.source = source;
-    this.traceUUID = traceUUID;
-    this.spanUUID = spanUUID;
-    this.parents = parents;
-    this.followsFrom = followsFrom;
-    this.tags = tags;
-    this.spanLogs = spanLogs;
-  }
-
-  public Span(String name, long startMillis, long durationMillis, @Nullable String source,
-              UUID traceUUID, UUID spanUUID, @Nullable List<UUID> parents,
-              @Nullable List<UUID> followsFrom, @Nullable List<Pair<String, String>> tags,
               @Nullable List<SpanLog> spanLogs, SpanKind kind) {
     this.name = name;
     this.startMillis = startMillis;

@@ -86,7 +86,7 @@ public class ApplicationConfig {
    * Token for the statistics server.
    */
   @JsonProperty
-  private String reportStat = null;
+  private boolean reportStat = false;
 
 
   public String getWfTracesFile() {
@@ -133,7 +133,7 @@ public class ApplicationConfig {
 
   public String getStatToken() { return statToken; }
 
-  public String getReportStat(){ return reportStat; }
+  public boolean getReportStat(){ return reportStat; }
 
   @Override
   public String toString() {

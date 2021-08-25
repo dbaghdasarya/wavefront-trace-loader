@@ -3,21 +3,14 @@ package com.wavefront.generators;
 import com.google.common.base.Throwables;
 
 import com.wavefront.DataQueue;
-import com.wavefront.config.ApplicationConfig;
 import com.wavefront.config.GeneratorConfig;
-import com.wavefront.datastructures.Span;
 import com.wavefront.datastructures.SpanKind;
 import com.wavefront.datastructures.StatSpan;
 import com.wavefront.datastructures.Trace;
-import com.wavefront.internal.reporter.WavefrontInternalReporter;
-import com.wavefront.opentracing.reporting.WavefrontSpanReporter;
 import com.wavefront.sdk.common.Pair;
-import com.wavefront.sdk.common.WavefrontSender;
-import com.wavefront.sdk.common.clients.WavefrontClientFactory;
 
 import org.apache.commons.lang3.NotImplementedException;
 
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -103,12 +96,8 @@ public abstract class TraceGenerator extends BasicGenerator {
         }
       }
     }
-
     sendStat(str);
-
     logger.info("Generation complete!");
-
-
   }
 
   /**
@@ -144,8 +133,7 @@ public abstract class TraceGenerator extends BasicGenerator {
         UUID.randomUUID(),
         null,
         null, rootTags,
-        null,
-        SpanKind.STATISTICS);
+        null);
 
     statTrace.add(0, stat);
 
@@ -168,7 +156,7 @@ public abstract class TraceGenerator extends BasicGenerator {
       traceTypeTags.add(new Pair<>("Errors percentage", Long.toString(Math.round((double) v.getErrorCount() / getStatistics().getErrorsSum() * 100))));
       traceTypeTags.add(new Pair<>("Debug spans count", Integer.toString(v.getDebugSpansCount())));
 
-      StatSpan type_stat = new StatSpan(k,
+      StatSpan typeStat = new StatSpan(k,
           System.currentTimeMillis(),
           1,
           "localhost",
@@ -176,15 +164,10 @@ public abstract class TraceGenerator extends BasicGenerator {
           UUID.randomUUID(),
           parents_list,
           null, traceTypeTags,
-          null,
-          SpanKind.STATISTICS);
-      statTrace.add(1, type_stat);
-
+          null);
+      statTrace.add(1, typeStat);
       statTrace.setRoot(rootName);
-
       dataQueue.addTrace(statTrace);
     });
-
-
   }
 }

@@ -8,6 +8,7 @@ import com.wavefront.datastructures.ExactDistributionIterator;
 import com.wavefront.datastructures.RandomDistributionIterator;
 import com.wavefront.datastructures.ReferenceDistribution;
 import com.wavefront.datastructures.Span;
+import com.wavefront.datastructures.SpanKind;
 import com.wavefront.datastructures.Trace;
 import com.wavefront.datastructures.TraceTypePattern;
 import com.wavefront.datastructures.ValueDistribution;
@@ -134,7 +135,8 @@ public class FromPatternGenerator extends TraceGenerator {
         null,
         null,
         getTags(traceTypePattern, traceTypePattern.traceTypeName, traceTypePattern.errorRate),
-        null));
+        null,
+        SpanKind.REGULAR));
     trace.setRoot(traceTypePattern.traceTypeName);
 
     while (spanNumbers > 0) {
@@ -166,7 +168,8 @@ public class FromPatternGenerator extends TraceGenerator {
               null,
               // Not root spans will have error tag if ErrorConditions defined
               getTags(traceTypePattern, spanName, 0),
-              null));
+              null,
+              SpanKind.REGULAR));
           spanNumbers--;
         }
       }

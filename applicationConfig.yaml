@@ -18,12 +18,12 @@ traceOutputFile: "wftraces.txt"
 #proxyServer: "http://localhost"
 
 ## Uncomment and setup for direct ingestion. The direct ingestion is possible only over https.
-#server: "meru.wavefront.com"
-#token: "1e76ec8a-9070-4886-abf1-d7d324984520"
+#server: "<cluster>.wavefront.com"
+#token: "515168464hiyigufjf"
 
 ## Uncomment and setup for direct ingestion. The direct ingestion is possible only over https.
-#statServer: "meru.wavefront.com"
-#statToken: "78b70d3e-04b2-460d-89c1-f38da1e68383"
+#statServer: "<cluster>.wavefront.com"
+#statToken: "7515168464hiyigufjf"
 
 ## Uncomment for activating statistics reporting tool.
 #reportStat: "true"

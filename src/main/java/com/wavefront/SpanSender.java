@@ -37,11 +37,11 @@ public class SpanSender implements Runnable {
   private final String traceOutputFile;
   private final DataQueue dataQueue;
   private final AtomicBoolean stopSending = new AtomicBoolean(false);
-  private String reportStat = null;
+  private boolean reportStat = false;
 
 
   public SpanSender(WavefrontSender wavefrontSender, WavefrontSender statSender, Integer rate,
-                    DataQueue dataQueue, String reportStat) {
+                    DataQueue dataQueue, boolean reportStat) {
     this.spanSender = wavefrontSender;
     this.statSender = statSender;
     this.rate = rate;
@@ -52,7 +52,7 @@ public class SpanSender implements Runnable {
   }
 
   public SpanSender(String spanOutputFile, String traceOutputFile, DataQueue dataQueue,
-                    String reportStat) {
+                    boolean reportStat) {
     this.spanSender = null;
     this.statSender = null;
     this.rate = null;
@@ -92,20 +92,19 @@ public class SpanSender implements Runnable {
         if (tempTrace.isError()) {
           errors++;
         }
-        StringBuilder stringBuilder = new StringBuilder("[{\"root\":\"" + tempTrace.getRoot() +
-            "\"}," + tempTrace.toWFTrace().toJSONString() + "]\n");
-        if(Defaults.STAT_ROOT_NAME_LIST.contains(tempTrace.getRoot())) {
-          if (reportStat != null) {
-            stringBuilder.insert(0, ":)");
-            fileWriter.write(stringBuilder.toString());
+        if(tempTrace.getSpans().get(0).get(0).getKind() == SpanKind.REGULAR || reportStat == true) {
+          StringBuilder stringBuilder = new StringBuilder("[{\"root\":\"" + tempTrace.getRoot() +
+              "\"}," + tempTrace.toWFTrace().toJSONString() + "]\n");
+          if (tempTrace.getSpans().get(0).get(0).getKind() == SpanKind.STATISTICS) {
+              stringBuilder.insert(0, ":)");
+              fileWriter.write(stringBuilder.toString());
+          }
+          else {
+              roots.add(tempTrace.getRoot());
+              fileWriter.write(stringBuilder.toString());
+              total++;
           }
         }
-        else {
-          roots.add(tempTrace.getRoot());
-          fileWriter.write(stringBuilder.toString());
-          total++;
-        }
-
       }
       final ObjectMapper mapper = new ObjectMapper();
       fileWriter.write("\n" + mapper.writeValueAsString(roots));
@@ -138,7 +137,7 @@ public class SpanSender implements Runnable {
         ListIterator<Span> iter = spansToSend.listIterator();
         while (iter.hasNext() && sentSpans < mustBeSentSpans) {
           Span tempSpan = iter.next();
-          if(tempSpan.getKind() == SpanKind.STATISTICS && reportStat != null){
+          if(tempSpan.getKind() == SpanKind.STATISTICS && reportStat ==true && statSender != null){
             statSender.sendSpan(tempSpan.getName(),
                 tempSpan.getStartMillis(),
                 tempSpan.getDuration(),

@@ -9,6 +9,7 @@ import com.wavefront.datastructures.ExactDistributionIterator;
 import com.wavefront.datastructures.RandomDistributionIterator;
 import com.wavefront.datastructures.ReferenceDistribution;
 import com.wavefront.datastructures.Span;
+import com.wavefront.datastructures.SpanKind;
 import com.wavefront.datastructures.Trace;
 import com.wavefront.datastructures.TraceType;
 import com.wavefront.datastructures.ValueDistribution;
@@ -92,7 +93,8 @@ public class FromTopologyGenerator extends TraceGenerator {
           null,
           null,
           List.of(new Pair<>(SERVICE, root)),
-          null));
+          null,
+          SpanKind.REGULAR));
       trace.setRoot(root);
 
       for (int n = 1; n < levels && alreadyGenerated < tt.spansCount; n++) {
@@ -127,7 +129,8 @@ public class FromTopologyGenerator extends TraceGenerator {
               null,
               // Not root spans will have error tag if ErrorConditions defined
               List.of(new Pair<>(SERVICE, nextService)),
-              null));
+              null,
+              SpanKind.REGULAR));
         }
       }
 
@@ -259,8 +262,8 @@ public class FromTopologyGenerator extends TraceGenerator {
         null,
         null,
         getTags(trace, traceType, 0, root.getTags().get(0)._2, root.getName(), null),
-        null
-    ));
+        null,
+        SpanKind.REGULAR));
     trace.setRoot(root.getName());
 
     for (int n = 1; n < traceTemplate.getSpans().size(); n++) {
@@ -300,8 +303,8 @@ public class FromTopologyGenerator extends TraceGenerator {
             List.of(parentUUID),
             null,
             getTags(trace, traceType, n, span.getTags().get(0)._2, span.getName(), parentUUID),
-            null
-        ));
+            null,
+            SpanKind.REGULAR));
       }
     }
 

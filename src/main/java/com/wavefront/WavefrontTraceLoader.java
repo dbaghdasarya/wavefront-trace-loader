@@ -66,19 +66,24 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
 
       WavefrontSender statSender;
       WavefrontClientFactory statClientFactory = new WavefrontClientFactory();
-      if(applicationConfig.getStatServer() != null && applicationConfig.getStatToken() != null) {
-        statClientFactory.addClient("https://" + applicationConfig.getStatToken() +
-            "@" + applicationConfig.getStatServer());
+      if (applicationConfig.getStatServer() != null || applicationConfig.getServer() != null) {
+        if (applicationConfig.getStatServer() != null && applicationConfig.getStatToken() != null) {
+          statClientFactory.addClient("https://" + applicationConfig.getStatToken() +
+              "@" + applicationConfig.getStatServer());
+        } else {
+          statClientFactory.addClient("https://" + applicationConfig.getToken() +
+              "@" + applicationConfig.getServer());
+        }
+        statSender = statClientFactory.getClient();
+        WavefrontSpanReporter statSpanReporter = new WavefrontSpanReporter.Builder().build(statSender);
+        statSpanReporter.setMetricsReporter(new WavefrontInternalReporter.Builder().build(statSender));
+        spanSender = new SpanSender(wfSender, statSender, generatorConfig.getSpansRate(), dataQueue
+            , applicationConfig.getReportStat());
       }
       else {
-        statClientFactory.addClient("https://" + applicationConfig.getToken() +
-            "@" + applicationConfig.getServer());
+        spanSender = new SpanSender(wfSender, null, generatorConfig.getSpansRate(), dataQueue
+            , applicationConfig.getReportStat());
       }
-      statSender = statClientFactory.getClient();
-      WavefrontSpanReporter statSpanReporter = new WavefrontSpanReporter.Builder().build(statSender);
-      statSpanReporter.setMetricsReporter(new WavefrontInternalReporter.Builder().build(statSender));
-      spanSender = new SpanSender(wfSender, statSender, generatorConfig.getSpansRate(), dataQueue
-          , applicationConfig.getReportStat());
     }
   }
 

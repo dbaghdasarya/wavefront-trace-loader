@@ -9,8 +9,9 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 public class StatSpan extends Span{
-  public StatSpan(String name, long startMillis, long durationMillis, @Nullable String source, UUID traceUUID, UUID spanUUID, @Nullable List<UUID> parents, @Nullable List<UUID> followsFrom, @Nullable List<Pair<String, String>> tags, @Nullable List<SpanLog> spanLogs, SpanKind kind) {
-    super(name, startMillis, durationMillis, source, traceUUID, spanUUID, parents, followsFrom, tags, spanLogs, kind);
+  public StatSpan(String name, long startMillis, long durationMillis, @Nullable String source, UUID traceUUID, UUID spanUUID, @Nullable List<UUID> parents, @Nullable List<UUID> followsFrom, @Nullable List<Pair<String, String>> tags, @Nullable List<SpanLog> spanLogs) {
+    super(name, startMillis, durationMillis, source, traceUUID, spanUUID, parents, followsFrom,
+        tags, spanLogs, SpanKind.STATISTICS);
   }
 
   @Override
