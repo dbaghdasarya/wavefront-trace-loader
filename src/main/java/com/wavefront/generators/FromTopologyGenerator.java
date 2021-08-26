@@ -93,8 +93,7 @@ public class FromTopologyGenerator extends TraceGenerator {
           null,
           null,
           List.of(new Pair<>(SERVICE, root)),
-          null,
-          SpanKind.REGULAR));
+          null));
       trace.setRoot(root);
 
       for (int n = 1; n < levels && alreadyGenerated < tt.spansCount; n++) {
@@ -129,8 +128,7 @@ public class FromTopologyGenerator extends TraceGenerator {
               null,
               // Not root spans will have error tag if ErrorConditions defined
               List.of(new Pair<>(SERVICE, nextService)),
-              null,
-              SpanKind.REGULAR));
+              null));
         }
       }
 
@@ -262,8 +260,7 @@ public class FromTopologyGenerator extends TraceGenerator {
         null,
         null,
         getTags(trace, traceType, 0, root.getTags().get(0)._2, root.getName(), null),
-        null,
-        SpanKind.REGULAR));
+        null));
     trace.setRoot(root.getName());
 
     for (int n = 1; n < traceTemplate.getSpans().size(); n++) {
@@ -303,8 +300,7 @@ public class FromTopologyGenerator extends TraceGenerator {
             List.of(parentUUID),
             null,
             getTags(trace, traceType, n, span.getTags().get(0)._2, span.getName(), parentUUID),
-            null,
-            SpanKind.REGULAR));
+            null));
       }
     }
 

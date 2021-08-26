@@ -113,6 +113,6 @@ public class SpanFromWF {
         map(id -> UUID.fromString(id._2)).collect(Collectors.toList());
 
     return new Span(name, startMs, durationMs, host, UUID.fromString(traceId),
-        UUID.fromString(spanId), parents, followsFrom, tags, null, SpanKind.REGULAR);
+        UUID.fromString(spanId), parents, followsFrom, tags, null);
   }
 }

@@ -135,8 +135,7 @@ public class FromPatternGenerator extends TraceGenerator {
         null,
         null,
         getTags(traceTypePattern, traceTypePattern.traceTypeName, traceTypePattern.errorRate),
-        null,
-        SpanKind.REGULAR));
+        null));
     trace.setRoot(traceTypePattern.traceTypeName);
 
     while (spanNumbers > 0) {
@@ -168,8 +167,7 @@ public class FromPatternGenerator extends TraceGenerator {
               null,
               // Not root spans will have error tag if ErrorConditions defined
               getTags(traceTypePattern, spanName, 0),
-              null,
-              SpanKind.REGULAR));
+              null));
           spanNumbers--;
         }
       }

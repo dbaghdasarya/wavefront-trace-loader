@@ -31,11 +31,20 @@ public class Span {
   private List<Pair<String, String>> tags;
   @Nullable
   private List<SpanLog> spanLogs;
-  private SpanKind kind = SpanKind.REGULAR;
+  private final SpanKind kind;
 
 
   public Span() {
     spanUUID = UUID.randomUUID();
+    kind = SpanKind.REGULAR;
+  }
+
+  public Span(String name, long startMillis, long durationMillis, @Nullable String source,
+              UUID traceUUID, UUID spanUUID, @Nullable List<UUID> parents,
+              @Nullable List<UUID> followsFrom, @Nullable List<Pair<String, String>> tags,
+              @Nullable List<SpanLog> spanLogs) {
+    this(name, startMillis, durationMillis, source, traceUUID, spanUUID, parents, followsFrom,
+        tags, spanLogs, SpanKind.REGULAR);
   }
 
   public Span(String name, long startMillis, long durationMillis, @Nullable String source,

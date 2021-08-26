@@ -70,15 +70,22 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
         if (applicationConfig.getStatServer() != null && applicationConfig.getStatToken() != null) {
           statClientFactory.addClient("https://" + applicationConfig.getStatToken() +
               "@" + applicationConfig.getStatServer());
-        } else {
+        }
+        else if(applicationConfig.getServer() != null && applicationConfig.getToken() != null){
           statClientFactory.addClient("https://" + applicationConfig.getToken() +
               "@" + applicationConfig.getServer());
+        }
+        else {
+          throw new IOException("No token provided.");
         }
         statSender = statClientFactory.getClient();
         WavefrontSpanReporter statSpanReporter = new WavefrontSpanReporter.Builder().build(statSender);
         statSpanReporter.setMetricsReporter(new WavefrontInternalReporter.Builder().build(statSender));
         spanSender = new SpanSender(wfSender, statSender, generatorConfig.getSpansRate(), dataQueue
             , applicationConfig.getReportStat());
+      }
+      else if(applicationConfig.getReportStat() == true){
+        throw new IOException("Statistics reporting requested, but no destination provided.");
       }
       else {
         spanSender = new SpanSender(wfSender, null, generatorConfig.getSpansRate(), dataQueue
