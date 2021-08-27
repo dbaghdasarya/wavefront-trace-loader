@@ -8,7 +8,6 @@ import com.wavefront.datastructures.ExactDistributionIterator;
 import com.wavefront.datastructures.RandomDistributionIterator;
 import com.wavefront.datastructures.ReferenceDistribution;
 import com.wavefront.datastructures.Span;
-import com.wavefront.datastructures.SpanKind;
 import com.wavefront.datastructures.Trace;
 import com.wavefront.datastructures.TraceTypePattern;
 import com.wavefront.datastructures.ValueDistribution;
