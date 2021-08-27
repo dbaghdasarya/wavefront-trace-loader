@@ -1,0 +1,167 @@
+{
+  "spansRate": 50,
+  "duration": "2m",
+  "totalTraceCount": 1000,
+  "traceTopology": {
+    "traceTypes": [
+      {
+        "tracePercentage": 100,
+        "spansCount": 4,
+        "errorRate": 20,
+        "debugRate": 30,
+        "traceDurations": [
+          {
+            "startValue": 50,
+            "endValue": 100,
+            "percentage": 20
+          },
+          {
+            "startValue": 200,
+            "endValue": 500,
+            "percentage": 80
+          }
+        ],
+        "errorConditions": [
+          {
+            "tagName": "driver",
+            "tagValue": "Davit",
+            "errorRate": 80
+          }
+        ]
+      }
+    ],
+    "serviceConnections": [
+      {
+        "root": true,
+        "services": [
+          "order"
+        ],
+        "children": [
+          "overnight"
+        ]
+      },
+      {
+        "services": [
+          "overnight"
+        ],
+        "children": [
+          "taxi"
+        ]
+      },
+      {
+        "services": [
+          "taxi"
+        ],
+        "children": [
+          "payment",
+          "ranking"
+        ]
+      },
+      {
+        "services": [
+          "payment"
+        ],
+        "children": [
+          "cash",
+          "card",
+          "bonus",
+          "barter"
+        ]
+      }
+    ],
+    "serviceTags": [
+      {
+        "services": [
+          "*"
+        ],
+        "mandatoryTags": [
+          {
+            "tagName": "application",
+            "tagValues": [
+              "Topo_TestApp_new"
+            ]
+          },
+          {
+            "tagName": "source",
+            "tagValues": [
+              "ip-10.1.2.3",
+              "ip-11.2.3.4",
+              "ip-12.3.4.5",
+              "ip-13.4.5.6",
+              "ip-14.5.6.7",
+              "ip-15.6.7.8"
+            ]
+          },
+          {
+            "tagName": "shard",
+            "tagValues": [
+              "primary",
+              "secondary"
+            ]
+          },
+          {
+            "tagName": "cluster",
+            "tagValues": [
+              "us-west"
+            ]
+          }
+        ],
+        "optionalTags": [
+          {
+            "tagName": "days",
+            "tagValues": [
+              5,
+              2,
+              1,
+              7
+            ]
+          },
+          {
+            "tagName": "amount",
+            "tagValues": [
+              10,
+              20,
+              30,
+              40,
+              50,
+              55
+            ]
+          },
+          {
+            "tagName": "quantity",
+            "tagValues": [
+              10,
+              20,
+              30
+            ]
+          }
+        ],
+        "optionalTagsPercentage": 90
+      },
+      {
+        "services" : ["taxi"],
+        "mandatoryTags": [
+          {
+            "tagName": "driver",
+            "tagValues": ["Davit","Vazgen"]
+          }
+        ]
+      }
+    ],
+    "serviceSpansNumbers": [
+      {
+        "services": [
+          "*"
+        ],
+        "spansNumber": 2
+      },
+      {
+        "services": [
+          "order",
+          "request"
+        ],
+        "spansNumber": 1
+      }
+    ]
+  }
+}

@@ -83,6 +83,7 @@ public class AbstractTraceLoaderTest {
   public void testByLinesWithYamlConfigurationOptionWhenCommandLineArgumentsAreNotSpecified() {
     List<String> JsonFiles = Arrays.asList(loadFile(PATTERN_FOR_TEST), loadFile(PATTERN_FOR_TEST));
     expect(applicationConfig.getInputJsonFiles()).andReturn(JsonFiles).anyTimes();
+    expect(applicationConfig.getCycle()).andReturn("1").times(1);
 
     replay(applicationConfig);
 
@@ -97,6 +98,7 @@ public class AbstractTraceLoaderTest {
   public void testByLinesWithYamlConfigurationOptionWhenCommandLineArgumentsAreSpecified() {
     List<String> jsonFiles = Arrays.asList(loadFile(PATTERN_FOR_TEST), loadFile(PATTERN_FOR_TEST));
     expect(applicationConfig.getInputJsonFiles()).andReturn(jsonFiles).anyTimes();
+    expect(applicationConfig.getCycle()).andReturn("1").times(1);
 
     replay(applicationConfig);
 
