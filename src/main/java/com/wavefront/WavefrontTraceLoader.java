@@ -44,7 +44,7 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
     if (!Strings.isNullOrEmpty(applicationConfig.getSpanOutputFile())
         || !Strings.isNullOrEmpty(applicationConfig.getTraceOutputFile())) {
       spanSender = new SpanSender(applicationConfig.getSpanOutputFile(),
-          applicationConfig.getTraceOutputFile(), dataQueue);
+          applicationConfig.getTraceOutputFile(), dataQueue, applicationConfig.getReportStat());
     } else {
       WavefrontSender wfSender;
       WavefrontClientFactory wfClientFactory = new WavefrontClientFactory();
@@ -64,7 +64,34 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
       wfSender = wfClientFactory.getClient();
       WavefrontSpanReporter wfSpanReporter = new WavefrontSpanReporter.Builder().build(wfSender);
       wfSpanReporter.setMetricsReporter(new WavefrontInternalReporter.Builder().build(wfSender));
-      spanSender = new SpanSender(wfSender, generatorConfig.getSpansRate(), dataQueue);
+
+      WavefrontSender statSender;
+      WavefrontClientFactory statClientFactory = new WavefrontClientFactory();
+      if (applicationConfig.getStatServer() != null || applicationConfig.getServer() != null) {
+        if (applicationConfig.getStatServer() != null && applicationConfig.getStatToken() != null) {
+          statClientFactory.addClient("https://" + applicationConfig.getStatToken() +
+              "@" + applicationConfig.getStatServer());
+        }
+        else if(applicationConfig.getServer() != null && applicationConfig.getToken() != null){
+          statClientFactory.addClient("https://" + applicationConfig.getToken() +
+              "@" + applicationConfig.getServer());
+        }
+        else {
+          throw new IOException("No token provided.");
+        }
+        statSender = statClientFactory.getClient();
+        WavefrontSpanReporter statSpanReporter = new WavefrontSpanReporter.Builder().build(statSender);
+        statSpanReporter.setMetricsReporter(new WavefrontInternalReporter.Builder().build(statSender));
+        spanSender = new SpanSender(wfSender, statSender, generatorConfig.getSpansRate(), dataQueue
+            , applicationConfig.getReportStat());
+      }
+      else if(applicationConfig.getReportStat() == true){
+        throw new IOException("Statistics reporting requested, but no destination provided.");
+      }
+      else {
+        spanSender = new SpanSender(wfSender, null, generatorConfig.getSpansRate(), dataQueue
+            , applicationConfig.getReportStat());
+      }
     }
   }
 

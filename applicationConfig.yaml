@@ -18,4 +18,11 @@ inputJsonFiles:
 #proxyServer: "http://localhost"
 ## Uncomment and setup for direct ingestion. The direct ingestion is possible only over https.
 #server: "<cluster>.wavefront.com"
-#token: "bdc66030-a1a8-493b-b416-5559fdcfa45d"
+#token: "515168464hiyigufjf"
+
+## Uncomment and setup for direct ingestion. The direct ingestion is possible only over https.
+#statServer: "<cluster>.wavefront.com"
+#statToken: "7515168464hiyigufjf"
+
+## Uncomment for activating statistics reporting tool.
+#reportStat: "true"

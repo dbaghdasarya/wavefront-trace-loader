@@ -5,7 +5,9 @@ import com.google.common.base.Throwables;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wavefront.datastructures.Span;
+import com.wavefront.datastructures.SpanKind;
 import com.wavefront.datastructures.Trace;
+import com.wavefront.helpers.Defaults;
 import com.wavefront.sdk.common.WavefrontSender;
 
 import java.io.File;
@@ -19,6 +21,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
+import javax.annotation.Nullable;
+
 /**
  * Performs spans sending and span/trace saving to file.
  *
@@ -27,27 +31,35 @@ import java.util.logging.Logger;
 public class SpanSender implements Runnable {
   private static final Logger LOGGER = Logger.getLogger(SpanSender.class.getCanonicalName());
   private final WavefrontSender spanSender;
+  private final WavefrontSender statSender;
   private final Integer rate;
   private final String spanOutputFile;
   private final String traceOutputFile;
   private final DataQueue dataQueue;
   private final AtomicBoolean stopSending = new AtomicBoolean(false);
+  private boolean reportStat = false;
 
 
-  public SpanSender(WavefrontSender wavefrontSender, Integer rate, DataQueue dataQueue) {
+  public SpanSender(WavefrontSender wavefrontSender, WavefrontSender statSender, Integer rate,
+                    DataQueue dataQueue, boolean reportStat) {
     this.spanSender = wavefrontSender;
+    this.statSender = statSender;
     this.rate = rate;
     this.dataQueue = dataQueue;
     this.spanOutputFile = null;
     this.traceOutputFile = null;
+    this.reportStat = reportStat;
   }
 
-  public SpanSender(String spanOutputFile, String traceOutputFile, DataQueue dataQueue) {
+  public SpanSender(String spanOutputFile, String traceOutputFile, DataQueue dataQueue,
+                    boolean reportStat) {
     this.spanSender = null;
+    this.statSender = null;
     this.rate = null;
     this.dataQueue = dataQueue;
     this.spanOutputFile = spanOutputFile;
     this.traceOutputFile = traceOutputFile;
+    this.reportStat = reportStat;
   }
 
   public void saveToFile() throws Exception {
@@ -77,13 +89,22 @@ public class SpanSender implements Runnable {
       int errors = 0;
       int total = 0;
       while ((tempTrace = dataQueue.pollFirstTrace()) != null) {
-        total++;
         if (tempTrace.isError()) {
           errors++;
         }
-        roots.add(tempTrace.getRoot());
-        fileWriter.write("[{\"root\":\"" + tempTrace.getRoot() +
-            "\"}," + tempTrace.toWFTrace().toJSONString() + "]\n");
+        if(tempTrace.getSpans().get(0).get(0).getKind() == SpanKind.REGULAR || reportStat == true) {
+          StringBuilder stringBuilder = new StringBuilder("[{\"root\":\"" + tempTrace.getRoot() +
+              "\"}," + tempTrace.toWFTrace().toJSONString() + "]\n");
+          if (tempTrace.getSpans().get(0).get(0).getKind() == SpanKind.STATISTICS) {
+              stringBuilder.insert(0, ":)");
+              fileWriter.write(stringBuilder.toString());
+          }
+          else {
+              roots.add(tempTrace.getRoot());
+              fileWriter.write(stringBuilder.toString());
+              total++;
+          }
+        }
       }
       final ObjectMapper mapper = new ObjectMapper();
       fileWriter.write("\n" + mapper.writeValueAsString(roots));
@@ -116,7 +137,19 @@ public class SpanSender implements Runnable {
         ListIterator<Span> iter = spansToSend.listIterator();
         while (iter.hasNext() && sentSpans < mustBeSentSpans) {
           Span tempSpan = iter.next();
-          if (tempSpan.getStartMillis() < System.currentTimeMillis()) {
+          if(tempSpan.getKind() == SpanKind.STATISTICS && reportStat ==true && statSender != null){
+            statSender.sendSpan(tempSpan.getName(),
+                tempSpan.getStartMillis(),
+                tempSpan.getDuration(),
+                tempSpan.getSource(),
+                tempSpan.getTraceUUID(),
+                tempSpan.getSpanUUID(),
+                tempSpan.getParents(),
+                null,
+                tempSpan.getTags(),
+                null);
+          }
+          else if (tempSpan.getStartMillis() < System.currentTimeMillis()) {
             try {
               Thread.sleep(1);
               spanSender.sendSpan(
@@ -138,9 +171,10 @@ public class SpanSender implements Runnable {
           }
         }
       }
-    } catch (InterruptedException e) {
+    } catch (InterruptedException | IOException e) {
       LOGGER.severe(Throwables.getStackTraceAsString(e));
     }
+
     try {
       System.out.println("Closing sender.");
       spanSender.flush();

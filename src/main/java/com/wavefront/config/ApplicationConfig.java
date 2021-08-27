@@ -76,6 +76,22 @@ public class ApplicationConfig {
    */
   @JsonProperty
   private String token = null;
+  /**
+   * Server URL used for sending statistics. If not specified, will be sent to the same address
+   * as the traces.
+   */
+  @JsonProperty
+  private String statServer = null;
+  /**
+   * Token for the statistics server.
+   */
+  @JsonProperty
+  private String statToken = null;
+  /**
+   * Token for the statistics server.
+   */
+  @JsonProperty
+  private boolean reportStat = false;
 
 
   public String getWfTracesFile() {
@@ -124,5 +140,30 @@ public class ApplicationConfig {
 
   public Integer getCustomTracingPorts() {
     return customTracingPorts;
+  }
+
+  public String getStatServer() { return statServer; }
+
+  public String getStatToken() { return statToken; }
+
+  public boolean getReportStat(){ return reportStat; }
+
+  @Override
+  public String toString() {
+    return "ApplicationConfig{" +
+        "wfTracesFile='" + wfTracesFile + '\'' +
+        ", spanOutputFile='" + spanOutputFile + '\'' +
+        ", traceOutputFile='" + traceOutputFile + '\'' +
+        ", inputJsonFiles=" + inputJsonFiles +
+        ", proxyServer='" + proxyServer + '\'' +
+        ", metricsPort=" + metricsPort +
+        ", distributionPort=" + distributionPort +
+        ", tracingPort=" + tracingPort +
+        ", customTracingPorts=" + customTracingPorts +
+        ", server='" + server + '\'' +
+        ", token='" + token + '\'' +
+        ", statServer='" + statServer + '\'' +
+        ", statToken='" + statToken + '\'' +
+        '}';
   }
 }

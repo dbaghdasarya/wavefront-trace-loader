@@ -259,8 +259,7 @@ public class FromTopologyGenerator extends TraceGenerator {
         null,
         null,
         getTags(trace, traceType, 0, root.getTags().get(0)._2, root.getName(), null),
-        null
-    ));
+        null));
     trace.setRoot(root.getName());
 
     for (int n = 1; n < traceTemplate.getSpans().size(); n++) {
@@ -300,8 +299,7 @@ public class FromTopologyGenerator extends TraceGenerator {
             List.of(parentUUID),
             null,
             getTags(trace, traceType, n, span.getTags().get(0)._2, span.getName(), parentUUID),
-            null
-        ));
+            null));
       }
     }
 

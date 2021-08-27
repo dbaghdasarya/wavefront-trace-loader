@@ -398,3 +398,9 @@ Also, user can add the following string to modify spans and traces duration acco
 latency: {  "spanName":"<Name of a span>", "tagName":"Name of a tag", "tagValue":"Tag value", 
             "delta":<percentage>, "probability":<percentage>}
 ```
+##Statistics
+If the user is interested in sending the statistics directly to the Wavefront, he/she can 
+uncomment the `reportStat` field in the `yaml` file. This way, a trace bearing the statistical 
+data will be sent to the same cluster and to the same customer as the other traces. Additionally,
+one can specify the cluster, and the token of the customer to which the statistics should be sent 
+via the fields `statServer` and `statToken` correspondingly.
