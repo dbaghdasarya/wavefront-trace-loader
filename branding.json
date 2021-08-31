@@ -1,0 +1,197 @@
+{
+  "spansRate": 50,
+  "duration": "2m",
+  "totalTraceCount": 1000,
+  "traceTopology": {
+    "traceTypes": [
+      {
+        "tracePercentage": 100,
+        "spansCount": 10,
+        "errorRate": 30,
+        "debugRate": 30,
+        "traceDurations": [
+          {
+            "startValue": 50,
+            "endValue": 100,
+            "percentage": 20
+          },
+          {
+            "startValue": 200,
+            "endValue": 500,
+            "percentage": 80
+          }
+        ],
+        "errorConditions": [
+          {
+            "tagName": "time",
+            "tagValue": "5-6 PM",
+            "errorRate": 50
+          },
+          {
+            "tagName": "colour",
+            "tagValue": "white",
+            "errorRate": 50
+          },
+          {
+            "tagName": "quantity",
+            "tagValue": 1000 ,
+            "errorRate": 60
+          }
+        ]
+      }
+    ],
+    "serviceConnections": [
+      {
+        "root": true,
+        "services": [
+          "styling",
+          "selling"
+        ],
+        "children": [
+          "packaging",
+          "delivery",
+          "advertisement"
+        ]
+      },
+      {
+        "services": [
+          "packaging"
+        ],
+        "children": [
+          "quantity",
+          "colour",
+          "style"
+        ]
+      },
+      {
+        "services": [
+          "delivery"
+        ],
+        "children": [
+          "time"
+        ]
+      },
+      {
+        "services": [
+          "advertisement"
+        ],
+        "children": [
+          "concept",
+          "payment",
+          "staff"
+        ]
+      },
+      {
+        "services": [
+          "payment"
+        ],
+        "children": [
+          "cash",
+          "card",
+          "bonus",
+          "barter"
+        ]
+      },
+      {
+        "services": [
+          "card"
+        ],
+        "children": [
+          "ranking"
+        ]
+      }
+    ],
+    "serviceTags": [
+      {
+        "services": [
+          "*"
+        ],
+        "mandatoryTags": [
+          {
+            "tagName": "application",
+            "tagValues": [
+              "branding"
+            ]
+          },
+          {
+            "tagName": "source",
+            "tagValues": [
+              "ip-10.1.2.3",
+              "ip-11.2.3.4",
+              "ip-12.3.4.5",
+              "ip-13.4.5.6",
+              "ip-14.5.6.7",
+              "ip-15.6.7.8"
+            ]
+          },
+          {
+            "tagName": "shard",
+            "tagValues": [
+              "primary"
+            ]
+          },
+          {
+            "tagName": "cluster",
+            "tagValues": [
+              "us-west"
+            ]
+          }
+        ],
+        "optionalTags": [
+          {
+            "tagName": "colour",
+            "tagValues": [
+              "white",
+              "red",
+              "blue",
+              "pink"
+            ]
+          }
+        ],
+        "optionalTagsPercentage": 60
+      },
+      {
+        "services" : ["delivery"],
+        "mandatoryTags": [
+          {
+            "tagName": "time",
+            "tagValues": ["1-2 PM","3-4 PM","5-6 PM"]
+          }
+        ]
+      },
+      {
+        "services" : ["packaging"],
+        "mandatoryTags": [
+          {
+            "tagName": "colour",
+            "tagValues": ["white","blue","red"]
+          }
+        ]
+      },
+      {
+        "services" : ["delivery"],
+        "mandatoryTags": [
+          {
+            "tagName": "quantity",
+            "tagValues": [1000,2000]
+          }
+        ]
+      }
+    ],
+    "serviceSpansNumbers": [
+      {
+        "services": [
+          "*"
+        ],
+        "spansNumber": 1
+      },
+      {
+        "services": [
+          "styling",
+          "selling"
+        ],
+        "spansNumber": 2
+      }
+    ]
+  }
+}
