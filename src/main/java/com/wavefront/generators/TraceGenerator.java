@@ -1,7 +1,5 @@
 package com.wavefront.generators;
 
-import com.google.common.base.Throwables;
-
 import com.wavefront.DataQueue;
 import com.wavefront.config.GeneratorConfig;
 import com.wavefront.datastructures.StatSpan;
@@ -35,6 +33,10 @@ public abstract class TraceGenerator extends BasicGenerator {
   private double usedHeapMemoryGB = 0;
   private final double maxHeapMemoryGB =
       (double) memoryMXBean.getHeapMemoryUsage().getMax() / GIGA;
+  private long maxDataQueueSize;
+  private boolean isSleep;
+  private final double MAX_ALLOWED_HEAP_MEMORY = (maxHeapMemoryGB * 90) / 100;
+  private final int QUEUE_LOW_LIMIT = 20;
 
   protected TraceGenerator(@Nonnull DataQueue dataQueue) {
     super(dataQueue);
@@ -83,12 +85,12 @@ public abstract class TraceGenerator extends BasicGenerator {
       } else {
         // Spread traces across the whole period.
         // Simulate the delay.
-        current += SLEEP_DELAY_MILLIS;
+        current += GENERATION_DELAY_MILLIS;
       }
-      mustBeGeneratedSpans = (long) (rate * (current - start) / 1000);
+      mustBeGeneratedSpans = (rate * (current - start) / 1000);
 
       while (generatedSpans < mustBeGeneratedSpans) {
-        final Trace trace = generateTrace(current - RANDOM.nextInt(SLEEP_DELAY_MILLIS));
+        final Trace trace = generateTrace(current - RANDOM.nextInt(sleeping(isRealTime)));
         if (trace != null) {
           dataQueue.addTrace(trace);
           generatedSpans += trace.getSpansCount();
@@ -97,24 +99,40 @@ public abstract class TraceGenerator extends BasicGenerator {
         }
         updateHeapMemory();
       }
-
-      if (isRealTime) {
-        try {
-          Thread.sleep(SLEEP_DELAY_SECONDS);
-        } catch (InterruptedException e) {
-          logger.severe(Throwables.getStackTraceAsString(e));
-        }
-      }
     }
     logger.info("Generation complete!\n" + ANSI_YELLOW + String.format(generatorConfig.getGeneratorConfigFile() +
         " Memory " + "usage- %.2fGB / %.2fGB", usedHeapMemoryGB, maxHeapMemoryGB) + ANSI_RESET);
     sendStat(str);
   }
 
+  private int sleeping(boolean isRealTime) {
+    if (isRealTime) {
+      long start = System.currentTimeMillis();
+      while (isSleep) {
+        if (dataQueue.size() <= (maxDataQueueSize * QUEUE_LOW_LIMIT) / 100) {
+          isSleep = false;
+        }
+        try {
+          Thread.sleep(SLEEP_DELAY_MILLISECONDS);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+      long end = System.currentTimeMillis();
+      return (int) (end - start);
+    } else {
+      return GENERATION_DELAY_MILLIS;
+    }
+  }
+
   private void updateHeapMemory() {
     double currentUsed = (double) memoryMXBean.getHeapMemoryUsage().getUsed() / GIGA;
     if (usedHeapMemoryGB < currentUsed) {
       usedHeapMemoryGB = currentUsed;
+    }
+    if (currentUsed >= MAX_ALLOWED_HEAP_MEMORY) {
+      maxDataQueueSize = dataQueue.size();
+      isSleep = true;
     }
   }
 
