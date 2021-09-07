@@ -215,12 +215,15 @@ public class FromTopologyGenerator extends TraceGenerator {
     if (generatorConfig.getTotalTraceCount() > 0) {
       traceTypeIterator = new ExactDistributionIterator<>(referenceDistributions,
           generatorConfig.getTotalTraceCount());
+      for (ReferenceDistribution<TraceType> traceType : referenceDistributions) {
+        traceType.reference.init((int) Math.round(traceType.portion));
+      }
     } else {
       traceTypeIterator = new RandomDistributionIterator<>(referenceDistributions);
+      traceTopology.traceTypes.forEach(traceType -> {
+        traceType.init(generatorConfig.getTotalTraceCount());
+      });
     }
-    traceTopology.traceTypes.forEach(traceType -> {
-      traceType.init(generatorConfig.getTotalTraceCount());
-    });
   }
 
   @Override

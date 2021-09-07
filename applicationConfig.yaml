@@ -1,10 +1,10 @@
 ## Parse Wavefront traces from file and re-ingest them.
 ## Uncomment if necessary.
 #wfTracesFile: "wftraces.txt"
-cycle: 2
+cycle: 100
 ## Uncomment for generating traces to file.
 ## This option has the highest priority and will block trace ingestion to Wavefront.
-#spanOutputFile: "spans.txt"
+spanOutputFile: "spans.txt"
 traceOutputFile: "wftraces.txt"
 
 ## Uncomment to provide Trace Type files from yaml.
@@ -17,5 +17,5 @@ inputJsonFiles:
 ## This option priority is the next after generation to file option.
 #proxyServer: "http://localhost"
 ## Uncomment and setup for direct ingestion. The direct ingestion is possible only over https.
-#server: "<cluster>.wavefront.com"
-#token: "bdc66030-a1a8-493b-b416-5559fdcfa45d"
+#server: "meru.wavefront.com"
+#token: "78b70d3e-04b2-460d-89c1-f38da1e68383"
