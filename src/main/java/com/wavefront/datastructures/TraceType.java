@@ -40,11 +40,11 @@ public class TraceType {
   /**
    * Initialize distribution iterator(random or exact mode).
    */
-  public void init(int totalTracesCount) {
+  public void init(int traceCount) {
     // If the total number of traces is specified, then this is the exact mode,
     // otherwise it is the random mode.
-    if (totalTracesCount > 0) {
-      this.traceDurationsIterator = new ExactDistributionIterator<>(this.traceDurations, totalTracesCount);
+    if (traceCount > 0) {
+      this.traceDurationsIterator = new ExactDistributionIterator<>(this.traceDurations, traceCount);
     } else {
       this.traceDurationsIterator = new RandomDistributionIterator<>(this.traceDurations);
     }

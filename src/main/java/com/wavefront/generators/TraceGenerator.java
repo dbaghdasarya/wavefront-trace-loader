@@ -2,6 +2,7 @@ package com.wavefront.generators;
 
 import com.google.common.base.Throwables;
 
+import com.wavefront.AbstractTraceLoader;
 import com.wavefront.DataQueue;
 import com.wavefront.config.GeneratorConfig;
 import com.wavefront.datastructures.SpanKind;
@@ -85,6 +86,10 @@ public abstract class TraceGenerator extends BasicGenerator {
           generatedSpans += trace.getSpansCount();
         }else {
           break;
+        }
+        if (AbstractTraceLoader.usedHeapMemory < (double) AbstractTraceLoader.memoryMXBean.getHeapMemoryUsage().getUsed() / 1073741824) {
+          AbstractTraceLoader.usedHeapMemory =
+              (double) AbstractTraceLoader.memoryMXBean.getHeapMemoryUsage().getUsed() / 1073741824;
         }
       }
 
