@@ -4,8 +4,8 @@
 cycle: 2
 ## Uncomment for generating traces to file.
 ## This option has the highest priority and will block trace ingestion to Wavefront.
-spanOutputFile: "spans.txt"
-traceOutputFile: "wftraces.txt"
+#spanOutputFile: "spans.txt"
+#traceOutputFile: "wftraces.txt"
 
 ## Uncomment to provide Trace Type files from yaml.
 ## This option has higher priority and will block the usage of command line arguments.
@@ -15,7 +15,7 @@ traceOutputFile: "wftraces.txt"
 
 ## Uncomment for ingesting traces through proxy.
 ## This option priority is the next after generation to file option.
-#proxyServer: "http://localhost"
+proxyServer: "http://localhost"
 
 ## Uncomment and setup for direct ingestion. The direct ingestion is possible only over https.
 #server: "<cluster>.wavefront.com"
