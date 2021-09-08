@@ -31,6 +31,9 @@ public class Defaults {
   public static final Pair<String, String> ERROR_TAG = new Pair<>(ERROR, "true");
   public static final Pair<String, String> DEBUG_TAG = new Pair<>(DEBUG, "true");
   public static final double HUNDRED_PERCENT = 100;
+  public static final int GIGA = 1073741824;
+  public static final String ANSI_YELLOW = "\u001B[33m";
+  public static final String ANSI_RESET = "\u001B[0m";
 
   public static final List<TagVariation> DEFAULT_MANDATORY_TAGS = List.of(
       new TagVariation(APPLICATION, Set.of("Application_1")),

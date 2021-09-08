@@ -4,13 +4,14 @@ import com.google.common.base.Throwables;
 
 import com.wavefront.DataQueue;
 import com.wavefront.config.GeneratorConfig;
-import com.wavefront.datastructures.SpanKind;
 import com.wavefront.datastructures.StatSpan;
 import com.wavefront.datastructures.Trace;
 import com.wavefront.sdk.common.Pair;
 
 import org.apache.commons.lang3.NotImplementedException;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -19,6 +20,10 @@ import java.util.logging.Logger;
 
 import javax.annotation.Nonnull;
 
+import static com.wavefront.helpers.Defaults.ANSI_RESET;
+import static com.wavefront.helpers.Defaults.ANSI_YELLOW;
+import static com.wavefront.helpers.Defaults.GIGA;
+
 /**
  * Common interface for various trace generators.
  *
@@ -26,6 +31,10 @@ import javax.annotation.Nonnull;
  */
 public abstract class TraceGenerator extends BasicGenerator {
   protected GeneratorConfig generatorConfig;
+  private final MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
+  private double usedHeapMemoryGB = 0;
+  private final double maxHeapMemoryGB =
+      (double) memoryMXBean.getHeapMemoryUsage().getMax() / GIGA;
 
   protected TraceGenerator(@Nonnull DataQueue dataQueue) {
     super(dataQueue);
@@ -83,9 +92,10 @@ public abstract class TraceGenerator extends BasicGenerator {
         if (trace != null) {
           dataQueue.addTrace(trace);
           generatedSpans += trace.getSpansCount();
-        }else {
+        } else {
           break;
         }
+        updateHeapMemory();
       }
 
       if (isRealTime) {
@@ -96,8 +106,16 @@ public abstract class TraceGenerator extends BasicGenerator {
         }
       }
     }
+    logger.info("Generation complete!\n" + ANSI_YELLOW + String.format(generatorConfig.getGeneratorConfigFile() +
+        " Memory " + "usage- %.2fGB / %.2fGB", usedHeapMemoryGB, maxHeapMemoryGB) + ANSI_RESET);
     sendStat(str);
-    logger.info("Generation complete!");
+  }
+
+  private void updateHeapMemory() {
+    double currentUsed = (double) memoryMXBean.getHeapMemoryUsage().getUsed() / GIGA;
+    if (usedHeapMemoryGB < currentUsed) {
+      usedHeapMemoryGB = currentUsed;
+    }
   }
 
   /**
@@ -111,7 +129,7 @@ public abstract class TraceGenerator extends BasicGenerator {
         "functionality");
   }
 
-  private void sendStat(String str){
+  private void sendStat(String str) {
     Trace statTrace = new Trace(2, UUID.randomUUID());
 
     List<Pair<String, String>> rootTags = new LinkedList<>();
@@ -137,7 +155,7 @@ public abstract class TraceGenerator extends BasicGenerator {
 
     statTrace.add(0, stat);
 
-    statistics.getTracesByType().forEach((k, v) ->{
+    statistics.getTracesByType().forEach((k, v) -> {
       List<UUID> parents_list = new LinkedList();
       parents_list.add(stat.getSpanUUID());
 

@@ -111,7 +111,7 @@ public abstract class AbstractTraceLoader {
       initialize();
 
       setupSenders();
-      setupGenerators();
+      setupGenerator();
 
       startLoading();
 
@@ -168,5 +168,5 @@ public abstract class AbstractTraceLoader {
 
   abstract void dumpStatistics() throws Exception;
 
-  abstract void setupGenerators() throws Exception;
+  abstract void setupGenerator() throws Exception;
 }

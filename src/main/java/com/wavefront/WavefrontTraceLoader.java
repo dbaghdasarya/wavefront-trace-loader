@@ -114,7 +114,7 @@ public class WavefrontTraceLoader extends AbstractTraceLoader {
   }
 
   @Override
-  void setupGenerators() {
+  void setupGenerator() {
     if (applicationConfig != null && !Strings.isNullOrEmpty(applicationConfig.getWfTracesFile())) {
       this.basicGenerator = new ReIngestGenerator(applicationConfig.getWfTracesFile(), dataQueue);
     } else {
