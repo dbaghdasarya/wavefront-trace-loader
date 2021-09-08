@@ -1,6 +1,7 @@
 package com.wavefront.generators;
 
 import com.google.common.base.Throwables;
+
 import com.wavefront.DataQueue;
 import com.wavefront.config.GeneratorConfig;
 import com.wavefront.datastructures.StatSpan;
@@ -16,11 +17,12 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.logging.Logger;
+
 import javax.annotation.Nonnull;
 
 import static com.wavefront.helpers.Defaults.ANSI_RESET;
 import static com.wavefront.helpers.Defaults.ANSI_YELLOW;
-import static com.wavefront.helpers.Defaults.CONVERT_BYTES_TO_GB;
+import static com.wavefront.helpers.Defaults.GIGA;
 
 /**
  * Common interface for various trace generators.
@@ -32,7 +34,7 @@ public abstract class TraceGenerator extends BasicGenerator {
   private final MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
   private double usedHeapMemoryGB = 0;
   private final double maxHeapMemoryGB =
-      (double) memoryMXBean.getHeapMemoryUsage().getMax() / CONVERT_BYTES_TO_GB;
+      (double) memoryMXBean.getHeapMemoryUsage().getMax() / GIGA;
 
   protected TraceGenerator(@Nonnull DataQueue dataQueue) {
     super(dataQueue);
@@ -105,16 +107,14 @@ public abstract class TraceGenerator extends BasicGenerator {
       }
     }
     logger.info("Generation complete!\n" + ANSI_YELLOW + String.format(generatorConfig.getGeneratorConfigFile() +
-            " Memory " +
-            "usage- %.2fGB / %.2fGB",
-        usedHeapMemoryGB, maxHeapMemoryGB) + ANSI_RESET);
+        " Memory " + "usage- %.2fGB / %.2fGB", usedHeapMemoryGB, maxHeapMemoryGB) + ANSI_RESET);
     sendStat(str);
   }
 
   private void updateHeapMemory() {
-    if (usedHeapMemoryGB < (double) memoryMXBean.getHeapMemoryUsage().getUsed() / CONVERT_BYTES_TO_GB) {
-      usedHeapMemoryGB =
-          (double) memoryMXBean.getHeapMemoryUsage().getUsed() / CONVERT_BYTES_TO_GB;
+    double currentUsed = (double) memoryMXBean.getHeapMemoryUsage().getUsed() / GIGA;
+    if (usedHeapMemoryGB < currentUsed) {
+      usedHeapMemoryGB = currentUsed;
     }
   }
 
