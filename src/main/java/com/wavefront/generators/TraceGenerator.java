@@ -1,7 +1,5 @@
 package com.wavefront.generators;
 
-import com.google.common.base.Throwables;
-
 import com.wavefront.DataQueue;
 import com.wavefront.config.GeneratorConfig;
 import com.wavefront.datastructures.StatSpan;
@@ -36,9 +34,10 @@ public abstract class TraceGenerator extends BasicGenerator {
   private final double maxHeapMemoryGB =
       (double) memoryMXBean.getHeapMemoryUsage().getMax() / GIGA;
   private long maxDataQueueSize;
-  private boolean flag;
-  private final int MEMORY_PERCENTAGE = 90;
-  private final int QUEUE_PERCENTAGE = 20;
+  private boolean isSleep;
+  private final double MAX_ALLOWED_HEAP_MEMORY = (maxHeapMemoryGB * 90) / 100;
+  private final int QUEUE_LOW_LIMIT = 20;
+
   protected TraceGenerator(@Nonnull DataQueue dataQueue) {
     super(dataQueue);
   }
@@ -86,12 +85,12 @@ public abstract class TraceGenerator extends BasicGenerator {
       } else {
         // Spread traces across the whole period.
         // Simulate the delay.
-        current += SLEEP_DELAY_MILLIS;
+        current += GENERATION_DELAY_MILLIS;
       }
       mustBeGeneratedSpans = (rate * (current - start) / 1000);
 
       while (generatedSpans < mustBeGeneratedSpans) {
-        final Trace trace = generateTrace(current - RANDOM.nextInt(SLEEP_DELAY_MILLIS));
+        final Trace trace = generateTrace(current - RANDOM.nextInt(sleeping(isRealTime)));
         if (trace != null) {
           dataQueue.addTrace(trace);
           generatedSpans += trace.getSpansCount();
@@ -99,7 +98,6 @@ public abstract class TraceGenerator extends BasicGenerator {
           break;
         }
         updateHeapMemory();
-        sleeping(isRealTime);
       }
     }
     logger.info("Generation complete!\n" + ANSI_YELLOW + String.format(generatorConfig.getGeneratorConfigFile() +
@@ -107,16 +105,23 @@ public abstract class TraceGenerator extends BasicGenerator {
     sendStat(str);
   }
 
-  private void sleeping(boolean isRealTime) {
-    while (isRealTime && flag) {
-      if (dataQueue.size() <= (maxDataQueueSize * QUEUE_PERCENTAGE) / 100) {
-        flag = false;
+  private int sleeping(boolean isRealTime) {
+    if (isRealTime) {
+      long start = System.currentTimeMillis();
+      while (isSleep) {
+        if (dataQueue.size() <= (maxDataQueueSize * QUEUE_LOW_LIMIT) / 100) {
+          isSleep = false;
+        }
+        try {
+          Thread.sleep(SLEEP_DELAY_MILLISECONDS);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
       }
-      try {
-        Thread.sleep(SLEEP_DELAY_MILLISECONDS);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
+      long end = System.currentTimeMillis();
+      return (int) (end - start);
+    } else {
+      return GENERATION_DELAY_MILLIS;
     }
   }
 
@@ -125,9 +130,9 @@ public abstract class TraceGenerator extends BasicGenerator {
     if (usedHeapMemoryGB < currentUsed) {
       usedHeapMemoryGB = currentUsed;
     }
-    if (currentUsed >= (maxHeapMemoryGB * MEMORY_PERCENTAGE) / 100) {
+    if (currentUsed >= MAX_ALLOWED_HEAP_MEMORY) {
       maxDataQueueSize = dataQueue.size();
-      flag = true;
+      isSleep = true;
     }
   }
 

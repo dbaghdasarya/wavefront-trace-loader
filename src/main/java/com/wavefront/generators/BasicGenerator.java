@@ -10,7 +10,7 @@ import javax.annotation.Nonnull;
 public abstract class BasicGenerator implements Runnable {
   protected static final Random RANDOM = new Random(System.currentTimeMillis());
   protected static final int SLEEP_DELAY_MILLISECONDS = 5;
-  protected static final int SLEEP_DELAY_MILLIS = SLEEP_DELAY_MILLISECONDS * 1000;
+  protected static final int GENERATION_DELAY_MILLIS = 5000;
   public final Statistics statistics = new Statistics();
   @Nonnull
   protected final DataQueue dataQueue;
