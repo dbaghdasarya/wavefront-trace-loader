@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.wavefront.config.ApplicationConfig;
 import com.wavefront.config.GeneratorConfig;
+import com.wavefront.datastructures.LoaderParams;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 public abstract class AbstractTraceLoader {
   protected static final Logger LOGGER = Logger.getLogger("traceloader");
   protected final GeneratorConfig generatorConfig = new GeneratorConfig();
+  protected final LoaderParams loaderParams = new LoaderParams();
   protected ApplicationConfig applicationConfig;
 
   @VisibleForTesting
@@ -56,6 +58,13 @@ public abstract class AbstractTraceLoader {
    */
   public void start(String[] args) {
     try {
+      JCommander jCommander = JCommander.newBuilder().
+          addObject(loaderParams).
+          acceptUnknownOptions(true).
+          allowParameterOverwriting(true).
+          build();
+      jCommander.parse(args);
+
       loadApplicationConfig();
       cycle(args);
     } catch (Throwable t) {
@@ -90,7 +99,7 @@ public abstract class AbstractTraceLoader {
       } catch (ParameterException e) {
         LOGGER.log(Level.SEVERE, "Generation can't be started! Neither Command Line Arguments, " +
             "nor YAML config files are provided.");
-        LOGGER.info("Arguments: " + Arrays.stream(args).collect(Collectors.joining(", ")) + " are " +
+        LOGGER.info("Arguments: " + String.join(", ", args) + " are " +
             "not enough to start generating.");
         System.exit(1);
       }
@@ -142,13 +151,9 @@ public abstract class AbstractTraceLoader {
   @VisibleForTesting
   protected void loadApplicationConfig() throws Exception {
     try {
-      if (generatorConfig.getAppConfigFile() == null) {
-        throw new Exception("Application config can be loaded only after proper loading of " +
-            "generator file!");
-      }
       ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
       if (applicationConfig == null) {
-        applicationConfig = objectMapper.readValue(new File(generatorConfig.getAppConfigFile()),
+        applicationConfig = objectMapper.readValue(new File(loaderParams.getAppConfigFile()),
             ApplicationConfig.class);
       }
       if (applicationConfig.getTraceOutputFile() != null) {
