@@ -14,8 +14,6 @@ import com.wavefront.datastructures.LoaderParams;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -32,9 +30,7 @@ public abstract class AbstractTraceLoader {
   protected final GeneratorConfig generatorConfig = new GeneratorConfig();
   protected final LoaderParams loaderParams = new LoaderParams();
   protected ApplicationConfig applicationConfig;
-  public static MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
-  public static double usedHeapMemory = (double) memoryMXBean.getHeapMemoryUsage().getUsed() / 1073741824;
-  public static double maxHeapMemory = (double) memoryMXBean.getHeapMemoryUsage().getMax() / 1073741824;
+
   @VisibleForTesting
   protected void parseArguments(String[] args) {
     LOGGER.info("Arguments: " + Arrays.stream(args).
@@ -74,8 +70,6 @@ public abstract class AbstractTraceLoader {
     } catch (Throwable t) {
       handleProgramExit(t);
     }
-    System.out.println("\u001B[33m" + String.format("Max heap memory: %.2f GB", maxHeapMemory) );
-    System.out.println("\u001B[33m" + String.format("Used heap memory: %.2f GB", usedHeapMemory));
   }
 
   private void cycle(String[] args) {
