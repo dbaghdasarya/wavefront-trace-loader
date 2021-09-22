@@ -1,14 +1,14 @@
 {
   "spansRate": 50,
   "duration": "2m",
-  "totalTraceCount": 6,
+  "totalTraceCount": 30000,
   "traceTopology": {
     "traceTypes": [
       {
         "tracePercentage": 80,
-        "spansCount": 150,
+        "spansCount": 10,
         "errorRate": 20,
-        "debugRate": 30,
+        "debugRate": 100,
         "traceDurations": [
           {
             "startValue": 50,
@@ -25,7 +25,7 @@
           {
             "spanNames": ["taxi_001"],
             "tagName": "application",
-            "tagValue": "Topo_TestApp",
+            "tagValue": "Topowith",
             "errorRate": 20
           },
           {
@@ -37,9 +37,9 @@
       },
       {
         "tracePercentage": 20,
-        "spansCount": 25,
+        "spansCount": 10,
         "errorRate": 0,
-        "debugRate": 30,
+        "debugRate": 100,
         "traceDurations": [
           {
             "startValue": 300,
@@ -50,9 +50,9 @@
       },
       {
         "tracePercentage": 20,
-        "spansCount": 30,
+        "spansCount": 10,
         "errorRate": 40,
-        "debugRate": 30,
+        "debugRate": 100,
         "traceDurations": [
           {
             "startValue": 500,
@@ -413,7 +413,7 @@
           {
             "tagName": "application",
             "tagValues": [
-              "Topo_TestApp"
+              "Topowith"
             ]
           },
           {
