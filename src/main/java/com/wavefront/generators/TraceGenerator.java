@@ -118,7 +118,7 @@ public abstract class TraceGenerator extends BasicGenerator {
           e.printStackTrace();
         }
       }
-      long end = System.currentTimeMillis();
+      long end = Math.max(System.currentTimeMillis(), start + 1);
       return (int) (end - start);
     } else {
       return GENERATION_DELAY_MILLIS;
