@@ -47,6 +47,10 @@ public class ExactDistributionIterator<T extends Distribution> extends Distribut
     }
   }
 
+  /**
+   *  Pick a random index from distributions taking into account the weights of corresponding
+   *  items. The algorithm was inspired from https://stackoverflow.com/questions/1761626/weighted-random-numbers
+   */
   protected int weightedRand(int sumOfPercentages){
     int index = 0;
     int rand = RANDOM.nextInt(sumOfPercentages);
