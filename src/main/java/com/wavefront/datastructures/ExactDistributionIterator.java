@@ -47,16 +47,37 @@ public class ExactDistributionIterator<T extends Distribution> extends Distribut
     }
   }
 
+  /**
+   *  Pick a random index from distributions taking into account the weights of corresponding
+   *  items. The algorithm was inspired from https://stackoverflow.com/questions/1761626/weighted-random-numbers
+   */
+  protected int weightedRand(int sumOfPercentages){
+    int index = 0;
+    int rand = RANDOM.nextInt(sumOfPercentages);
+    for(int i = 0; i < distributions.size(); i++){
+      if(distributions.get(i).percentage > rand){
+        index = i;
+      }
+      else {
+        rand -= distributions.get(i).percentage;
+      }
+    }
+    return index;
+  }
+
   @Override
   public T getNextDistribution() {
     if (distributions.isEmpty()) {
       return null;
     }
-    int index = RANDOM.nextInt(distributions.size());
+    int sumOfPercentages = (int) distributions.stream().
+        mapToDouble(t -> t.percentage).sum();
+    int index = weightedRand(sumOfPercentages);
     // Removing of depleted distributions.
     while (distributions.size() > 1 && distributions.get(index).portion <= 0) {
+      sumOfPercentages -= distributions.get(index).percentage;
       distributions.remove(index);
-      index = RANDOM.nextInt(distributions.size());
+      index = weightedRand(sumOfPercentages);
     }
     distributions.get(index).portion--;
 
